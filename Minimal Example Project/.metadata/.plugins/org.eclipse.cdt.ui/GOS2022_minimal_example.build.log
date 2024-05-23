@@ -1,0 +1,19 @@
+12:44:09 **** Incremental Build of configuration Debug for project GOS2022_minimal_example ****
+make -j8 all 
+arm-none-eabi-gcc -o "GOS2022_minimal_example.elf" @"objects.list"  -lGOS2022 -lGOS2022_lib -mcpu=cortex-m4 -T"C:\Users\Gabor\Documents\GitHub\GOS2022_root\Projects\Minimal Example Project\GOS2022_minimal_example\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="GOS2022_minimal_example.map" -Wl,--gc-sections -static -L"C:\Users\Gabor\Documents\GitHub\GOS2022_root\Projects\Minimal Example Project\GOS2022\Debug" -L"C:\Users\Gabor\Documents\GitHub\GOS2022_root\Projects\Minimal Example Project\GOS2022_lib\Debug" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: GOS2022_minimal_example.elf
+ 
+arm-none-eabi-size  GOS2022_minimal_example.elf 
+arm-none-eabi-objdump -h -S GOS2022_minimal_example.elf  > "GOS2022_minimal_example.list"
+   text	   data	    bss	    dec	    hex	filename
+  65692	   7412	  38308	 111412	  1b334	GOS2022_minimal_example.elf
+arm-none-eabi-objcopy  -O binary GOS2022_minimal_example.elf  "GOS2022_minimal_example.bin"
+Finished building: default.size.stdout
+ 
+Finished building: GOS2022_minimal_example.bin
+Finished building: GOS2022_minimal_example.list
+ 
+ 
+
+12:44:13 Build Finished. 0 errors, 0 warnings. (took 3s.866ms)
+
