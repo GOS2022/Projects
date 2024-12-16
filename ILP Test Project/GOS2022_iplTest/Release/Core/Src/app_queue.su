@@ -1,0 +1,2 @@
+../Core/Src/app_queue.c:68:19:APP_QueueFullHook	40	static
+../Core/Src/app_queue.c:28:8:APP_QueueObserverTask	16	static

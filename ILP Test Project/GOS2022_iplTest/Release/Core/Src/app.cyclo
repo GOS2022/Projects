@@ -1,0 +1,3 @@
+app.c:358:19:APP_TaskDeleteSignalHandler	2
+app.c:271:14:gos_platformDriverInit	1
+app.c:321:14:gos_userApplicationInit	1

@@ -1,0 +1,5 @@
+g_window.c:39:8:g_windowDraw	8
+g_window.c:108:8:g_windowAddButton	3
+g_window.c:124:8:g_windowAddLabel	3
+g_window.c:140:8:g_windowShow	2
+g_window.c:152:8:g_windowHide	2

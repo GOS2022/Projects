@@ -1,0 +1,11 @@
+../os/services/src/gos_queue.c:147:14:gos_queueInit	3
+../os/services/src/gos_queue.c:181:14:gos_queueCreate	6
+../os/services/src/gos_queue.c:231:14:gos_queuePut	14
+../os/services/src/gos_queue.c:310:14:gos_queueGet	11
+../os/services/src/gos_queue.c:385:14:gos_queuePeek	8
+../os/services/src/gos_queue.c:435:14:gos_queueReset	5
+../os/services/src/gos_queue.c:473:14:gos_queueRegisterFullHook	3
+../os/services/src/gos_queue.c:499:14:gos_queueRegisterEmptyHook	3
+../os/services/src/gos_queue.c:525:14:gos_queueGetName	5
+../os/services/src/gos_queue.c:564:14:gos_queueGetElementNumber	5
+../os/services/src/gos_queue.c:598:8:gos_queueDump	3

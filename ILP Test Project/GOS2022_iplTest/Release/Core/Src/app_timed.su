@@ -1,0 +1,2 @@
+../Core/Src/app_timed.c:35:19:APP_ButtonPressedSignalHandler	0	static
+../Core/Src/app_timed.c:18:8:APP_TimedTask	8	static

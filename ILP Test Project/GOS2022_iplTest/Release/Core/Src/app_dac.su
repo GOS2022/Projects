@@ -1,0 +1,9 @@
+../Core/Src/app_dac.c:462:19:APP_DAC_GetSawtoothVal	0	static
+../Core/Src/app_dac.c:483:19:APP_DAC_TaskDeleteSignalHandler	0	static
+../Core/Src/app_dac.c:331:19:APP_DAC_ModulateTask	32	static
+../Core/Src/app_dac.c:596:19:APP_DAC_ShellModulateSpeedHandler	8	static
+../Core/Src/app_dac.c:497:19:APP_DAC_ShellSongPlayHandler	24	static
+../Core/Src/app_dac.c:553:19:APP_DAC_ShellLoopHandler	8	static
+../Core/Src/app_dac.c:527:19:APP_DAC_ShellSongSoundHandler	32	static
+../Core/Src/app_dac.c:571:19:APP_DAC_ShellModulateHandler	8	static
+../Core/Src/app_dac.c:252:8:APP_DAC_Task	40	static

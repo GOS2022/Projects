@@ -1,0 +1,2 @@
+rtc_driver.c:16:14:rtc_driver_set_time	1
+rtc_driver.c:34:14:rtc_driver_get_time	4

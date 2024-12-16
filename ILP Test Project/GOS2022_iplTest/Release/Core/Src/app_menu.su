@@ -1,0 +1,4 @@
+../Core/Src/app_menu.c:323:19:APP_TimeSignalHandler	8	static
+../Core/Src/app_menu.c:303:19:APP_XButtonPressedInterruptCallback	8	static
+../Core/Src/app_menu.c:277:19:APP_MainButtonPressedInterruptCallback	8	static
+../Core/Src/app_menu.c:61:8:APP_MenuTask	88	static

@@ -1,0 +1,13 @@
+../Core/driver/src/sd_driver.c:27:19:SELECT	8	static
+../Core/driver/src/sd_driver.c:34:19:DESELECT	8	static
+../Core/driver/src/sd_driver.c:55:17:SPI_RxByte	16	static
+../Core/driver/src/sd_driver.c:97:19:SD_PowerOn	24	static
+../Core/driver/src/sd_driver.c:79:17:SD_ReadyWait	16	static
+../Core/driver/src/sd_driver.c:226:17:SD_SendCmd	24	static
+../Core/driver/src/sd_driver.c:182:17:SD_TxDataBlock	24	static
+../Core/driver/src/sd_driver.c:151:17:SD_RxDataBlock	16	static
+../Core/driver/src/sd_driver.c:275:9:SD_disk_initialize	32	static
+../Core/driver/src/sd_driver.c:380:9:SD_disk_status	0	static
+../Core/driver/src/sd_driver.c:387:9:SD_disk_read	16	static
+../Core/driver/src/sd_driver.c:429:9:SD_disk_write	24	static
+../Core/driver/src/sd_driver.c:484:9:SD_disk_ioctl	32	static

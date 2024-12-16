@@ -1,0 +1,5 @@
+../svl/src/svl_ipl.c:398:14:svl_iplInit	1
+../svl/src/svl_ipl.c:416:14:svl_iplRegisterUserMsg	4
+../svl/src/svl_ipl.c:454:14:svl_iplConfigure	3
+../svl/src/svl_ipl.c:486:19:svl_iplDaemon	57
+../svl/src/svl_ipl.c:900:25:svl_iplSendMessage	4

@@ -1,0 +1,12 @@
+../Core/gos_graphics/src/g_window.c:37:8:g_windowInit	1
+../Core/gos_graphics/src/g_window.c:65:8:g_windowDraw	6
+../Core/gos_graphics/src/g_window.c:110:8:g_windowRefreshArea	11
+../Core/gos_graphics/src/g_window.c:194:8:g_windowAddButton	3
+../Core/gos_graphics/src/g_window.c:210:8:g_windowAddLabel	3
+../Core/gos_graphics/src/g_window.c:226:8:g_windowShow	2
+../Core/gos_graphics/src/g_window.c:236:8:g_windowHide	2
+../Core/gos_graphics/src/g_window.c:248:19:g_windowCloseButtonPressedCallback	1
+../Core/gos_graphics/src/g_window.c:253:19:g_windowCloseButtonReleasedCallback	1
+../Core/gos_graphics/src/g_window.c:259:8:g_windowTabStep	8
+../Core/gos_graphics/src/g_window.c:308:8:g_windowPressFocused	6
+../Core/gos_graphics/src/g_window.c:329:8:g_windowReleaseFocused	6

@@ -1,0 +1,9 @@
+../os/services/src/gos_shell.c:153:14:gos_shellInit	16	static
+../os/services/src/gos_shell.c:187:14:gos_shellRegisterCommands	24	static
+../os/services/src/gos_shell.c:235:14:gos_shellRegisterCommand	24	static
+../os/services/src/gos_shell.c:270:14:gos_shellSuspend	16	static
+../os/services/src/gos_shell.c:288:14:gos_shellResume	16	static
+../os/services/src/gos_shell.c:306:14:gos_shellEchoOn	16	static
+../os/services/src/gos_shell.c:324:14:gos_shellEchoOff	16	static
+../os/services/src/gos_shell.c:349:19:gos_shellDaemonTask	16	static
+../os/services/src/gos_shell.c:480:19:gos_shellCommandHandler	48	static

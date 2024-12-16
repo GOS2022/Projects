@@ -1,0 +1,2 @@
+../Core/gos_graphics/src/g_label.c:14:8:g_labelDraw	40	static
+../Core/gos_graphics/src/g_label.c:60:8:g_labelSetText	16	static

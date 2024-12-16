@@ -1,0 +1,13 @@
+../Core/driver/src/file_driver.c:9:14:file_driver_create_file	3
+../Core/driver/src/file_driver.c:27:14:file_driver_write_file	5
+../Core/driver/src/file_driver.c:46:14:file_driver_read_file	5
+../Core/driver/src/file_driver.c:66:14:file_driver_append_to_file	6
+../Core/driver/src/file_driver.c:88:14:file_driver_delete_file	3
+../Core/driver/src/file_driver.c:101:14:file_driver_rename_file	2
+../Core/driver/src/file_driver.c:113:14:file_driver_move_file	2
+../Core/driver/src/file_driver.c:125:14:file_driver_format_drive	2
+../Core/driver/src/file_driver.c:138:14:file_driver_open_directory	2
+../Core/driver/src/file_driver.c:150:14:file_driver_close_directory	2
+../Core/driver/src/file_driver.c:162:14:file_driver_create_directory	2
+../Core/driver/src/file_driver.c:174:14:file_driver_rename_directory	2
+../Core/driver/src/file_driver.c:186:14:file_driver_move_directory	2

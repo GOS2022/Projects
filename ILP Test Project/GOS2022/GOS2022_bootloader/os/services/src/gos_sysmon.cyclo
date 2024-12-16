@@ -1,0 +1,14 @@
+../os/services/src/gos_sysmon.c:532:14:gos_sysmonInit	4
+../os/services/src/gos_sysmon.c:569:14:gos_sysmonRegisterUserMessage	6
+../os/services/src/gos_sysmon.c:608:19:gos_sysmonDaemonTask	8
+../os/services/src/gos_sysmon.c:685:36:gos_sysmonGetLutIndex	3
+../os/services/src/gos_sysmon.c:719:19:gos_sysmonSendResponse	1
+../os/services/src/gos_sysmon.c:739:19:gos_sysmonHandlePingRequest	1
+../os/services/src/gos_sysmon.c:756:19:gos_sysmonHandleCpuUsageGet	2
+../os/services/src/gos_sysmon.c:783:19:gos_sysmonHandleTaskDataGet	6
+../os/services/src/gos_sysmon.c:882:19:gos_sysmonHandleTaskVariableDataGet	6
+../os/services/src/gos_sysmon.c:970:19:gos_sysmonHandleTaskModification	16
+../os/services/src/gos_sysmon.c:1079:19:gos_sysmonHandleSysRuntimeGet	3
+../os/services/src/gos_sysmon.c:1113:19:gos_sysmonHandleSystimeSet	3
+../os/services/src/gos_sysmon.c:1147:19:gos_sysmonHandleResetRequest	2
+../os/services/src/gos_sysmon.c:1174:38:gos_sysmonCheckMessage	2

@@ -1,0 +1,4 @@
+../drv/src/drv_dac.c:97:14:drv_dacInit	16	static
+../drv/src/drv_dac.c:127:14:drv_dacInitInstance	32	static
+../drv/src/drv_dac.c:176:14:drv_dacStart	48	static
+../drv/src/drv_dac.c:237:8:HAL_DAC_MspInit	24	static

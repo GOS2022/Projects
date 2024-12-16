@@ -1,0 +1,11 @@
+../bld/src/bld_statemachine.c:185:14:bld_stateMachineInitialize	1
+../bld/src/bld_statemachine.c:198:14:bld_getState	2
+../bld/src/bld_statemachine.c:224:14:bld_stateMachineRun	7
+../bld/src/bld_statemachine.c:271:25:bld_stateMachineHandleConnectionEstablishment	4
+../bld/src/bld_statemachine.c:344:25:bld_stateMachineHandleRequestWait	11
+../bld/src/bld_statemachine.c:444:25:bld_stateMachineHandleDataRequest	1
+../bld/src/bld_statemachine.c:474:25:bld_stateMachineHandleConnectionClose	1
+../bld/src/bld_statemachine.c:503:25:bld_stateMachineHandleAppDataRequest	9
+../bld/src/bld_statemachine.c:609:25:bld_stateMachineHandleAppInstall	13
+../bld/src/bld_statemachine.c:755:25:bld_stateMachineHandleAppCheck	2
+../bld/src/bld_statemachine.c:797:25:bld_stateMachineHandleConfigRequest	2

@@ -1,0 +1,6 @@
+../os/services/src/gos_gcp.c:170:14:gos_gcpInit	16	static
+../os/services/src/gos_gcp.c:202:14:gos_gcpRegisterPhysicalDriver	32	static
+../os/services/src/gos_gcp.c:233:14:gos_gcpTransmitMessage	80	static
+../os/services/src/gos_gcp.c:266:14:gos_gcpReceiveMessage	88	static
+../os/services/src/gos_gcp.c:622:25:gos_gcpValidateHeader	24	static
+../os/services/src/gos_gcp.c:677:25:gos_gcpValidateData	32	static

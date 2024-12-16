@@ -1,0 +1,6 @@
+dac_driver.c:18:14:dac_driver_init	6
+dac_driver.c:54:14:dac_driver_start	3
+dac_driver.c:69:14:dac_driver_set_freq	1
+dac_driver.c:90:8:HAL_DAC_MspInit	2
+dac_driver.c:139:8:HAL_TIM_Base_MspInit	2
+dac_driver.c:154:8:TIM2_IRQHandler	1

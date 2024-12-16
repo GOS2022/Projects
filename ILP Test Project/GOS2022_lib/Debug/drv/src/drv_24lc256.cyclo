@@ -1,0 +1,5 @@
+../drv/src/drv_24lc256.c:72:14:drv_24lc256Init	5
+../drv/src/drv_24lc256.c:93:14:drv_24lc256GetErrorFlags	3
+../drv/src/drv_24lc256.c:119:14:drv_24lc256ClearErrorFlags	2
+../drv/src/drv_24lc256.c:145:25:drv_24lc256Read	14
+../drv/src/drv_24lc256.c:228:25:drv_24lc256Write	14

@@ -1,0 +1,6 @@
+../Core/gos_graphics/src/g_button.c:7:8:g_buttonDraw	7
+../Core/gos_graphics/src/g_button.c:57:8:g_buttonDrawClick	6
+../Core/gos_graphics/src/g_button.c:102:8:g_buttonPress	5
+../Core/gos_graphics/src/g_button.c:116:8:g_buttonRelease	5
+../Core/gos_graphics/src/g_button.c:130:8:g_buttonFocus	5
+../Core/gos_graphics/src/g_button.c:142:8:g_buttonDeFocus	5
