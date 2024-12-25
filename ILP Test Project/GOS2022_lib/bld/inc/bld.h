@@ -52,7 +52,7 @@
  * Includes
  */
 #include <gos.h>
-#include <gos_libdef.h>
+//#include <gos_libdef.h>
 #include <bld_data.h>
 #include <bld_cfg.h>
 #include <bld_com.h>
@@ -87,7 +87,7 @@ typedef enum
  * @retval  TODO
  * @retval  TODO
  */
-gos_result_t bld_getVersion (gos_libVersion_t* pBldVersion);
+gos_result_t bld_getVersion (/*gos_libVersion_t* pBldVersion*/ void_t);
 
 /**
  * @brief   TODO

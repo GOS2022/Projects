@@ -48,6 +48,16 @@ GOS_CONST drv_itDescriptor_t itConfig [] =
 		.preemtPriority = 0,
 		.subPriority    = 0
 	},
+	/*{
+		.irqType        = I2C1_EV_IRQn,
+		.preemtPriority = 0,
+		.subPriority    = 0
+	},*/
+	{
+		.irqType        = SPI2_IRQn,
+		.preemtPriority = 0,
+		.subPriority    = 0
+	},
 };
 
 /**

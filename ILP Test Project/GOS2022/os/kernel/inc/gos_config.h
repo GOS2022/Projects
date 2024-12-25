@@ -262,6 +262,10 @@
  * Command buffer size.
  */
 #define CFG_SHELL_COMMAND_BUFFER_SIZE   ( 200 )
+/**
+ * Shell daemon startup delay time [ms].
+ */
+#define CFG_SHELL_STARTUP_DELAY_MS      ( 500 )
 
 /*
  * GCP service parameters.
@@ -295,7 +299,7 @@
 /**
  * Maximum number of user messages.
  */
-#define CFG_SYSMON_MAX_USER_MESSAGES    ( 6 )
+#define CFG_SYSMON_MAX_USER_MESSAGES    ( 10 )
 
 /*
  * Error handling parameters.

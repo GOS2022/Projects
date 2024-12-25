@@ -167,13 +167,31 @@
  * 1 : Only state machine state info.
  * 2 : All debug info.
  */
-#define SVL_IPL_TRACE_LEVEL                  ( 2 )
+#define SVL_IPL_TRACE_LEVEL                  ( 1 )
 
 //! IPL daemon task priority.
-#define SVL_IPL_DAEMON_PRIORITY              ( CFG_TASK_SYSMON_DAEMON_PRIO )
+#define SVL_IPL_DAEMON_PRIORITY              ( 190 )
 
 //! IPL daemon task stack size.
-#define SVL_IPL_DAEMON_STACK_SIZE            ( CFG_TASK_SYSMON_DAEMON_STACK )
+#define SVL_IPL_DAEMON_STACK_SIZE            ( 0x400 )
+
+/*
+ * SDH Service Configuration
+ */
+/**
+ * Trace level for IPL debugging.
+ *
+ * 0 : Debug messages disabled.
+ * 1 : Only state machine state info.
+ * 2 : All debug info.
+ */
+#define SVL_SDH_TRACE_LEVEL                  ( 2 )
+
+//! SDH daemon task priority.
+#define SVL_SDH_DAEMON_PRIORITY              ( 189 )
+
+//! SDH daemon task stack size.
+#define SVL_SDH_DAEMON_STACK_SIZE            ( 0x400 )
 
 /*
  * DSM Service Configuration

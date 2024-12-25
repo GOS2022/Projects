@@ -23,13 +23,14 @@ typedef struct
 /*
  * Function: bld_getVersion
  */
-gos_result_t bld_getVersion (gos_libVersion_t* pBldVersion)
+gos_result_t bld_getVersion (/*gos_libVersion_t* pBldVersion*/void_t)
 {
     /*
      * Local variables.
      */
     gos_result_t getVersionResult = GOS_ERROR;
-
+// TODO
+#if 0
     /*
      * Function code.
      */
@@ -52,6 +53,7 @@ gos_result_t bld_getVersion (gos_libVersion_t* pBldVersion)
     {
         // Target is NULL.
     }
+#endif
 
     return getVersionResult;
 }

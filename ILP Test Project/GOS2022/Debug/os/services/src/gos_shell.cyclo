@@ -6,4 +6,4 @@
 ../os/services/src/gos_shell.c:306:14:gos_shellEchoOn	1
 ../os/services/src/gos_shell.c:324:14:gos_shellEchoOff	1
 ../os/services/src/gos_shell.c:349:19:gos_shellDaemonTask	14
-../os/services/src/gos_shell.c:480:19:gos_shellCommandHandler	31
+../os/services/src/gos_shell.c:481:19:gos_shellCommandHandler	31

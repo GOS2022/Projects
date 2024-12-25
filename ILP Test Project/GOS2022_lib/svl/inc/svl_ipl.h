@@ -52,7 +52,6 @@
  * Includes
  */
 #include <gos.h>
-#include <bld_com.h>
 
 /*
  * Type definitions
@@ -68,7 +67,7 @@ typedef gos_result_t (*svl_iplTransmitFunction)(u8_t* pData, u32_t dataSize, u32
 typedef gos_result_t (*svl_iplReceiveFunction)(u8_t* pData, u32_t dataSize, u32_t timeout);
 
 /**
- * IPL user-defined message callback funciton type.
+ * IPL user-defined message callback function type.
  */
 typedef void_t (*svl_iplCallback_t)(u8_t* pData, u32_t size, u32_t crc);
 
@@ -89,5 +88,20 @@ gos_result_t svl_iplRegisterUserMsg (svl_iplUserMsgDesc_t* pUserMsgDesc);
 
 // TODO
 gos_result_t svl_iplConfigure (svl_iplTransmitFunction transmitFunc, svl_iplReceiveFunction receiveFunc);
+
+/**
+ * @brief   IPL message send function.
+ * @details Prepares the message header and transmits the header and data via
+ *          the registered transmit function.
+ *
+ * @param   msgId      : Message ID.
+ * @param   pData      : Buffer containing the message data.
+ * @param   dataLength : Length of message data in bytes.
+ *
+ * @return  Result of message sending.
+ * @retval  GOS_SUCCESS : Sending successful.
+ * @retval  GOS_ERROR   : CRC calculation error or transmission error.
+ */
+gos_result_t svl_iplSendMessage (u32_t msgId, u8_t* pData, u32_t dataLength);
 
 #endif

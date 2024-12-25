@@ -14,6 +14,12 @@
 
 gos_result_t app_iplBdSpecInit (void_t);
 
+gos_result_t app_pdhBdSpecInit (void_t);
+
+gos_result_t app_sdhBdSpecInit (void_t);
+
+gos_result_t app_psuTestInit (void_t);
+
 gos_result_t APP_LedInit (void_t);
 
 #endif /* INC_APP_H_ */

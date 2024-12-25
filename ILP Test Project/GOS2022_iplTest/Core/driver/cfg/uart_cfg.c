@@ -79,7 +79,8 @@ drv_uartServiceTimeoutConfig_t uartServiceTmoConfig =
 GOS_CONST drv_uartPeriphInstance_t  uartServiceConfig [] =
 {
 	[DRV_UART_SYSMON_INSTANCE] = DRV_UART_INSTANCE_5,
-	[DRV_UART_TRACE_INSTANCE]  = DRV_UART_INSTANCE_1
+	[DRV_UART_TRACE_INSTANCE]  = DRV_UART_INSTANCE_1,
+	[DRV_UART_SHELL_INSTANCE]  = DRV_UART_INSTANCE_INVALID
 };
 
 /**

@@ -69,7 +69,8 @@ typedef enum
     DRV_UART_INSTANCE_4,                     //!< UART4
     DRV_UART_INSTANCE_5,                     //!< UART5
     DRV_UART_INSTANCE_6,                     //!< USART6
-    DRV_UART_NUM_OF_INSTANCES                //!< Number of UART instances.
+    DRV_UART_NUM_OF_INSTANCES,               //!< Number of UART instances.
+    DRV_UART_INSTANCE_INVALID = 0xFF
 }drv_uartPeriphInstance_t;
 
 /**

@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_gpio.h
 //! @author     Ahmed Gazar
-//! @date       2024-02-27
-//! @version    1.0
+//! @date       2024-12-24
+//! @version    1.1
 //!
 //! @brief      GOS2022 Library / GPIO driver header.
 //! @details    This component provides access to the GPIO peripheries.
@@ -25,6 +25,7 @@
 // Version    Date          Author          Description
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-02-27    Ahmed Gazar     Initial version created.
+// 1.1        2024-12-24    Ahmed Gazar     +    Default state added.
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -72,19 +73,6 @@ typedef struct
 }drv_gpioItCallbackDescriptor_t;
 
 /**
- * GPIO descriptor.
- */
-typedef struct
-{
-    GPIO_TypeDef* port;      //!< Port.
-    u16_t         pin;       //!< Pin.
-    u32_t         mode;      //!< Mode.
-    u32_t         speed;     //!< Speed.
-    u32_t         pull;      //!< Pull.
-    u32_t         alternate; //!< Alternate.
-}drv_gpioDescriptor_t;
-
-/**
  * GPIO state enumerator.
  */
 typedef enum
@@ -92,6 +80,20 @@ typedef enum
     GPIO_STATE_LOW = 0u, //!< GPIO low.
     GPIO_STATE_HIGH      //!< GPIO high.
 }drv_gpioState_t;
+
+/**
+ * GPIO descriptor.
+ */
+typedef struct
+{
+    GPIO_TypeDef*   port;         //!< Port.
+    u16_t           pin;          //!< Pin.
+    u32_t           mode;         //!< Mode.
+    u32_t           speed;        //!< Speed.
+    u32_t           pull;         //!< Pull.
+    u32_t           alternate;    //!< Alternate.
+    drv_gpioState_t defaultState; //!< Default state to initialize to.
+}drv_gpioDescriptor_t;
 
 /*
  * Function prototypes

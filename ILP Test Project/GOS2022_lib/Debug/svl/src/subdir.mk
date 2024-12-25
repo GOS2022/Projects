@@ -9,24 +9,27 @@ C_SRCS += \
 ../svl/src/svl_dhs.c \
 ../svl/src/svl_dsm.c \
 ../svl/src/svl_frs.c \
-../svl/src/svl_hwi.c \
-../svl/src/svl_ipl.c 
+../svl/src/svl_ipl.c \
+../svl/src/svl_pdh.c \
+../svl/src/svl_sdh.c 
 
 OBJS += \
 ./svl/src/svl_bldHandler.o \
 ./svl/src/svl_dhs.o \
 ./svl/src/svl_dsm.o \
 ./svl/src/svl_frs.o \
-./svl/src/svl_hwi.o \
-./svl/src/svl_ipl.o 
+./svl/src/svl_ipl.o \
+./svl/src/svl_pdh.o \
+./svl/src/svl_sdh.o 
 
 C_DEPS += \
 ./svl/src/svl_bldHandler.d \
 ./svl/src/svl_dhs.d \
 ./svl/src/svl_dsm.d \
 ./svl/src/svl_frs.d \
-./svl/src/svl_hwi.d \
-./svl/src/svl_ipl.d 
+./svl/src/svl_ipl.d \
+./svl/src/svl_pdh.d \
+./svl/src/svl_sdh.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -36,7 +39,7 @@ svl/src/%.o svl/src/%.su svl/src/%.cyclo: ../svl/src/%.c svl/src/subdir.mk
 clean: clean-svl-2f-src
 
 clean-svl-2f-src:
-	-$(RM) ./svl/src/svl_bldHandler.cyclo ./svl/src/svl_bldHandler.d ./svl/src/svl_bldHandler.o ./svl/src/svl_bldHandler.su ./svl/src/svl_dhs.cyclo ./svl/src/svl_dhs.d ./svl/src/svl_dhs.o ./svl/src/svl_dhs.su ./svl/src/svl_dsm.cyclo ./svl/src/svl_dsm.d ./svl/src/svl_dsm.o ./svl/src/svl_dsm.su ./svl/src/svl_frs.cyclo ./svl/src/svl_frs.d ./svl/src/svl_frs.o ./svl/src/svl_frs.su ./svl/src/svl_hwi.cyclo ./svl/src/svl_hwi.d ./svl/src/svl_hwi.o ./svl/src/svl_hwi.su ./svl/src/svl_ipl.cyclo ./svl/src/svl_ipl.d ./svl/src/svl_ipl.o ./svl/src/svl_ipl.su
+	-$(RM) ./svl/src/svl_bldHandler.cyclo ./svl/src/svl_bldHandler.d ./svl/src/svl_bldHandler.o ./svl/src/svl_bldHandler.su ./svl/src/svl_dhs.cyclo ./svl/src/svl_dhs.d ./svl/src/svl_dhs.o ./svl/src/svl_dhs.su ./svl/src/svl_dsm.cyclo ./svl/src/svl_dsm.d ./svl/src/svl_dsm.o ./svl/src/svl_dsm.su ./svl/src/svl_frs.cyclo ./svl/src/svl_frs.d ./svl/src/svl_frs.o ./svl/src/svl_frs.su ./svl/src/svl_ipl.cyclo ./svl/src/svl_ipl.d ./svl/src/svl_ipl.o ./svl/src/svl_ipl.su ./svl/src/svl_pdh.cyclo ./svl/src/svl_pdh.d ./svl/src/svl_pdh.o ./svl/src/svl_pdh.su ./svl/src/svl_sdh.cyclo ./svl/src/svl_sdh.d ./svl/src/svl_sdh.o ./svl/src/svl_sdh.su
 
 .PHONY: clean-svl-2f-src
 

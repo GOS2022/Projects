@@ -1,6 +1,0 @@
-../Core/gos_graphics/src/g_button.c:7:8:g_buttonDraw	56	static
-../Core/gos_graphics/src/g_button.c:57:8:g_buttonDrawClick	56	static
-../Core/gos_graphics/src/g_button.c:102:8:g_buttonPress	16	static
-../Core/gos_graphics/src/g_button.c:116:8:g_buttonRelease	16	static
-../Core/gos_graphics/src/g_button.c:130:8:g_buttonFocus	16	static
-../Core/gos_graphics/src/g_button.c:142:8:g_buttonDeFocus	16	static

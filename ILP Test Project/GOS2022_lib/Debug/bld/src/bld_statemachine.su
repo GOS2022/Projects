@@ -5,7 +5,7 @@
 ../bld/src/bld_statemachine.c:344:25:bld_stateMachineHandleRequestWait	40	static
 ../bld/src/bld_statemachine.c:444:25:bld_stateMachineHandleDataRequest	16	static
 ../bld/src/bld_statemachine.c:474:25:bld_stateMachineHandleConnectionClose	16	static
-../bld/src/bld_statemachine.c:503:25:bld_stateMachineHandleAppDataRequest	16	static
-../bld/src/bld_statemachine.c:609:25:bld_stateMachineHandleAppInstall	48	static
-../bld/src/bld_statemachine.c:755:25:bld_stateMachineHandleAppCheck	712	static
-../bld/src/bld_statemachine.c:797:25:bld_stateMachineHandleConfigRequest	24	static
+../bld/src/bld_statemachine.c:503:25:bld_stateMachineHandleAppDataRequest	24	static
+../bld/src/bld_statemachine.c:611:25:bld_stateMachineHandleAppInstall	48	static
+../bld/src/bld_statemachine.c:757:25:bld_stateMachineHandleAppCheck	64	static
+../bld/src/bld_statemachine.c:799:25:bld_stateMachineHandleConfigRequest	24	static

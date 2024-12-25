@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_gpio.c
 //! @author     Ahmed Gazar
-//! @date       2024-02-27
-//! @version    1.0
+//! @date       2024-12-24
+//! @version    1.1
 //!
 //! @brief      GOS2022 Library / GPIO driver source.
 //! @details    For a more detailed description of this driver, please refer to @ref drv_gpio.h
@@ -25,6 +25,7 @@
 // Version    Date          Author          Description
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-02-27    Ahmed Gazar     Initial version created.
+// 1.1        2024-12-24    Ahmed Gazar     +    Default state handling added.
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -125,6 +126,16 @@ gos_result_t drv_gpioInitPin (u8_t pinIndex)
         gpioInit.Alternate = gpioConfig[pinIndex].alternate;
 
         HAL_GPIO_Init(gpioConfig[pinIndex].port, &gpioInit);
+
+        if (gpioConfig[pinIndex].defaultState == GPIO_STATE_HIGH ||
+        	gpioConfig[pinIndex].defaultState == GPIO_STATE_LOW)
+        {
+        	HAL_GPIO_WritePin(gpioConfig[pinIndex].port, gpioConfig[pinIndex].pin, gpioConfig[pinIndex].defaultState);
+        }
+        else
+        {
+        	// No default state is defined.
+        }
 
         gpioInitPinResult = GOS_SUCCESS;
     }

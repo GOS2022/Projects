@@ -51,10 +51,11 @@
 /*
  * Includes
  */
-//#include <drv_crc.h>
-//#include <libdef.h>
 // TODO: used for layer includes.
 #include <drv_24lc256.h>
+#include <drv_25lc256.h>
+#include <drv_25lc640.h>
+#include <drv_w25q64.h>
 #include <drv_adc.h>
 #include <drv_crc.h>
 #include <drv_dac.h>
@@ -72,23 +73,5 @@
 #include <drv_tmr.h>
 #include <drv_trace.h>
 #include <drv_uart.h>
-
-// TODO: file to be removed.
-
-/*
- * Function prototypes
- */
-/**
- * @brief   Returns the driver version information.
- * @details Returns the driver version information.
- *
- * @param   pDrvVersion : Target to store version info in.
- *
- * @return  Result of version request.
- *
- * @retval  GOS_SUCCESS : Version request successful.
- * @retval  GOS_ERROR   : Parameter is NULL pointer.
- */
-//gos_result_t drv_getVersion (lib_version_t* pDrvVersion);
 
 #endif

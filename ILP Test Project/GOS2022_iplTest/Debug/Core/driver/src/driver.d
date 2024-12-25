@@ -21,10 +21,7 @@ Core/driver/src/driver.o: ../Core/driver/src/driver.c \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_time.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_trigger.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_iplTest/Core/driver/cfg/cfg_def.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_iplTest/Core/driver/inc/pwm_driver.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_iplTest/Core/driver/inc/rcc_driver.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_iplTest/Core/driver/inc/lm75_driver.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_adc.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dma.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
@@ -61,13 +58,11 @@ Core/driver/src/driver.o: ../Core/driver/src/driver.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dac.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_tmr.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_gpio.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_i2c.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_it.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_i2c.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_systimer.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_tmr.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_uart.h
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_iplTest/Core/driver/inc/driver.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos.h:
@@ -91,10 +86,7 @@ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_sysmon.h
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_time.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_trigger.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_iplTest/Core/driver/cfg/cfg_def.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_iplTest/Core/driver/inc/pwm_driver.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_iplTest/Core/driver/inc/rcc_driver.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_iplTest/Core/driver/inc/lm75_driver.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_adc.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dma.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -131,11 +123,9 @@ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dma.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dac.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_tmr.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_gpio.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_i2c.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_it.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_i2c.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_systimer.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_tmr.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_uart.h:

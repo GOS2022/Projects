@@ -1,6 +1,0 @@
-../Core/gos_graphics/src/g_driver.c:41:14:g_initGraphicsDriver	8	static
-../Core/gos_graphics/src/g_driver.c:61:14:g_registerWindow	24	static
-../Core/gos_graphics/src/g_driver.c:83:8:g_activateWindow	24	static
-../Core/gos_graphics/src/g_driver.c:106:8:g_inactivateWindow	24	static
-../Core/gos_graphics/src/g_driver.c:128:19:g_task	96	static
-../Core/gos_graphics/src/g_driver.c:146:19:g_redrawHandler	48	static,ignoring_inline_asm

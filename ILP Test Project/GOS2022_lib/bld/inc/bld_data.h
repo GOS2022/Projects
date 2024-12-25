@@ -52,7 +52,7 @@
  * Includes
  */
 #include <bld_cfg.h>
-#include <gos_libdef.h>
+//#include <gos_libdef.h>
 
 /*
  * Type definitions
@@ -63,8 +63,8 @@ typedef struct __attribute__((packed))
 	u32_t            startAddress;
 	u32_t            size;
 	u32_t            crc        __attribute__((aligned(8)));
-	gos_libVersion_t libVersion __attribute__((aligned(8)));
-	gos_libVersion_t version    __attribute__((aligned(8)));
+	//gos_libVersion_t libVersion __attribute__((aligned(8)));
+	//gos_libVersion_t version    __attribute__((aligned(8)));
 	bool_t           updateMode;
 	u32_t            dataCrc    __attribute__((aligned(8)));
 }bld_bootloaderData_t;
@@ -75,8 +75,8 @@ typedef struct __attribute__((packed))
 	u32_t            startAddress;
 	u32_t            size;
 	u32_t            crc;
-	gos_libVersion_t libVersion;
-	gos_libVersion_t version;
+	//gos_libVersion_t libVersion;
+	//gos_libVersion_t version;
 	u32_t            dataCrc __attribute__((aligned(8)));
 }bld_appData_t;
 

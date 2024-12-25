@@ -1,3 +1,0 @@
-../Core/Src/app_iplBdSpec.c:10:14:app_iplBdSpecInit	8	static
-../Core/Src/app_iplBdSpec.c:15:25:app_iplBdSpecTransmit	32	static
-../Core/Src/app_iplBdSpec.c:20:25:app_iplBdSpecReceive	32	static

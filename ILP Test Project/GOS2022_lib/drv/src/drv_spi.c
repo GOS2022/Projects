@@ -286,6 +286,8 @@ gos_result_t drv_spiTransmitIT (
      */
     if (gos_mutexLock(&spiMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+    	(void_t) HAL_SPI_Abort_IT(&hspis[instance]);
+
         if (HAL_SPI_Transmit_IT(&hspis[instance], pData, size) == HAL_OK)
         {
             if (triggerTmo > 0u)
@@ -338,6 +340,8 @@ gos_result_t drv_spiReceiveIT (
      */
     if (gos_mutexLock(&spiMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+    	(void_t) HAL_SPI_Abort_IT(&hspis[instance]);
+
         if (HAL_SPI_Receive_IT(&hspis[instance], pBuffer, size) == HAL_OK)
         {
             if (triggerTmo > 0u)

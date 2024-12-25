@@ -92,6 +92,8 @@ gos_result_t svl_dsmPrintLibInfo (void_t);
 
 gos_result_t svl_dsmPrintHwInfo (void_t);
 
+gos_result_t svl_dsmPrintAppInfo (void_t);
+
 void_t svl_dsmWaitForState (svl_dsmState_t requiredState);
 
 void_t svl_dsmSetState (svl_dsmState_t requiredState);

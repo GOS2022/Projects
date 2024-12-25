@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_shell.c
 //! @author     Ahmed Gazar
-//! @date       2024-03-15
-//! @version    1.0
+//! @date       2024-12-20
+//! @version    1.1
 //!
 //! @brief      GOS2022 Library / Shell driver source.
 //! @details    For a more detailed description of this driver, please refer to @ref drv_shell.h
@@ -25,6 +25,7 @@
 // Version    Date          Author          Description
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-03-15    Ahmed Gazar     Initial version created.
+// 1.1        2024-12-20    Ahmed Gazar     +    Instance validity check added.
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -83,8 +84,15 @@ GOS_INLINE gos_result_t drv_shellTransmitString (char_t* pString)
     {
         instance = uartServiceConfig[DRV_UART_SHELL_INSTANCE];
 
-        uartTransmitResult = drv_uartTransmitIT(instance, (u8_t*)pString, strlen(pString),
-                uartServiceTmoConfig.shellTxMutexTmo, uartServiceTmoConfig.shellTxTriggerTmo);
+        if (instance < DRV_UART_NUM_OF_INSTANCES)
+        {
+            uartTransmitResult = drv_uartTransmitIT(instance, (u8_t*)pString, strlen(pString),
+                    uartServiceTmoConfig.shellTxMutexTmo, uartServiceTmoConfig.shellTxTriggerTmo);
+        }
+        else
+        {
+        	// Invalid instance.
+        }
     }
     else
     {
@@ -112,8 +120,15 @@ GOS_INLINE gos_result_t drv_shellReceiveChar (char_t* pBuffer)
     {
         instance = uartServiceConfig[DRV_UART_SHELL_INSTANCE];
 
-        uartReceiveResult = drv_uartReceiveIT(instance, (u8_t*)pBuffer, sizeof(char_t),
-                uartServiceTmoConfig.shellRxMutexTmo, uartServiceTmoConfig.shellRxTriggerTmo);
+        if (instance < DRV_UART_NUM_OF_INSTANCES)
+        {
+            uartReceiveResult = drv_uartReceiveIT(instance, (u8_t*)pBuffer, sizeof(char_t),
+                    uartServiceTmoConfig.shellRxMutexTmo, uartServiceTmoConfig.shellRxTriggerTmo);
+        }
+        else
+        {
+        	// Invalid instance.
+        }
     }
     else
     {

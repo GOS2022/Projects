@@ -59,6 +59,10 @@ Core/driver/cfg/dsm_cfg.o: ../Core/driver/cfg/dsm_cfg.c ../Core/Inc/app.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_24lc256.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_i2c.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dma.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_25lc256.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_25lc640.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_w25q64.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_adc.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_crc.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dac.h \
@@ -69,13 +73,11 @@ Core/driver/cfg/dsm_cfg.o: ../Core/driver/cfg/dsm_cfg.c ../Core/Inc/app.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_it.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_mcp23017.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_shell.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_sysmon.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_systimer.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_trace.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_uart.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/Inc/gos_libdef.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_data.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_cfg.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_com.h \
@@ -85,8 +87,9 @@ Core/driver/cfg/dsm_cfg.o: ../Core/driver/cfg/dsm_cfg.c ../Core/Inc/app.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_dhs.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_dsm.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_frs.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_hwi.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_ipl.h
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_ipl.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_pdh.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_sdh.h
 ../Core/Inc/app.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/driver/inc/gos_driver.h:
@@ -148,6 +151,10 @@ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_24lc256.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_i2c.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dma.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_25lc256.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_25lc640.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_w25q64.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_adc.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_crc.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dac.h:
@@ -158,13 +165,11 @@ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_gpio.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_it.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_mcp23017.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_shell.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_sysmon.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_systimer.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_trace.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_uart.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/Inc/gos_libdef.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_data.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_cfg.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_com.h:
@@ -174,5 +179,6 @@ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_cfg.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_dhs.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_dsm.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_frs.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_hwi.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_ipl.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_pdh.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_sdh.h:

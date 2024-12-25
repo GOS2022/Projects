@@ -20,12 +20,8 @@ svl/src/svl_ipl.o: ../svl/src/svl_ipl.c \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_sysmon.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_time.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_trigger.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_com.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_data.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_cfg.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/Inc/gos_libdef.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_cfg.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_bldHandler.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_pdh.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_crc.h
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_ipl.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos.h:
@@ -48,10 +44,6 @@ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_signal.h
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_sysmon.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_time.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_trigger.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_com.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_data.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_cfg.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/Inc/gos_libdef.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_cfg.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_bldHandler.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/svl/inc/svl_pdh.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_crc.h:

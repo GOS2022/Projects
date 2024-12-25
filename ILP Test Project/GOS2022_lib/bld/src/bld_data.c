@@ -4,7 +4,7 @@
 #include <drv.h>
 #include <drv_crc.h>
 #include <drv_flash.h>
-#include <gos_libdef.h>
+//#include <gos_libdef.h>
 #include <string.h>
 
 GOS_STATIC bld_bootloaderData_t bootloaderData;
@@ -34,13 +34,13 @@ gos_result_t bld_dataInitialize (void_t)
     	(void_t) memcpy ((void_t*)&bootloaderConfig, (void_t*)&bldPackedData.bldConfig, sizeof(bldPackedData.bldConfig));
 
         // Force update bootloader version info.
-        (void_t) bld_getVersion(&bootloaderData.version);
+        //(void_t) bld_getVersion(&bootloaderData.version); TODO
 
         if (bootloaderData.initPattern == BLD_INIT_PATTERN &&
-        	bootloaderConfig.initPattern == BLD_INIT_PATTERN &&
+        	bootloaderConfig.initPattern == BLD_INIT_PATTERN/* &&
 			bootloaderData.version.major == BLD_VERSION_MAJOR &&
 			bootloaderData.version.minor == BLD_VERSION_MINOR &&
-			bootloaderData.version.build == BLD_VERSION_BUILD)
+			bootloaderData.version.build == BLD_VERSION_BUILD*/)
         {
             // Data already initialized.
             // Check data CRC.
@@ -85,7 +85,8 @@ gos_result_t bld_dataReset (void_t)
      * Local variables.
      */
     gos_result_t dataResetResult = GOS_ERROR;
-
+    // TODO
+#if 0
     /*
      * Function code.
      */
@@ -107,8 +108,8 @@ gos_result_t bld_dataReset (void_t)
     (void_t) drv_crcGetCrc32((u8_t*)&appData, sizeof(appData) - sizeof(appData.dataCrc), &appData.dataCrc);
 
     // Get bootloader version info and driver version info.
-    (void_t) bld_getVersion(&bootloaderData.version);
-    (void_t) gos_libGetVersion(&bootloaderData.libVersion);
+    //(void_t) bld_getVersion(&bootloaderData.version); TODO
+    //(void_t) gos_libGetVersion(&bootloaderData.libVersion); TODO
 
     bootloaderData.startAddress = BLD_ROM_START_ADDRESS;
     bootloaderData.size         = bld_dataGetBootloaderSize();
@@ -136,6 +137,7 @@ gos_result_t bld_dataReset (void_t)
     {
         dataResetResult = GOS_SUCCESS;
     }
+#endif
 
     return dataResetResult;
 }
@@ -354,7 +356,8 @@ void_t bld_dataPrint (void_t)
      */
     // Header.
     (void_t) gos_traceTraceFormattedUnsafe("\r\n");
-
+    // TODO
+#if 0
     // Driver info.
     (void_t) gos_traceTraceFormattedUnsafe(TRACE_BG_BLUE_START "LIBRARY: %s" TRACE_FORMAT_RESET "\r\n", bootloaderData.libVersion.name);
     (void_t) gos_traceTraceFormattedUnsafe("Version:    \t%u.%u.%u\r\n",bootloaderData.libVersion.major, bootloaderData.libVersion.minor, bootloaderData.libVersion.build);
@@ -387,6 +390,7 @@ void_t bld_dataPrint (void_t)
     (void_t) gos_traceTraceFormattedUnsafe("Size:        \t%u bytes\r\n", appData.size);
     (void_t) gos_traceTraceFormattedUnsafe("Address:     \t0x%08x\r\n", appData.startAddress);
     (void_t) gos_traceTraceFormattedUnsafe("CRC32:       \t0x%08x\r\n\r\n", appData.crc);
+#endif
 }
 
 /**

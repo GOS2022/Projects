@@ -1,8 +1,7 @@
 // IPL board-specific implementation.
 
 #include "app.h"
-#include "svl_ipl.h"
-#include "drv_uart.h"
+#include "gos_lib.h"
 
 GOS_STATIC gos_result_t app_iplBdSpecTransmit (u8_t* pData, u32_t dataSize, u32_t timeout);
 GOS_STATIC gos_result_t app_iplBdSpecReceive (u8_t* pData, u32_t dataSize, u32_t timeout);

@@ -49,9 +49,8 @@
  * Includes
  */
 #include <svl_dsm.h>
-#include <svl_hwi.h>
+#include <svl_pdh.h>
 #include <gos_trace_driver.h>
-#include <gos_libdef.h>
 
 /**
  * TODO
@@ -95,7 +94,7 @@ gos_taskDescriptor_t svlDsmDaemonDesc =
 {
 	.taskFunction	    = svl_dsmTask,
 	.taskName		    = "svl_dsm_daemon",
-	.taskStackSize 	    = 0x400,
+	.taskStackSize 	    = 0x600,
 	.taskPriority 	    = 0u,
 	.taskPrivilegeLevel	= GOS_TASK_PRIVILEGE_KERNEL
 };
@@ -117,6 +116,9 @@ gos_result_t svl_dsmInit (void_t)
 	 */
 	if (initPhaseConfig != NULL && initPhaseConfigSize > 0u)
 	{
+		// Register DSM task.
+		dsmInitResult &= gos_taskRegister(&svlDsmDaemonDesc, NULL);
+
 		// Loop through all init phases.
 		for (initIdx = 0u; initIdx < initPhaseConfigSize / sizeof(svl_dsmInitPhaseDesc_t); initIdx++)
 		{
@@ -144,9 +146,6 @@ gos_result_t svl_dsmInit (void_t)
 	{
 		// Configuration is empty.
 	}
-
-	// Register DSM task.
-	dsmInitResult &= gos_taskRegister(&svlDsmDaemonDesc, NULL);
 
 	if (dsmInitResult != GOS_SUCCESS)
 	{
@@ -196,13 +195,13 @@ gos_result_t svl_dsmPrintLibInfo (void_t)
 	/*
 	 * Local variables.
 	 */
-	gos_result_t     printResult = GOS_SUCCESS;
-	gos_libVersion_t libVer      = {0};
+	gos_result_t       printResult = GOS_SUCCESS;
+	svl_pdhSwVerInfo_t libVer      = {0};
 
 	/*
 	 * Function code.
 	 */
-	printResult &= gos_libGetVersion(&libVer);
+	printResult &= svl_pdhGetLibVersion(&libVer);
 
 	printResult &= gos_traceTraceFormatted(GOS_FALSE, "\r\n"TRACE_BG_BLUE_START"Library Info"TRACE_FORMAT_RESET"\r\n");
 	printResult &= gos_traceTraceFormatted(GOS_FALSE, "Name:        \t%s\r\n", libVer.name);
@@ -231,13 +230,13 @@ gos_result_t svl_dsmPrintHwInfo (void_t)
 	/*
 	 * Local variables.
 	 */
-	gos_result_t  printResult = GOS_SUCCESS;
-	svl_hwiInfo_t hwInfo      = {0};
+	gos_result_t    printResult = GOS_SUCCESS;
+	svl_pdhHwInfo_t hwInfo      = {0};
 
 	/*
 	 * Function code.
 	 */
-	printResult &= svl_hwiRead(&hwInfo);
+	printResult &= svl_pdhGetHwInfo(&hwInfo);
 
 	printResult &= gos_traceTraceFormatted(GOS_FALSE, "\r\n"TRACE_BG_BLUE_START"Hardware Info"TRACE_FORMAT_RESET"\r\n");
 	printResult &= gos_traceTraceFormatted(GOS_FALSE, "Board name:    %s\r\n", hwInfo.boardName);
@@ -250,6 +249,41 @@ gos_result_t svl_dsmPrintHwInfo (void_t)
 			hwInfo.date.months,
 			hwInfo.date.days
 			);
+
+	if (printResult != GOS_SUCCESS)
+	{
+		printResult = GOS_ERROR;
+	}
+	else
+	{
+		// Success.
+	}
+
+	return printResult;
+}
+
+/*
+ * Function: svl_dsmPrintAppInfo
+ */
+gos_result_t svl_dsmPrintAppInfo (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	gos_result_t    printResult = GOS_SUCCESS;
+	svl_pdhSwInfo_t swInfo      = {0};
+
+	/*
+	 * Function code.
+	 */
+	printResult &= svl_pdhGetSwInfo(&swInfo);
+
+	printResult &= gos_traceTraceFormatted(GOS_FALSE, "\r\n"TRACE_BG_BLUE_START"Application Info"TRACE_FORMAT_RESET"\r\n");
+	printResult &= gos_traceTraceFormatted(GOS_FALSE, "Name:        \t%s\r\n", swInfo.appSwVerInfo.name);
+	printResult &= gos_traceTraceFormatted(GOS_FALSE, "Description: \t%s\r\n", swInfo.appSwVerInfo.description);
+	printResult &= gos_traceTraceFormatted(GOS_FALSE, "Version:     \t%02u.%02u.%02u\r\n", swInfo.appSwVerInfo.major, swInfo.appSwVerInfo.minor, swInfo.appSwVerInfo.build);
+	printResult &= gos_traceTraceFormatted(GOS_FALSE, "Date:        \t%4u-%02u-%02u\r\n", swInfo.appSwVerInfo.date.years, swInfo.appSwVerInfo.date.months, swInfo.appSwVerInfo.date.days);
+	printResult &= gos_traceTraceFormatted(GOS_FALSE, "Author:      \t%s\r\n", swInfo.appSwVerInfo.author);
 
 	if (printResult != GOS_SUCCESS)
 	{
@@ -312,6 +346,9 @@ GOS_STATIC void_t svl_dsmTask (void_t)
 
 	// Print out Hardware Info.
 	(void_t) svl_dsmPrintHwInfo();
+
+	// Print out Application Info.
+	(void_t) svl_dsmPrintAppInfo();
 
 	// Change priority.
 	(void_t) gos_taskSetPriority(svlDsmDaemonDesc.taskId, SVL_DSM_DAEMON_PRIO);

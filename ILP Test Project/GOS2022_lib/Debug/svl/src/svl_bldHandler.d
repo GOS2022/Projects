@@ -22,7 +22,6 @@ svl/src/svl_bldHandler.o: ../svl/src/svl_bldHandler.c \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_trigger.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_data.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_cfg.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/Inc/gos_libdef.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_com.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_24lc256.h \
@@ -59,6 +58,10 @@ svl/src/svl_bldHandler.o: ../svl/src/svl_bldHandler.c \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/hal/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/hal/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/hal/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_25lc256.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_25lc640.h \
+ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_w25q64.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_adc.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_crc.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dac.h \
@@ -69,7 +72,6 @@ svl/src/svl_bldHandler.o: ../svl/src/svl_bldHandler.c \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_it.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_mcp23017.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_shell.h \
- C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_sysmon.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_systimer.h \
  C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_trace.h \
@@ -97,7 +99,6 @@ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_time.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/os/services/inc/gos_trigger.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_data.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_cfg.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/Inc/gos_libdef.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/bld/inc/bld_com.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_24lc256.h:
@@ -134,6 +135,10 @@ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/hal/STM32F4xx_HAL_Driver
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/hal/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/hal/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/hal/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_25lc256.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_25lc640.h:
+C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_w25q64.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_adc.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_crc.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_dac.h:
@@ -144,7 +149,6 @@ C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_gpio.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_it.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_mcp23017.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_shell.h:
-C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_spi.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_sysmon.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_systimer.h:
 C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/drv/inc/drv_trace.h:

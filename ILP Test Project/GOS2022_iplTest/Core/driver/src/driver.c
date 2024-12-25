@@ -12,6 +12,7 @@
 #include "drv_dma.h"
 #include "drv_gpio.h"
 #include "drv_it.h"
+#include "drv_i2c.h"
 #include "drv_systimer.h"
 #include "drv_tmr.h"
 #include "drv_uart.h"
@@ -26,6 +27,8 @@ gos_result_t driver_init (void_t)
 	driverInitResult &= drv_tmrInit();
 	driverInitResult &= drv_systimerStart();
 	driverInitResult &= drv_gpioInit();
+	driverInitResult &= drv_i2cInit();
+	driverInitResult &= drv_spiInit();
 	driverInitResult &= drv_dmaInit();
 	driverInitResult &= drv_uartInit();
 	driverInitResult &= drv_itInit();

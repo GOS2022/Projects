@@ -52,13 +52,13 @@
 #include <bld_data.h>
 #include <bld_com.h>
 #include <drv.h>
-#include <gos_libdef.h>
+//#include <gos_libdef.h>
 
 /*
  * Function prototypes
  */
-GOS_STATIC void_t svl_bldHandlerBootModeReqMsgReceived (void_t);
-GOS_STATIC void_t svl_bldHandlerBootDataReqMsgReceived (void_t);
+GOS_STATIC void_t svl_bldHandlerBootModeReqMsgReceived     (void_t);
+//GOS_STATIC void_t svl_bldHandlerSoftwareInfoReqMsgReceived (void_t); TODO
 
 /*
  * Static variables
@@ -78,14 +78,14 @@ GOS_STATIC gos_sysmonUserMessageDescriptor_t bootMsg =
 /**
  * Bootloader data request message.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t bootDataReqMsg =
+/*GOS_STATIC gos_sysmonUserMessageDescriptor_t softwareInfoReqMsg = TODO
 {
-	.callback        = svl_bldHandlerBootDataReqMsgReceived,
+	.callback        = svl_bldHandlerSoftwareInfoReqMsgReceived,
 	.messageId       = BLD_MSG_DATA_REQ_ID,
 	.payload         = NULL,
 	.payloadSize     = 0u,
 	.protocolVersion = 1u
-};
+};*/
 
 /*
  * Function: svl_bldHandlerInit
@@ -100,8 +100,8 @@ gos_result_t svl_bldHandlerInit (void_t)
 	/*
 	 * Function code.
 	 */
-	if (gos_sysmonRegisterUserMessage(&bootMsg)        == GOS_SUCCESS &&
-	    gos_sysmonRegisterUserMessage(&bootDataReqMsg) == GOS_SUCCESS)
+	if (gos_sysmonRegisterUserMessage(&bootMsg)            == GOS_SUCCESS)/* &&
+	    gos_sysmonRegisterUserMessage(&softwareInfoReqMsg) == GOS_SUCCESS) TODO */
 	{
 		bldHandlerInitResult = GOS_SUCCESS;
 	}
@@ -150,22 +150,40 @@ GOS_STATIC void_t svl_bldHandlerBootModeReqMsgReceived (void_t)
 	}
 }
 
+#if 0
 /**
- * @brief   Handles the bootloader data request message.
- * @details Sends out the bootloader data via the sysmon GCP channel.
+ * @brief   Handles the software info request message.
+ * @details Sends out the software info via the sysmon GCP channel.
  *
  * @return  -
  */
-GOS_STATIC void_t svl_bldHandlerBootDataReqMsgReceived (void_t)
+GOS_STATIC void_t svl_bldHandlerSoftwareInfoReqMsgReceived (void_t)
 {
 	/*
 	 * Local variables.
 	 */
-	bld_com_data_resp_msg_t bootloaderDataMessage = {0};
+	//bld_com_data_resp_msg_t bootloaderDataMessage = {0};
+	svl_pdhSwInfo_t swInfoMsg = {0};
 
 	/*
 	 * Function code.
 	 */
+	if (svl_pdhGetSwInfo(&swInfoMsg) == GOS_SUCCESS)
+	{
+	    (void_t) gos_gcpTransmitMessage(
+	    		CFG_SYSMON_GCP_CHANNEL_NUM,
+				BLD_MSG_DATA_RESP_ID,
+				(void_t*)&swInfoMsg,
+				sizeof(swInfoMsg),
+				0xFFFF);
+	}
+	else
+	{
+		// Data get error.
+	}
+
+	// TODO
+#if 0
 	if (bld_dataGet(&bootloaderDataMessage.bldData) == GOS_SUCCESS &&
 	    bld_appDataGet(&bootloaderDataMessage.appData) == GOS_SUCCESS)
 	{
@@ -192,4 +210,6 @@ GOS_STATIC void_t svl_bldHandlerBootDataReqMsgReceived (void_t)
 	{
 		// Data get error.
 	}
+#endif
 }
+#endif

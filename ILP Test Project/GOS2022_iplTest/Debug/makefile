@@ -9,12 +9,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include Middlewares/Third_Party/FatFs/src/option/subdir.mk
--include Middlewares/Third_Party/FatFs/src/subdir.mk
--include FATFS/Target/subdir.mk
--include FATFS/App/subdir.mk
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
--include Core/gos_graphics/src/subdir.mk
 -include Core/driver/src/subdir.mk
 -include Core/driver/cfg/subdir.mk
 -include Core/Startup/subdir.mk
@@ -70,8 +65,8 @@ all: main-build
 main-build: GOS2022_iplTest.elf secondary-outputs
 
 dependents:
-	-cd C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/Debug && $(MAKE) all
-	-cd C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/Debug && $(MAKE) all
+	-cd C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/Debug && $(MAKE) clean all
+	-cd C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/Debug && $(MAKE) clean all
 
 # Tool invocations
 GOS2022_iplTest.elf GOS2022_iplTest.map: $(OBJS) $(USER_OBJS) C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022/Debug/libGOS2022.a C:/Users/Gabor/STM32CubeIDE/workspace_1.5.1/GOS2022_lib/Debug/libGOS2022_lib.a C:\Users\Gabor\STM32CubeIDE\workspace_1.5.1\GOS2022_iplTest\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)

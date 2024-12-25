@@ -51,7 +51,7 @@
 #include <svl_ipl.h>
 #include <string.h>
 #include <svl_cfg.h>
-#include <svl_bldHandler.h>
+#include <svl_pdh.h>
 #include <drv_crc.h>
 
 /*
@@ -60,7 +60,12 @@
 /**
  * Ping OK value.
  */
-#define SVL_IPL_PING_OK ( 40u )
+#define SVL_IPL_PING_OK      ( 40u )
+
+/**
+ * Maximum number of attempting to connect.
+ */
+#define SVL_IPL_MAX_ATTEMPTS ( 5u )
 
 /*
  * Type definitions
@@ -104,6 +109,10 @@ typedef enum
 	IPL_MSG_ID_SWINFO_ACK        = 0xAA1, //!< Software info acknowledge.
 	IPL_MSG_ID_TASK_MODIFY       = 0xB1,  //!< Task modify request.
 	IPL_MSG_ID_TASK_MODIFY_ACK   = 0xAB1, //!< Task modify acknowledge.
+    IPL_MSG_ID_HWINFO            = 0xC1,  //!< Hardware info request.
+    IPL_MSG_ID_HWINFO_ACK        = 0xAC1, //!< Hardware info acknowledge.
+    IPL_MSG_ID_SYNC_TIME         = 0xD1,  //!< System time synchronization request.
+	IPL_MSG_ID_SYNC_TIME_ACK     = 0xAD1, //!< System time synchronization acknowledge.
 }svl_iplMsgId_t;
 
 /**
@@ -160,15 +169,6 @@ typedef struct
 }svl_iplTaskDataGetMsg_t;
 
 /**
- * IPL software info message.
- */
-typedef struct
-{
-	bld_bootloaderData_t bldData;
-	bld_appData_t        appData;
-}svl_iplSwInfoMsg_t;
-
-/**
  * IPL task modify message type.
  */
 typedef struct
@@ -213,6 +213,14 @@ typedef struct __attribute__((packed))
 }svl_iplTaskDataMsg_t;
 
 /**
+ * IPL system time set message.
+ */
+typedef struct __attribute__((packed))
+{
+    gos_time_t desiredSystemTime;                        //!< Desired system time.
+}svl_iplSystimeSetMessage_t;
+
+/**
  * IPL discovery message.
  */
 typedef struct __attribute__((packed))
@@ -228,19 +236,6 @@ typedef struct
 {
 	bool_t connectSuccess;
 }svl_iplConnectMessage_t;
-
-/**
- * IPL device configuration message.
- */
-typedef struct __attribute__((packed))
-{
-    char_t ssid      [SVL_IPL_DEVCFG_WIFI_SSID_MAX_LENGTH];  //!< WiFi SSID.
-    char_t pwd       [SVL_IPL_DEVCFG_WIFI_PWD_MAX_LENGTH];   //!< WiFi password.
-    u8_t   ipAddress [SVL_IPL_DEVCFG_IP_ADDR_ELEMENTS];      //!< IP address.
-    u8_t   gateway   [SVL_IPL_DEVCFG_GATEWAY_ADDR_ELEMENTS]; //!< Gateway.
-    u8_t   subnet    [SVL_IPL_DEVCFG_SUBNET_ADDR_ELEMENTS];  //!< Sub-net.
-    u16_t  port;                                             //!< Port.
-}svl_iplDeviceConfigMessage_t;
 
 /**
  * IPL state machine states.
@@ -328,21 +323,12 @@ GOS_STATIC svl_iplTaskNumberMsg_t       taskNumMsg;
 /**
  * Device configuration message.
  */
-GOS_STATIC svl_iplDeviceConfigMessage_t devConfigMsg =
-{
-	// TODO: these values shall be removed.
-	.ssid      = "HUAWEI-2.4G-Qwa6",
-	.pwd       = "bXxACd4P",
-	.ipAddress = { 192, 168, 100, 184 },
-	.port      = 3000,
-	.gateway   = { 192, 168, 100, 1   },
-	.subnet    = { 255, 255, 0,   0   }
-};
+GOS_STATIC svl_pdhWifiCfg_t             devConfigMsg;
 
 /**
  * Received device configuration message.
  */
-GOS_STATIC svl_iplDeviceConfigMessage_t receivedDevConfigMsg;
+GOS_STATIC svl_pdhWifiCfg_t             receivedDevConfigMsg;
 
 /**
  * Discovery message.
@@ -350,14 +336,24 @@ GOS_STATIC svl_iplDeviceConfigMessage_t receivedDevConfigMsg;
 GOS_STATIC svl_iplDiscoveryMessage_t    discoveryMsg;
 
 /**
+ * Hardware info message.
+ */
+GOS_STATIC svl_pdhHwInfo_t              hwInfoMsg;
+
+/**
  * Software info message.
  */
-GOS_STATIC svl_iplSwInfoMsg_t           swInfoMsg;
+GOS_STATIC svl_pdhSwInfo_t              swInfoMsg;
 
 /**
  * Task modify message.
  */
 GOS_STATIC svl_iplTaskModifyMsg_t       taskModifyMsg;
+
+/**
+ * System time set message.
+ */
+GOS_STATIC svl_iplSystimeSetMessage_t   sysTimeSetMsg;
 
 /**
  * User-defined IPL messages.
@@ -374,11 +370,15 @@ GOS_STATIC svl_iplTransmitFunction      svl_iplTransmit;
  */
 GOS_STATIC svl_iplReceiveFunction       svl_iplReceive;
 
+/**
+ * IPL connection attempt counter.
+ */
+GOS_STATIC u8_t                         attemptCount = 0u;
+
 /*
  * Function prototypes
  */
-GOS_STATIC void_t       svl_iplDaemon      (void_t);
-GOS_STATIC gos_result_t svl_iplSendMessage (u32_t msgId, u8_t* pData, u32_t dataLength);
+GOS_STATIC void_t svl_iplDaemon (void_t);
 
 /**
  * IPL daemon descriptor.
@@ -477,6 +477,37 @@ gos_result_t svl_iplConfigure (svl_iplTransmitFunction transmitFunc, svl_iplRece
 	return configureResult;
 }
 
+/*
+ * Function: svl_iplSendMessage
+ */
+gos_result_t svl_iplSendMessage (u32_t msgId, u8_t* pData, u32_t dataLength)
+{
+	/*
+	 * Local variables.
+	 */
+	gos_result_t       sendResult = GOS_ERROR;
+	svl_iplMsgHeader_t header;
+
+	/*
+	 * Function code.
+	 */
+	header.messageId     = msgId;
+	header.messageLength = dataLength;
+
+	if (drv_crcGetCrc32((u8_t*)pData, dataLength, &header.messageCrc) == GOS_SUCCESS &&
+		svl_iplTransmit((u8_t*)&header, sizeof(svl_iplMsgHeader_t), 1000u) == GOS_SUCCESS &&
+		svl_iplTransmit(pData, dataLength, 1000u) == GOS_SUCCESS)
+	{
+		sendResult = GOS_SUCCESS;
+	}
+	else
+	{
+		// Error.
+	}
+
+	return sendResult;
+}
+
 /**
  * @brief   IPL daemon task.
  * @details Handles IPL state machine and incoming IPL messages.
@@ -508,10 +539,23 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 			}
 			case SVL_IPL_STATE_DISCOVER_START:
 			{
+				attemptCount++;
+
+				if (attemptCount <= SVL_IPL_MAX_ATTEMPTS)
+				{
 #if SVL_IPL_TRACE_LEVEL > 0
-				(void_t) gos_traceTrace(GOS_TRUE, "IPL discovery start...\r\n");
+					(void_t) gos_traceTrace(GOS_TRUE, "IPL discovery start...\r\n");
 #endif
-				iplState = SVL_IPL_STATE_DISCOVER;
+					iplState = SVL_IPL_STATE_DISCOVER;
+				}
+				else
+				{
+					// No more attempts. Suspend task.
+					(void_t) gos_taskSuspend(svlIplTaskDesc.taskId);
+
+					// If task gets resumed externally, restart state-machine.
+					attemptCount = 0u;
+				}
 				break;
 			}
 			case SVL_IPL_STATE_DISCOVER:
@@ -522,10 +566,10 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 				(void_t) strcpy(discoveryMsg.masterDeviceId, "STM32F446-0001");
 				(void_t) drv_crcGetCrc32((u8_t*)&discoveryMsg, sizeof(discoveryMsg), &msgHeader.messageCrc);
 
-				if (svl_iplTransmit((u8_t*)&msgHeader,    sizeof(svl_iplMsgHeader_t), 1000u) == GOS_SUCCESS &&
-					svl_iplTransmit((u8_t*)&discoveryMsg, sizeof(discoveryMsg),       1000u) == GOS_SUCCESS &&
-					svl_iplReceive((u8_t*)&msgHeader,     sizeof(msgHeader),          1000u) == GOS_SUCCESS &&
-					svl_iplReceive(iplRxBuffer,           msgHeader.messageLength,    1000u) == GOS_SUCCESS &&
+				if (svl_iplTransmit((u8_t*)&msgHeader,    sizeof(svl_iplMsgHeader_t), 100u) == GOS_SUCCESS &&
+					svl_iplTransmit((u8_t*)&discoveryMsg, sizeof(discoveryMsg),       100u) == GOS_SUCCESS &&
+					svl_iplReceive((u8_t*)&msgHeader,     sizeof(msgHeader),          200u) == GOS_SUCCESS &&
+					svl_iplReceive(iplRxBuffer,           msgHeader.messageLength,    200u) == GOS_SUCCESS &&
 					msgHeader.messageId == IPL_MSG_ID_DISCOVERY_ACK &&
 					drv_crcCheckCrc32(iplRxBuffer, msgHeader.messageLength, msgHeader.messageCrc, NULL) == DRV_CRC_CHECK_OK)
 				{
@@ -542,7 +586,7 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 					(void_t) gos_traceTrace(GOS_TRUE, "IPL discovery failed.\r\n");
 #endif
 					iplState = SVL_IPL_STATE_DISCOVER_START;
-					(void_t) gos_taskSleep(1000);
+					(void_t) gos_taskSleep(5000);
 				}
 				break;
 			}
@@ -556,6 +600,8 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 			}
 			case SVL_IPL_STATE_CONFIG:
 			{
+				(void_t) svl_pdhGetWifiCfg(&devConfigMsg);
+
 				msgHeader.messageId     = IPL_MSG_ID_CONFIG;
 				msgHeader.messageLength = sizeof(devConfigMsg);
 
@@ -600,7 +646,7 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 #if SVL_IPL_TRACE_LEVEL > 0
 					(void_t) gos_traceTrace(GOS_TRUE, "IPL configuration failed.\r\n");
 #endif
-					iplState = SVL_IPL_STATE_CONFIG_START;
+					iplState = SVL_IPL_STATE_DISCOVER_START;
 					(void_t) gos_taskSleep(1000);
 				}
 				break;
@@ -642,7 +688,7 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 #if SVL_IPL_TRACE_LEVEL > 0
 						(void_t) gos_traceTrace(GOS_TRUE, "Network connection failed.\r\n");
 #endif
-						iplState = SVL_IPL_STATE_CONNECT_START;
+						iplState = SVL_IPL_STATE_DISCOVER_START;
 					}
 				}
 				else
@@ -651,7 +697,7 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 #if SVL_IPL_TRACE_LEVEL > 0
 					(void_t) gos_traceTrace(GOS_TRUE, "No response was received.\r\n");
 #endif
-					iplState = SVL_IPL_STATE_CONNECT_START;
+					iplState = SVL_IPL_STATE_DISCOVER_START;
 				}
 
 				break;
@@ -766,26 +812,32 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 								(void_t) svl_iplSendMessage(IPL_MSG_ID_RUNTIME_ACK, (u8_t*)&runTimeMsg, sizeof(runTimeMsg));
 								break;
 							}
+							case IPL_MSG_ID_HWINFO:
+							{
+#if SVL_IPL_TRACE_LEVEL == 2
+								(void_t) gos_traceTrace(GOS_TRUE, "IPL hardware info request received.\r\n");
+#endif
+								(void_t) svl_pdhGetHwInfo(&hwInfoMsg);
+								(void_t) svl_iplSendMessage(IPL_MSG_ID_HWINFO_ACK, (u8_t*)&hwInfoMsg, sizeof(hwInfoMsg));
+								break;
+							}
 							case IPL_MSG_ID_SWINFO:
 							{
 #if SVL_IPL_TRACE_LEVEL == 2
 								(void_t) gos_traceTrace(GOS_TRUE, "IPL software info request received.\r\n");
 #endif
-								(void_t) bld_dataGet(&swInfoMsg.bldData);
-								(void_t) bld_appDataGet(&swInfoMsg.appData);
-
-								// Check if driver info is empty (first call).
-								if (swInfoMsg.appData.libVersion.date.years == 0u)
-								{
-									(void_t) gos_libGetVersion(&swInfoMsg.appData.libVersion);
-									(void_t) bld_appDataSet(&swInfoMsg.appData);
-								}
-								else
-								{
-									// Driver info OK.
-								}
-
+								(void_t) svl_pdhGetSwInfo(&swInfoMsg);
 								(void_t) svl_iplSendMessage(IPL_MSG_ID_SWINFO_ACK, (u8_t*)&swInfoMsg, sizeof(swInfoMsg));
+								break;
+							}
+							case IPL_MSG_ID_SYNC_TIME:
+							{
+#if SVL_IPL_TRACE_LEVEL == 2
+								(void_t) gos_traceTrace(GOS_TRUE, "IPL system time synchronization request received.\r\n");
+#endif
+								(void_t) memcpy((void_t*)&sysTimeSetMsg, (void_t*)iplRxBuffer, sizeof(sysTimeSetMsg));
+								(void_t) gos_timeSet(&sysTimeSetMsg.desiredSystemTime);
+								(void_t) svl_iplSendMessage(IPL_MSG_ID_SYNC_TIME_ACK, (u8_t*)&sysTimeSetMsg, sizeof(sysTimeSetMsg));
 								break;
 							}
 							case IPL_MSG_ID_TASK_MODIFY:
@@ -798,6 +850,7 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 										"IPL task modification request received. Idx: %u Type: %u.\r\n",
 										taskModifyMsg.taskIdx,
 										taskModifyMsg.modificationType);
+#endif
 
 								(void_t) gos_taskGetDataByIndex(taskModifyMsg.taskIdx, &taskData);
 
@@ -842,7 +895,6 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 
 								(void_t) svl_iplSendMessage(IPL_MSG_ID_TASK_MODIFY_ACK, (u8_t*)&taskModifyMsg, sizeof(taskModifyMsg));
 								break;
-#endif
 							}
 							default: break;
 						}
@@ -882,45 +934,4 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 		}
 		(void_t) gos_taskSleep(10);
 	}
-}
-
-/**
- * @brief   IPL message send function.
- * @details Prepares the message header and transmits the header and data via
- *          the registered transmit function.
- *
- * @param   msgId      : Message ID.
- * @param   pData      : Buffer containing the message data.
- * @param   dataLength : Length of message data in bytes.
- *
- * @return  Result of message sending.
- * @retval  GOS_SUCCESS : Sending successful.
- * @retval  GOS_ERROR   : CRC calculation error or transmission error.
- */
-GOS_STATIC gos_result_t svl_iplSendMessage (u32_t msgId, u8_t* pData, u32_t dataLength)
-{
-	/*
-	 * Local variables.
-	 */
-	gos_result_t       sendResult = GOS_ERROR;
-	svl_iplMsgHeader_t header;
-
-	/*
-	 * Function code.
-	 */
-	header.messageId     = msgId;
-	header.messageLength = dataLength;
-
-	if (drv_crcGetCrc32((u8_t*)pData, dataLength, &header.messageCrc) == GOS_SUCCESS &&
-		svl_iplTransmit((u8_t*)&header, sizeof(svl_iplMsgHeader_t), 1000u) == GOS_SUCCESS &&
-		svl_iplTransmit(pData, dataLength, 1000u) == GOS_SUCCESS)
-	{
-		sendResult = GOS_SUCCESS;
-	}
-	else
-	{
-		// Error.
-	}
-
-	return sendResult;
 }

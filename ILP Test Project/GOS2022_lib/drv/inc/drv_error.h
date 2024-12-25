@@ -77,6 +77,28 @@
 #define DRV_ERROR_24LC256_MEM_READ                ( 1 << 5  )
 #define DRV_ERROR_24LC256_MEM_WRITE               ( 1 << 6  )
 
+#define DRV_ERROR_25LC256_DEVICE_NULL             ( 1 << 0  )
+#define DRV_ERROR_25LC256_TARGET_NULL             ( 1 << 1  )
+#define DRV_ERROR_25LC256_DATA_NULL               ( 1 << 2  )
+#define DRV_ERROR_25LC256_MUTEX_INIT              ( 1 << 3  )
+#define DRV_ERROR_25LC256_MUTEX_LOCK              ( 1 << 4  )
+#define DRV_ERROR_25LC256_READ                    ( 1 << 5  )
+#define DRV_ERROR_25LC256_WRITE                   ( 1 << 6  )
+
+#define DRV_ERROR_25LC640_DEVICE_NULL             ( 1 << 0  )
+#define DRV_ERROR_25LC640_TARGET_NULL             ( 1 << 1  )
+#define DRV_ERROR_25LC640_DATA_NULL               ( 1 << 2  )
+#define DRV_ERROR_25LC640_MUTEX_INIT              ( 1 << 3  )
+#define DRV_ERROR_25LC640_MUTEX_LOCK              ( 1 << 4  )
+#define DRV_ERROR_25LC640_READ                    ( 1 << 5  )
+#define DRV_ERROR_25LC640_WRITE                   ( 1 << 6  )
+
+#define DRV_ERROR_W25Q64_DEVICE_NULL              ( 1 << 0  )
+#define DRV_ERROR_W25Q64_MUTEX_INIT               ( 1 << 1  )
+#define DRV_ERROR_W25Q64_MUTEX_LOCK               ( 1 << 2  )
+#define DRV_ERROR_W25Q64_READ                     ( 1 << 3  )
+#define DRV_ERROR_W25Q64_WRITE                    ( 1 << 4  )
+
 
 #define DRV_ERROR_CHK_NULL_PTR(var, flags, error) ( { if (var == NULL) DRV_ERROR_SET(flags, error); } )
 
@@ -84,7 +106,7 @@
 												      {														       \
 												          if (flags == 0u)                                         \
 													      {                                                        \
-												        	  if (res != GOS_SUCCESS) DRV_ERROR_SET(flags, error); \
+												        	  if (res != GOS_SUCCESS) { DRV_ERROR_SET(flags, error); } \
 													      }                                                        \
 												      }                                                            \
 												  )

@@ -531,7 +531,8 @@ GOS_STATIC gos_result_t bld_stateMachineHandleAppDataRequest (void_t)
         case BLD_COM_UPDATE_TYPE_INSTALL:
         {
             (void_t) gos_traceTrace(GOS_FALSE, "Update type:\tinstall\r\n");
-
+// TODO
+#if 0
             (void_t) gos_traceTraceFormatted(GOS_FALSE, "Name:       \t%s\r\n", installDataMessage.appData.version.name);
             (void_t) gos_traceTraceFormatted(GOS_FALSE, "Author:     \t%s\r\n", installDataMessage.appData.version.author);
             (void_t) gos_traceTraceFormatted(GOS_FALSE, "Description:\t%s\r\n", installDataMessage.appData.version.description);
@@ -543,6 +544,7 @@ GOS_STATIC gos_result_t bld_stateMachineHandleAppDataRequest (void_t)
             		installDataMessage.appData.version.date.years,
 					installDataMessage.appData.version.date.months,
 					installDataMessage.appData.version.date.days);
+#endif
             (void_t) gos_traceTraceFormatted(GOS_FALSE, "Size:       \t%u bytes\r\n", installDataMessage.appData.size);
 
             if (drv_crcCheckCrc32((u8_t*)&installDataMessage.appData,

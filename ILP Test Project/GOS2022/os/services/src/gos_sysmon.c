@@ -70,7 +70,7 @@
 /**
  * Receive buffer size.
  */
-#define RECEIVE_BUFFER_SIZE ( 128u )
+#define RECEIVE_BUFFER_SIZE ( 4096u )
 
 /*
  * Type definitions

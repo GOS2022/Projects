@@ -6,6 +6,6 @@
 ../bld/src/bld_statemachine.c:444:25:bld_stateMachineHandleDataRequest	1
 ../bld/src/bld_statemachine.c:474:25:bld_stateMachineHandleConnectionClose	1
 ../bld/src/bld_statemachine.c:503:25:bld_stateMachineHandleAppDataRequest	9
-../bld/src/bld_statemachine.c:609:25:bld_stateMachineHandleAppInstall	13
-../bld/src/bld_statemachine.c:755:25:bld_stateMachineHandleAppCheck	2
-../bld/src/bld_statemachine.c:797:25:bld_stateMachineHandleConfigRequest	2
+../bld/src/bld_statemachine.c:611:25:bld_stateMachineHandleAppInstall	13
+../bld/src/bld_statemachine.c:757:25:bld_stateMachineHandleAppCheck	2
+../bld/src/bld_statemachine.c:799:25:bld_stateMachineHandleConfigRequest	2
