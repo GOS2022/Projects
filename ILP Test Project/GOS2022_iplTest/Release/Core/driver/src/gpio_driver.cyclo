@@ -1,7 +1,0 @@
-gpio_driver.c:14:14:DRV_GPIO_Init	2
-gpio_driver.c:110:8:DRV_GPIO_RegisterITCallback	4
-gpio_driver.c:128:8:EXTI9_5_IRQHandler	5
-gpio_driver.c:139:8:EXTI15_10_IRQHandler	5
-gpio_driver.c:155:8:HAL_GPIO_EXTI_Callback	7
-gpio_driver.c:147:8:HAL_GPIO_EXTI_Falling_Callback	1
-gpio_driver.c:151:8:HAL_GPIO_EXTI_Rising_Callback	1

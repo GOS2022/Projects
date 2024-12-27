@@ -1,8 +1,0 @@
-../svl/src/svl_dsm.c:105:14:svl_dsmInit	24	static
-../svl/src/svl_dsm.c:165:14:svl_dsmPrintOSInfo	16	static
-../svl/src/svl_dsm.c:193:14:svl_dsmPrintLibInfo	184	static
-../svl/src/svl_dsm.c:228:14:svl_dsmPrintHwInfo	272	static
-../svl/src/svl_dsm.c:268:14:svl_dsmPrintAppInfo	696	static
-../svl/src/svl_dsm.c:303:19:svl_dsmWaitForState	16	static
-../svl/src/svl_dsm.c:317:19:svl_dsmSetState	16	static
-../svl/src/svl_dsm.c:331:19:svl_dsmTask	16	static

@@ -1,3 +1,0 @@
-app_counter.c:65:19:APP_ButtonPressedSignalHandler	2
-app_counter.c:21:8:APP_CounterProcess	1
-app_counter.c:38:8:APP_CounterTask	1

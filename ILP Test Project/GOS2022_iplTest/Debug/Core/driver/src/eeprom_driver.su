@@ -1,4 +1,0 @@
-../Core/driver/src/eeprom_driver.c:21:8:eeprom_driver_write_ex	64	static
-../Core/driver/src/eeprom_driver.c:56:8:eeprom_driver_read_ex	64	static
-../Core/driver/src/eeprom_driver.c:79:8:eeprom_driver_page_erase_ex	104	static
-../Core/driver/src/eeprom_driver.c:97:18:bytestowrite	16	static

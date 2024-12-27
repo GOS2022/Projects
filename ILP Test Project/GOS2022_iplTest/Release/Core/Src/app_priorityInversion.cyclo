@@ -1,4 +1,0 @@
-app_priorityInversion.c:176:19:APP_ButtonPressedSignalHandler	2
-app_priorityInversion.c:21:8:APP_HighPriorityTask	2
-app_priorityInversion.c:83:8:APP_MediumPriorityTask	1
-app_priorityInversion.c:121:8:APP_LowPriorityTask	2

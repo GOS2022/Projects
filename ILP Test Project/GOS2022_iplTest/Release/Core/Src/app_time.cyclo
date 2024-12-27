@@ -1,3 +1,0 @@
-app_time.c:95:19:APP_ButtonPressedSignalHandler	1
-app_time.c:77:19:APP_SecondElapsedSignalHandler	3
-app_time.c:22:8:APP_TimeTask	1

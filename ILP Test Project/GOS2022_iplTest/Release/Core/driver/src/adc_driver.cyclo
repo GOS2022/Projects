@@ -1,3 +1,0 @@
-adc_driver.c:14:14:adc_driver_init	3
-adc_driver.c:59:8:HAL_ADC_MspInit	2
-adc_driver.c:79:14:adc_driver_get_value	2

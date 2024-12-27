@@ -1,2 +1,0 @@
-timer_driver.c:17:14:timer_driver_systimer_init	3
-timer_driver.c:47:14:timer_driver_systimer_get	2

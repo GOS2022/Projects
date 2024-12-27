@@ -1,7 +1,0 @@
-../Core/Src/app_shell.c:248:19:APP_ShellDacSetHandler	8	static
-../Core/Src/app_shell.c:196:19:APP_ShellTimeSetHandler	32	static
-../Core/Src/app_shell.c:175:19:APP_ShellRunTimeHandler	16	static
-../Core/Src/app_shell.c:140:19:APP_ShellControlHandler	16	static
-../Core/Src/app_shell.c:113:19:APP_ShellEchoHandler	16	static
-../Core/Src/app_shell.c:76:19:APP_ShellLedHandler	8	static
-../Core/Src/app_shell.c:63:8:APP_ShellTask	8	static

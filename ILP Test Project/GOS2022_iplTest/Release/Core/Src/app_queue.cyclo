@@ -1,2 +1,0 @@
-app_queue.c:68:19:APP_QueueFullHook	1
-app_queue.c:28:8:APP_QueueObserverTask	2

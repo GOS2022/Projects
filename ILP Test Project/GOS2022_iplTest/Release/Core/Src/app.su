@@ -1,3 +1,0 @@
-../Core/Src/app.c:358:19:APP_TaskDeleteSignalHandler	8	static
-../Core/Src/app.c:271:14:gos_platformDriverInit	16	static
-../Core/Src/app.c:321:14:gos_userApplicationInit	32	static

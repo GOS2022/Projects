@@ -1,7 +1,0 @@
-app_shell.c:248:19:APP_ShellDacSetHandler	1
-app_shell.c:196:19:APP_ShellTimeSetHandler	8
-app_shell.c:175:19:APP_ShellRunTimeHandler	1
-app_shell.c:140:19:APP_ShellControlHandler	5
-app_shell.c:113:19:APP_ShellEchoHandler	3
-app_shell.c:76:19:APP_ShellLedHandler	6
-app_shell.c:63:8:APP_ShellTask	1

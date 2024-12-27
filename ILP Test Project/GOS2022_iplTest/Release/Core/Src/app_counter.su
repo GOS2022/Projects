@@ -1,3 +1,0 @@
-../Core/Src/app_counter.c:65:19:APP_ButtonPressedSignalHandler	8	static
-../Core/Src/app_counter.c:21:8:APP_CounterProcess	8	static
-../Core/Src/app_counter.c:38:8:APP_CounterTask	16	static

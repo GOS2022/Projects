@@ -1,4 +1,0 @@
-../Core/Src/app_priorityInversion.c:176:19:APP_ButtonPressedSignalHandler	16	static
-../Core/Src/app_priorityInversion.c:21:8:APP_HighPriorityTask	24	static
-../Core/Src/app_priorityInversion.c:83:8:APP_MediumPriorityTask	8	static
-../Core/Src/app_priorityInversion.c:121:8:APP_LowPriorityTask	24	static

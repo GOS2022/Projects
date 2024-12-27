@@ -1,7 +1,0 @@
-../Core/driver/src/gpio_driver.c:14:14:DRV_GPIO_Init	56	static
-../Core/driver/src/gpio_driver.c:110:8:DRV_GPIO_RegisterITCallback	8	static
-../Core/driver/src/gpio_driver.c:128:8:EXTI9_5_IRQHandler	8	static
-../Core/driver/src/gpio_driver.c:139:8:EXTI15_10_IRQHandler	8	static
-../Core/driver/src/gpio_driver.c:155:8:HAL_GPIO_EXTI_Callback	8	static
-../Core/driver/src/gpio_driver.c:147:8:HAL_GPIO_EXTI_Falling_Callback	0	static
-../Core/driver/src/gpio_driver.c:151:8:HAL_GPIO_EXTI_Rising_Callback	0	static

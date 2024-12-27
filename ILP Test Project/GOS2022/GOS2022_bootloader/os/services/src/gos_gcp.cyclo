@@ -1,6 +1,0 @@
-../os/services/src/gos_gcp.c:170:14:gos_gcpInit	3
-../os/services/src/gos_gcp.c:202:14:gos_gcpRegisterPhysicalDriver	4
-../os/services/src/gos_gcp.c:233:14:gos_gcpTransmitMessage	19
-../os/services/src/gos_gcp.c:266:14:gos_gcpReceiveMessage	16
-../os/services/src/gos_gcp.c:622:25:gos_gcpValidateHeader	6
-../os/services/src/gos_gcp.c:677:25:gos_gcpValidateData	5

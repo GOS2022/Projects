@@ -1,9 +1,0 @@
-g_driver.c:271:19:g_screenTouchEnd	1
-g_driver.c:172:19:g_redrawHandler	13
-g_driver.c:125:19:g_task	2
-g_driver.c:238:19:g_screenTouchBegin	14
-g_driver.c:233:19:g_touchItCallback	1
-g_driver.c:44:14:g_initGraphicsDriver	1
-g_driver.c:56:14:g_registerWindow	3
-g_driver.c:80:8:g_activateWindow	4
-g_driver.c:103:8:g_inactivateWindow	4

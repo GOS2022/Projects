@@ -1,8 +1,0 @@
-spi_driver.c:36:14:spi_driver_init	3
-spi_driver.c:95:25:spi_driver_transmit	4
-spi_driver.c:166:25:spi_driver_transmit_receive	4
-spi_driver.c:236:8:HAL_SPI_TxCpltCallback	2
-spi_driver.c:273:8:HAL_SPI_TxRxCpltCallback	2
-spi_driver.c:306:8:SPI2_IRQHandler	5
-spi_driver.c:320:8:SPI3_IRQHandler	1
-spi_driver.c:331:8:HAL_SPI_MspInit	3

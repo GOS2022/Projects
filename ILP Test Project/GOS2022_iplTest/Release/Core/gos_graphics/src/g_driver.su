@@ -1,9 +1,0 @@
-../Core/gos_graphics/src/g_driver.c:271:19:g_screenTouchEnd	0	static
-../Core/gos_graphics/src/g_driver.c:172:19:g_redrawHandler	24	static
-../Core/gos_graphics/src/g_driver.c:125:19:g_task	96	static
-../Core/gos_graphics/src/g_driver.c:238:19:g_screenTouchBegin	24	static,ignoring_inline_asm
-../Core/gos_graphics/src/g_driver.c:233:19:g_touchItCallback	0	static
-../Core/gos_graphics/src/g_driver.c:44:14:g_initGraphicsDriver	8	static
-../Core/gos_graphics/src/g_driver.c:56:14:g_registerWindow	12	static
-../Core/gos_graphics/src/g_driver.c:80:8:g_activateWindow	12	static
-../Core/gos_graphics/src/g_driver.c:103:8:g_inactivateWindow	8	static

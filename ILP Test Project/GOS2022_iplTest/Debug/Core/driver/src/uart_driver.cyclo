@@ -1,7 +1,0 @@
-../Core/driver/src/uart_driver.c:39:14:DRV_UART_Init	6
-../Core/driver/src/uart_driver.c:239:14:DRV_UART_TraceTransmitUnsafe	4
-../Core/driver/src/uart_driver.c:264:25:DRV_UART_TraceTransmit	4
-../Core/driver/src/uart_driver.c:430:25:DRV_UART_ShellReceiveChar	4
-../Core/driver/src/uart_driver.c:462:25:DRV_UART_ShellTransmitString	4
-../Core/driver/src/uart_driver.c:499:25:DRV_UART_SysmonTransmit	4
-../Core/driver/src/uart_driver.c:528:25:DRV_UART_SysmonReceive	4

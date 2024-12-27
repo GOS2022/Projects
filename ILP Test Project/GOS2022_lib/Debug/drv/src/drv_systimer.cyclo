@@ -1,2 +1,0 @@
-../drv/src/drv_systimer.c:65:14:drv_systimerStart	1
-../drv/src/drv_systimer.c:93:14:drv_systimerGetValue	2

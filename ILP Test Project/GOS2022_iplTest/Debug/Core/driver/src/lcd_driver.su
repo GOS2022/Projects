@@ -1,7 +1,0 @@
-../Core/driver/src/lcd_driver.c:90:14:lcd_driver_init	16	static
-../Core/driver/src/lcd_driver.c:198:25:lcd_driver_write_string	24	static
-../Core/driver/src/lcd_driver.c:242:25:lcd_driver_set_cursor	24	static
-../Core/driver/src/lcd_driver.c:298:14:lcd_driver_clear_display	16	static
-../Core/driver/src/lcd_driver.c:307:25:lcd_driver_send_cmd	32	static
-../Core/driver/src/lcd_driver.c:328:25:lcd_driver_send_data	32	static
-../Core/driver/src/lcd_driver.c:351:19:clear	8	static

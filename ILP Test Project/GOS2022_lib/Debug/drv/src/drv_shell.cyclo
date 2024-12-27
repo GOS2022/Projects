@@ -1,2 +1,0 @@
-../drv/src/drv_shell.c:72:25:drv_shellTransmitString	2
-../drv/src/drv_shell.c:108:25:drv_shellReceiveChar	2

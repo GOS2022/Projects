@@ -1,2 +1,0 @@
-../Core/driver/src/rtc_driver.c:16:14:rtc_driver_set_time	24	static
-../Core/driver/src/rtc_driver.c:34:14:rtc_driver_get_time	32	static

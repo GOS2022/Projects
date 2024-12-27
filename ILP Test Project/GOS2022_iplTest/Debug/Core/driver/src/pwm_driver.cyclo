@@ -1,2 +1,0 @@
-../Core/driver/src/pwm_driver.c:14:14:pwm_driver_init	7
-../Core/driver/src/pwm_driver.c:53:8:pwm_driver_set_duty	1

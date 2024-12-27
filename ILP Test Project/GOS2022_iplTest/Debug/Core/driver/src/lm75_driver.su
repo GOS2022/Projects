@@ -1,2 +1,0 @@
-../Core/driver/src/lm75_driver.c:16:14:lm75_driver_init	24	static
-../Core/driver/src/lm75_driver.c:32:14:lm75_get_temperature	32	static

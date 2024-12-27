@@ -1,8 +1,0 @@
-../Core/driver/src/spi_driver.c:36:14:spi_driver_init	24	static
-../Core/driver/src/spi_driver.c:95:25:spi_driver_transmit	16	static
-../Core/driver/src/spi_driver.c:166:25:spi_driver_transmit_receive	16	static
-../Core/driver/src/spi_driver.c:236:8:HAL_SPI_TxCpltCallback	0	static
-../Core/driver/src/spi_driver.c:273:8:HAL_SPI_TxRxCpltCallback	0	static
-../Core/driver/src/spi_driver.c:306:8:SPI2_IRQHandler	8	static
-../Core/driver/src/spi_driver.c:320:8:SPI3_IRQHandler	0	static
-../Core/driver/src/spi_driver.c:331:8:HAL_SPI_MspInit	72	static

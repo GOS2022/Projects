@@ -1,6 +1,0 @@
-../Core/driver/src/dac_driver.c:18:14:dac_driver_init	48	static
-../Core/driver/src/dac_driver.c:54:14:dac_driver_start	24	static
-../Core/driver/src/dac_driver.c:69:14:dac_driver_set_freq	8	static
-../Core/driver/src/dac_driver.c:90:8:HAL_DAC_MspInit	48	static
-../Core/driver/src/dac_driver.c:139:8:HAL_TIM_Base_MspInit	16	static
-../Core/driver/src/dac_driver.c:154:8:TIM2_IRQHandler	0	static
