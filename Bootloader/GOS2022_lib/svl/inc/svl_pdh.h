@@ -18,7 +18,7 @@
 /**
  * Library minor version.
  */
-#define PDH_LIBVER_VERSION_MINOR      ( 13                )
+#define PDH_LIBVER_VERSION_MINOR      ( 17                )
 
 /**
  * Library build number.
@@ -28,17 +28,17 @@
 /**
  * Library version date / year.
  */
-#define PDH_LIBVER_VERSION_DATE_YEAR  ( 2024              )
+#define PDH_LIBVER_VERSION_DATE_YEAR  ( 2025              )
 
 /**
  * Library version date / month.
  */
-#define PDH_LIBVER_VERSION_DATE_MONTH ( GOS_TIME_DECEMBER )
+#define PDH_LIBVER_VERSION_DATE_MONTH ( GOS_TIME_JANUARY  )
 
 /**
  * Library version date / day.
  */
-#define PDH_LIBVER_VERSION_DATE_DAY   ( 26                )
+#define PDH_LIBVER_VERSION_DATE_DAY   ( 2                 )
 /**
  * Library name.
  */

@@ -896,7 +896,31 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 								(void_t) svl_iplSendMessage(IPL_MSG_ID_TASK_MODIFY_ACK, (u8_t*)&taskModifyMsg, sizeof(taskModifyMsg));
 								break;
 							}
-							default: break;
+							default:
+							{
+#if SVL_IPL_TRACE_LEVEL == 2
+								(void_t) gos_traceTraceFormatted(GOS_TRUE, "IPL request received with ID: %u.\r\n", msgHeader.messageId);
+#endif
+								for (lutIndex = 0u; lutIndex < SVL_IPL_USER_MSG_CALLBACK_MAX_NUM; lutIndex++)
+								{
+									if (userMsgLut[lutIndex].callback == NULL)
+									{
+										// Last registered message found, break loop.
+										break;
+									}
+									else
+									{
+										if (userMsgLut[lutIndex].msgId == msgHeader.messageId)
+										{
+											userMsgLut[lutIndex].callback(iplRxBuffer, msgHeader.messageLength, msgHeader.messageCrc);
+										}
+										else
+										{
+											// Continue.
+										}
+									}
+								}
+							}
 						}
 					}
 					else
@@ -905,31 +929,6 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 					}
 				}
 				break;
-			}
-			default:
-			{
-#if SVL_IPL_TRACE_LEVEL == 2
-				(void_t) gos_traceTraceFormatted(GOS_TRUE, "IPL request received with ID: %u.\r\n", msgHeader.messageId);
-#endif
-				for (lutIndex = 0u; lutIndex < SVL_IPL_USER_MSG_CALLBACK_MAX_NUM; lutIndex++)
-				{
-					if (userMsgLut[lutIndex].callback == NULL)
-					{
-						// Last registered message found, break loop.
-						break;
-					}
-					else
-					{
-						if (userMsgLut[lutIndex].msgId == msgHeader.messageId)
-						{
-							userMsgLut[lutIndex].callback(iplRxBuffer, msgHeader.messageLength, msgHeader.messageCrc);
-						}
-						else
-						{
-							// Continue.
-						}
-					}
-				}
 			}
 		}
 		(void_t) gos_taskSleep(10);

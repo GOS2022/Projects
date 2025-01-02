@@ -17,6 +17,16 @@ GOS_STATIC svl_pdhReadWriteFunc_t pdhReadFunction = NULL;
  */
 GOS_STATIC svl_pdhReadWriteFunc_t pdhWriteFunction = NULL;
 
+/**
+ * PDH mutex.
+ */
+GOS_STATIC gos_mutex_t            pdhMutex;
+
+/**
+ * Initialized flag.
+ */
+GOS_STATIC bool_t                 pdhInited        = GOS_FALSE;
+
 /*
  * Function prototypes
  */
@@ -62,6 +72,9 @@ gos_result_t svl_pdhInit (void_t)
 	 */
 	initResult = gos_sysmonRegisterUserMessage(&softwareInfoReqMsg);
 	initResult &= gos_sysmonRegisterUserMessage(&hardwareInfoReqMsg);
+	initResult &= gos_mutexInit(&pdhMutex);
+
+	pdhInited = GOS_TRUE;
 
 	if (initResult != GOS_SUCCESS)
 	{
@@ -117,12 +130,18 @@ gos_result_t svl_pdhGetLibVersion (svl_pdhSwVerInfo_t* pLibVer)
 	 */
 	if (pLibVer != NULL && pdhReadFunction != NULL)
 	{
-		pLibVer->major       = PDH_LIBVER_VERSION_MAJOR;
-		pLibVer->minor       = PDH_LIBVER_VERSION_MINOR;
-		pLibVer->build       = PDH_LIBVER_VERSION_BUILD;
-		pLibVer->date.years  = PDH_LIBVER_VERSION_DATE_YEAR;
-		pLibVer->date.months = PDH_LIBVER_VERSION_DATE_MONTH;
-		pLibVer->date.days   = PDH_LIBVER_VERSION_DATE_DAY;
+		(void_t) memset((void_t*)pLibVer, 0, sizeof(*pLibVer));
+
+		pLibVer->major             = PDH_LIBVER_VERSION_MAJOR;
+		pLibVer->minor             = PDH_LIBVER_VERSION_MINOR;
+		pLibVer->build             = PDH_LIBVER_VERSION_BUILD;
+		pLibVer->date.years        = PDH_LIBVER_VERSION_DATE_YEAR;
+		pLibVer->date.months       = PDH_LIBVER_VERSION_DATE_MONTH;
+		pLibVer->date.days         = PDH_LIBVER_VERSION_DATE_DAY;
+		pLibVer->date.hours        = 0u;
+		pLibVer->date.minutes      = 0u;
+		pLibVer->date.seconds      = 0u;
+		pLibVer->date.milliseconds = 0u;
 
 		(void_t) strcpy(pLibVer->name,        PDH_LIBVER_NAME);
 		(void_t) strcpy(pLibVer->author,      PDH_LIBVER_AUTHOR);
@@ -141,7 +160,7 @@ gos_result_t svl_pdhGetLibVersion (svl_pdhSwVerInfo_t* pLibVer)
 /*
  * Function: svl_pdhGetSwInfo
  */
-gos_result_t svl_pdhGetSwInfo (svl_pdhSwInfo_t* pSwInfo)
+GOS_INLINE gos_result_t svl_pdhGetSwInfo (svl_pdhSwInfo_t* pSwInfo)
 {
 	/*
 	 * Local variables.
@@ -151,9 +170,11 @@ gos_result_t svl_pdhGetSwInfo (svl_pdhSwInfo_t* pSwInfo)
 	/*
 	 * Function code.
 	 */
-	if (pSwInfo != NULL && pdhReadFunction != NULL)
+	if ((pSwInfo != NULL) && (pdhReadFunction != NULL) &&
+		((pdhInited == GOS_FALSE) || (pdhInited == GOS_TRUE && gos_mutexLock(&pdhMutex, 5000) == GOS_SUCCESS)))
 	{
 		getResult = pdhReadFunction(PDH_ADDR_SW_INFO, (u8_t*)pSwInfo, sizeof(*pSwInfo));
+		(void_t) gos_mutexUnlock(&pdhMutex);
 	}
 	else
 	{
@@ -166,7 +187,7 @@ gos_result_t svl_pdhGetSwInfo (svl_pdhSwInfo_t* pSwInfo)
 /*
  * Function: svl_pdhGetHwInfo
  */
-gos_result_t svl_pdhGetHwInfo (svl_pdhHwInfo_t* pHwInfo)
+GOS_INLINE gos_result_t svl_pdhGetHwInfo (svl_pdhHwInfo_t* pHwInfo)
 {
 	/*
 	 * Local variables.
@@ -176,9 +197,11 @@ gos_result_t svl_pdhGetHwInfo (svl_pdhHwInfo_t* pHwInfo)
 	/*
 	 * Function code.
 	 */
-	if (pHwInfo != NULL && pdhReadFunction != NULL)
+	if ((pHwInfo != NULL) && (pdhReadFunction != NULL) &&
+		((pdhInited == GOS_FALSE) || (pdhInited == GOS_TRUE && gos_mutexLock(&pdhMutex, 5000) == GOS_SUCCESS)))
 	{
 		getResult = pdhReadFunction(PDH_ADDR_HW_INFO, (u8_t*)pHwInfo, sizeof(*pHwInfo));
+		(void_t) gos_mutexUnlock(&pdhMutex);
 	}
 	else
 	{
@@ -191,7 +214,7 @@ gos_result_t svl_pdhGetHwInfo (svl_pdhHwInfo_t* pHwInfo)
 /*
  * Function: svl_pdhGetBldCfg
  */
-gos_result_t svl_pdhGetBldCfg (svl_pdhBldCfg_t* pBldCfg)
+GOS_INLINE gos_result_t svl_pdhGetBldCfg (svl_pdhBldCfg_t* pBldCfg)
 {
 	/*
 	 * Local variables.
@@ -201,9 +224,11 @@ gos_result_t svl_pdhGetBldCfg (svl_pdhBldCfg_t* pBldCfg)
 	/*
 	 * Function code.
 	 */
-	if (pBldCfg != NULL && pdhReadFunction != NULL)
+	if ((pBldCfg != NULL) && (pdhReadFunction != NULL) &&
+	   ((pdhInited == GOS_FALSE) || (pdhInited == GOS_TRUE && gos_mutexLock(&pdhMutex, 5000) == GOS_SUCCESS)))
 	{
 		getResult = pdhReadFunction(PDH_ADDR_BLD_CFG, (u8_t*)pBldCfg, sizeof(*pBldCfg));
+		(void_t) gos_mutexUnlock(&pdhMutex);
 	}
 	else
 	{
@@ -226,9 +251,11 @@ gos_result_t svl_pdhGetWifiCfg (svl_pdhWifiCfg_t* pWifiCfg)
 	/*
 	 * Function code.
 	 */
-	if (pWifiCfg != NULL && pdhReadFunction != NULL)
+	if ((pWifiCfg != NULL) && (pdhReadFunction != NULL) &&
+		((pdhInited == GOS_FALSE) || (pdhInited == GOS_TRUE && gos_mutexLock(&pdhMutex, 5000) == GOS_SUCCESS)))
 	{
 		getResult = pdhReadFunction(PDH_ADDR_WIFI_CFG, (u8_t*)pWifiCfg, sizeof(*pWifiCfg));
+		(void_t) gos_mutexUnlock(&pdhMutex);
 	}
 	else
 	{
@@ -241,7 +268,7 @@ gos_result_t svl_pdhGetWifiCfg (svl_pdhWifiCfg_t* pWifiCfg)
 /*
  * Function: svl_pdhSetSwInfo
  */
-gos_result_t svl_pdhSetSwInfo (svl_pdhSwInfo_t* pSwInfo)
+GOS_INLINE gos_result_t svl_pdhSetSwInfo (svl_pdhSwInfo_t* pSwInfo)
 {
 	/*
 	 * Local variables.
@@ -251,9 +278,11 @@ gos_result_t svl_pdhSetSwInfo (svl_pdhSwInfo_t* pSwInfo)
 	/*
 	 * Function code.
 	 */
-	if (pSwInfo != NULL && pdhWriteFunction != NULL)
+	if ((pSwInfo != NULL) && (pdhWriteFunction != NULL) &&
+		((pdhInited == GOS_FALSE) || (pdhInited == GOS_TRUE && gos_mutexLock(&pdhMutex, 5000) == GOS_SUCCESS)))
 	{
 		setResult = pdhWriteFunction(PDH_ADDR_SW_INFO, (u8_t*)pSwInfo, sizeof(*pSwInfo));
+		(void_t) gos_mutexUnlock(&pdhMutex);
 	}
 	else
 	{
@@ -276,9 +305,11 @@ gos_result_t svl_pdhSetHwInfo (svl_pdhHwInfo_t* pHwInfo)
 	/*
 	 * Function code.
 	 */
-	if (pHwInfo != NULL && pdhWriteFunction != NULL)
+	if ((pHwInfo != NULL) && (pdhWriteFunction != NULL) &&
+		((pdhInited == GOS_FALSE) || (pdhInited == GOS_TRUE && gos_mutexLock(&pdhMutex, 5000) == GOS_SUCCESS)))
 	{
 		setResult = pdhWriteFunction(PDH_ADDR_HW_INFO, (u8_t*)pHwInfo, sizeof(*pHwInfo));
+		(void_t) gos_mutexUnlock(&pdhMutex);
 	}
 	else
 	{
@@ -291,7 +322,7 @@ gos_result_t svl_pdhSetHwInfo (svl_pdhHwInfo_t* pHwInfo)
 /*
  * Function: svl_pdhSetBldCfg
  */
-gos_result_t svl_pdhSetBldCfg (svl_pdhBldCfg_t* pBldCfg)
+GOS_INLINE gos_result_t svl_pdhSetBldCfg (svl_pdhBldCfg_t* pBldCfg)
 {
 	/*
 	 * Local variables.
@@ -301,9 +332,11 @@ gos_result_t svl_pdhSetBldCfg (svl_pdhBldCfg_t* pBldCfg)
 	/*
 	 * Function code.
 	 */
-	if (pBldCfg != NULL && pdhWriteFunction != NULL)
+	if ((pBldCfg != NULL) && (pdhWriteFunction != NULL) &&
+       ((pdhInited == GOS_FALSE) || (pdhInited == GOS_TRUE && gos_mutexLock(&pdhMutex, 5000) == GOS_SUCCESS)))
 	{
 		setResult = pdhWriteFunction(PDH_ADDR_BLD_CFG, (u8_t*)pBldCfg, sizeof(*pBldCfg));
+		(void_t) gos_mutexUnlock(&pdhMutex);
 	}
 	else
 	{
@@ -326,9 +359,11 @@ gos_result_t svl_pdhSetWifiCfg (svl_pdhWifiCfg_t* pWifiCfg)
 	/*
 	 * Function code.
 	 */
-	if (pWifiCfg != NULL && pdhWriteFunction != NULL)
+	if ((pWifiCfg != NULL) && (pdhWriteFunction != NULL) &&
+		((pdhInited == GOS_FALSE) || (pdhInited == GOS_TRUE && gos_mutexLock(&pdhMutex, 5000) == GOS_SUCCESS)))
 	{
 		setResult = pdhWriteFunction(PDH_ADDR_WIFI_CFG, (u8_t*)pWifiCfg, sizeof(*pWifiCfg));
+		(void_t) gos_mutexUnlock(&pdhMutex);
 	}
 	else
 	{

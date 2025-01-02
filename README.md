@@ -47,5 +47,5 @@ The project was also used to test the SDH (Software Download Handler) service. S
 is planned to work over IPL as well (implementation is ongoing). This application produces a bootloader-compatible binary (which can be downloaded
 with GOS tool).
 
-Last updated: 2024-12-27
+Last updated: 2025-01-02
 (c) 2024, Ahmed Gazar

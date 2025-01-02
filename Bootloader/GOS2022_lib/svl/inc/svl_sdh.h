@@ -90,6 +90,9 @@ gos_result_t svl_sdhConfigure (svl_sdhCfg_t* pCfg);
 gos_result_t svl_sdhGetBinaryData (u16_t index, svl_sdhBinaryDesc_t* pDesc);
 
 // TODO
+gos_result_t svl_sdhSetBinaryData (u16_t index, svl_sdhBinaryDesc_t* pDesc);
+
+// TODO
 gos_result_t svl_sdhReadBytesFromMemory (u32_t address, u8_t* pBuffer, u32_t size);
 
 #endif

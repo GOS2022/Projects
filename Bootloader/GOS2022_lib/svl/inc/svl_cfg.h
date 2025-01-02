@@ -155,10 +155,10 @@
 #define SVL_IPL_DEVCFG_SUBNET_ADDR_ELEMENTS  ( 4 )
 
 //! IPL RX buffer size.
-#define SVL_IPL_RX_BUFF_SIZE                 ( 128 )
+#define SVL_IPL_RX_BUFF_SIZE                 ( 4096u )
 
 //! Maximum number of user-defined message callbacks.
-#define SVL_IPL_USER_MSG_CALLBACK_MAX_NUM    ( 8 )
+#define SVL_IPL_USER_MSG_CALLBACK_MAX_NUM    ( 16 )
 
 /**
  * Trace level for IPL debugging.
@@ -173,7 +173,7 @@
 #define SVL_IPL_DAEMON_PRIORITY              ( 190 )
 
 //! IPL daemon task stack size.
-#define SVL_IPL_DAEMON_STACK_SIZE            ( 0x400 )
+#define SVL_IPL_DAEMON_STACK_SIZE            ( 0x800 )
 
 /*
  * SDH Service Configuration
@@ -191,7 +191,7 @@
 #define SVL_SDH_DAEMON_PRIORITY              ( 189 )
 
 //! SDH daemon task stack size.
-#define SVL_SDH_DAEMON_STACK_SIZE            ( 0x400 )
+#define SVL_SDH_DAEMON_STACK_SIZE            ( 0x800 )
 
 /*
  * DSM Service Configuration

@@ -72,7 +72,7 @@ gos_result_t app_pdhBdSpecInit (void_t)
 
 GOS_STATIC void_t app_pdhTask (void_t)
 {
-	(void_t) bld_initData(&bldVerInfo);
+	//(void_t) bld_initData(&bldVerInfo);
 
 	for (;;)
 	{

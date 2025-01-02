@@ -68,6 +68,7 @@ GOS_STATIC void_t app_ledTask (void_t)
 	 * Local variables.
 	 */
 	bld_state_t bldState;
+	bool_t iplInited = GOS_FALSE;
 
     /*
      * Function code.
@@ -86,6 +87,16 @@ GOS_STATIC void_t app_ledTask (void_t)
     		}
     		case BLD_STATE_WAIT:
     		{
+    			if (iplInited == GOS_FALSE)
+    			{
+    				(void_t) svl_iplInit();
+    				iplInited = GOS_TRUE;
+    			}
+    			else
+    			{
+    				// IPL running.
+    			}
+
     	        (void_t) drv_gpioTgglePin(IO_USER_LED);
     	        (void_t) gos_taskSleep(500);
     			break;

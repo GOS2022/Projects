@@ -20,12 +20,12 @@ GOS_STATIC svl_pdhSwVerInfo_t bldVerInfo =
 	.description = "GOS2022 bootloader for STM32F4 devices.",
 	.major       = 1,
 	.minor       = 0,
-	.build       = 3,
+	.build       = 4,
 	.date        =
 	{
-		.years   = 2024,
-		.months  = GOS_TIME_DECEMBER,
-		.days    = 26
+		.years   = 2025,
+		.months  = GOS_TIME_JANUARY,
+		.days    = 2
 	}
 };
 

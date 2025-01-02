@@ -51,6 +51,7 @@
 #include <svl_cfg.h>
 #include <svl_ipl.h>
 #include <svl_sdh.h>
+#include <drv_crc.h>
 #include <string.h>
 
 /*
@@ -71,26 +72,34 @@
 /*
  * Type definitions
  */
-// TODO
+/**
+ * SDH states.
+ */
 typedef enum
 {
-	SDH_STATE_IDLE,
-	SDH_STATE_DOWNLOADING_BINARY,
+	SDH_STATE_IDLE,               //!< Idle state.
+	SDH_STATE_DOWNLOADING_BINARY, //!< Downloading binary.
 
-	SDH_STATE_BINARY_NUM_REQ,
-	SDH_STATE_BINARY_INFO_REQ,
-	SDH_STATE_BINARY_DOWNLOAD_REQ,
-	SDH_STATE_BINARY_INSTALL_REQ
+	SDH_STATE_BINARY_NUM_REQ,     //!< Number of binaries request.
+	SDH_STATE_BINARY_INFO_REQ,    //!< Binary info request.
+	SDH_STATE_BINARY_DOWNLOAD_REQ,//!< Binary download request.
+	SDH_STATE_BINARY_INSTALL_REQ, //!< Binary install request.
+	SDH_STATE_BINARY_ERASE_REQ    //!< Binary erase request.
 }svl_sdhState_t;
 
+/**
+ * SDH download request results.
+ */
 typedef enum
 {
-	SDH_DOWNLOAD_REQ_OK = 1,
-	SDH_DOWNLOAD_REQ_DESC_SIZE_ERR = 2,
-	SDH_DOWNLOAD_REQ_FILE_SIZE_ERR = 4
+	SDH_DOWNLOAD_REQ_OK = 1,            //!< Request OK.
+	SDH_DOWNLOAD_REQ_DESC_SIZE_ERR = 2, //!< Descriptor does not fit.
+	SDH_DOWNLOAD_REQ_FILE_SIZE_ERR = 4  //!< File does not fit.
 }svl_sdhDownloadReqRes_t;
 
-// TODO
+/**
+ * SDH control message.
+ */
 typedef struct
 {
 	svl_sdhState_t requiredState;
@@ -98,6 +107,9 @@ typedef struct
 	u16_t          dataSize;
 }svl_sdhControlMsg_t;
 
+/**
+ * SDH chunk descriptor.
+ */
 typedef struct __attribute__((packed))
 {
 	u16_t chunkIdx;
@@ -117,30 +129,43 @@ GOS_STATIC svl_sdhReadWriteFunc_t sdhReadFunction = NULL;
  */
 GOS_STATIC svl_sdhReadWriteFunc_t sdhWriteFunction = NULL;
 
-// TODO
+/**
+ * SDH buffer for sysmon messages.
+ */
 GOS_STATIC u8_t  sdhBuffer [SVL_SDH_BUFFER_SIZE];
 
-// TODO
+/**
+ * State control message.
+ */
 GOS_STATIC gos_message_t sdhStateControlMsg =
 {
 	.messageId   = SVL_SDH_STATE_CONT_MSG_ID,
 	.messageSize = sizeof(svl_sdhControlMsg_t)
 };
 
-// TODO
+/**
+ * SDH state-machine variable.
+ */
 GOS_STATIC svl_sdhState_t sdhState = SDH_STATE_IDLE;
 
 /*
  * Function prototypes
  */
 GOS_STATIC void_t svl_sdhDaemon (void_t);
+
 GOS_STATIC void_t svl_sdhSysmonBinaryNumReqCallback (void_t);
 GOS_STATIC void_t svl_sdhSysmonBinaryInfoReqCallback (void_t);
 GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback (void_t);
 GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback (void_t);
 GOS_STATIC void_t svl_sdhSysmonSoftwareInstallReqCallback (void_t);
+GOS_STATIC void_t svl_sdhSysmonBinaryEraseReqCallback (void_t);
 
+GOS_STATIC void_t svl_sdhIplBinaryNumReqCallback (u8_t* pData, u32_t size, u32_t crc);
 GOS_STATIC void_t svl_sdhIplBinaryInfoReqCallback (u8_t* pData, u32_t size, u32_t crc);
+GOS_STATIC void_t svl_sdhIplDownloadReqCallback (u8_t* pData, u32_t size, u32_t crc);
+GOS_STATIC void_t svl_sdhIplBinaryChunkReqCallback (u8_t* pData, u32_t size, u32_t crc);
+GOS_STATIC void_t svl_sdhIplSoftwareInstallReqCallback (u8_t* pData, u32_t size, u32_t crc);
+GOS_STATIC void_t svl_sdhIplBinaryEraseReqCallback (u8_t* pData, u32_t size, u32_t crc);
 
 /**
  * TODO
@@ -202,12 +227,71 @@ GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonSoftwareInstallReqMsg =
 	.protocolVersion = 1u
 };
 
-/*
+/**
+ * TODO
+ */
+GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonBinaryEraseReqMsg =
+{
+	.callback        = svl_sdhSysmonBinaryEraseReqCallback,
+	.messageId       = 0x2106,
+	.payload         = (void_t*)sdhBuffer,
+	.payloadSize     = sizeof(u16_t) + sizeof(bool_t),
+	.protocolVersion = 1u
+};
+
+/**
+ * TODO
+ */
+GOS_STATIC svl_iplUserMsgDesc_t iplBinaryNumReqMsg =
+{
+	.callback        = svl_sdhIplBinaryNumReqCallback,
+	.msgId           = 0x02
+};
+
+/**
+ * TODO
+ */
 GOS_STATIC svl_iplUserMsgDesc_t iplBinaryInfoReqMsg =
 {
 	.callback        = svl_sdhIplBinaryInfoReqCallback,
-	.msgId           = 0x02
-};*/
+	.msgId           = 0x12
+};
+
+/**
+ * TODO
+ */
+GOS_STATIC svl_iplUserMsgDesc_t iplDownloadReqMsg =
+{
+	.callback        = svl_sdhIplDownloadReqCallback,
+	.msgId           = 0x22
+};
+
+/**
+ * TODO
+ */
+GOS_STATIC svl_iplUserMsgDesc_t iplBinaryChunkReqMsg =
+{
+	.callback        = svl_sdhIplBinaryChunkReqCallback,
+	.msgId           = 0x32
+};
+
+/**
+ * TODO
+ */
+GOS_STATIC svl_iplUserMsgDesc_t iplSoftwareInstallReqMsg =
+{
+	.callback        = svl_sdhIplSoftwareInstallReqCallback,
+	.msgId           = 0x42
+};
+
+/**
+ * TODO
+ */
+GOS_STATIC svl_iplUserMsgDesc_t iplEraseReqMsg =
+{
+	.callback        = svl_sdhIplBinaryEraseReqCallback,
+	.msgId           = 0x52
+};
 
 /**
  * SDH daemon descriptor.
@@ -234,14 +318,20 @@ gos_result_t svl_sdhInit (void_t)
 	/*
 	 * Function code.
 	 */
-	// TODO:
 	initResult = gos_sysmonRegisterUserMessage(&sysmonBinaryNumReqMsg);
 	initResult &= gos_sysmonRegisterUserMessage(&sysmonBinaryInfoReqMsg);
 	initResult &= gos_sysmonRegisterUserMessage(&sysmonDownloadReqMsg);
 	initResult &= gos_sysmonRegisterUserMessage(&sysmonBinaryChunkReqMsg);
 	initResult &= gos_sysmonRegisterUserMessage(&sysmonSoftwareInstallReqMsg);
+	initResult &= gos_sysmonRegisterUserMessage(&sysmonBinaryEraseReqMsg);
 
-	//initResult &= svl_iplRegisterUserMsg(&iplBinaryInfoReqMsg);
+	initResult &= svl_iplRegisterUserMsg(&iplBinaryNumReqMsg);
+	initResult &= svl_iplRegisterUserMsg(&iplBinaryInfoReqMsg);
+	initResult &= svl_iplRegisterUserMsg(&iplDownloadReqMsg);
+	initResult &= svl_iplRegisterUserMsg(&iplBinaryChunkReqMsg);
+	initResult &= svl_iplRegisterUserMsg(&iplSoftwareInstallReqMsg);
+	initResult &= svl_iplRegisterUserMsg(&iplEraseReqMsg);
+
 	initResult &= gos_taskRegister(&svlSdhTaskDesc, NULL);
 
 	if (initResult != GOS_SUCCESS)
@@ -325,6 +415,47 @@ gos_result_t svl_sdhGetBinaryData (u16_t index, svl_sdhBinaryDesc_t* pDesc)
 }
 
 /*
+ * Function: svl_sdhSetBinaryData
+ */
+gos_result_t svl_sdhSetBinaryData (u16_t index, svl_sdhBinaryDesc_t* pDesc)
+{
+	/*
+	 * Local variables.
+	 */
+	gos_result_t dataSetResult = GOS_SUCCESS;
+	u16_t        numOfBinaries = 0u;
+
+	/*
+	 * Function code.
+	 */
+	if (pDesc != NULL && sdhReadFunction != NULL && sdhWriteFunction != NULL)
+	{
+		(void_t) sdhReadFunction(SVL_SDH_STORAGE_DESC_AREA_START, (u8_t*)&numOfBinaries, sizeof(numOfBinaries));
+
+		if (index < numOfBinaries)
+		{
+			(void_t) sdhWriteFunction(
+					SVL_SDH_STORAGE_DESC_BIN_DESC_START + index * sizeof(svl_sdhBinaryDesc_t),
+					(u8_t*)pDesc,
+					sizeof(*pDesc)
+					);
+		}
+		else
+		{
+			// Invalid request.
+			dataSetResult = GOS_ERROR;
+		}
+	}
+	else
+	{
+		// NULL pointer error.
+		dataSetResult = GOS_ERROR;
+	}
+
+	return dataSetResult;
+}
+
+/*
  * Function: svl_sdhReadBytesFromMemory
  */
 gos_result_t svl_sdhReadBytesFromMemory (u32_t address, u8_t* pBuffer, u32_t size)
@@ -394,6 +525,10 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 						(void_t) memcpy((void_t*)gosRespMsg.messageBytes, (void_t*)&numOfBinaries, sizeof(numOfBinaries));
 						(void_t) gos_messageTx(&gosRespMsg);
 					}
+					else
+					{
+						// Request cannot be served.
+					}
 					break;
 				}
 				case SDH_STATE_BINARY_INFO_REQ:
@@ -401,7 +536,6 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 					if (sdhReadFunction != NULL)
 					{
 						u16_t index = 0u;
-						u16_t numOfBinaries = 0u;
 						svl_sdhBinaryDesc_t binaryDescriptor = {0};
 
 						(void_t) memcpy((void_t*)&index, (void_t*)controlMsg.pData, sizeof(index));
@@ -422,11 +556,15 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 							// Wrong request.
 						}
 					}
+					else
+					{
+						// Request cannot be served.
+					}
 					break;
 				}
 				case SDH_STATE_BINARY_INSTALL_REQ:
 				{
-					if (sdhReadFunction != NULL)
+					if (sdhReadFunction != NULL && sdhState == SDH_STATE_IDLE)
 					{
 						u16_t index = 0u;
 						u16_t numOfBinaries = 0u;
@@ -456,7 +594,10 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 							(void_t) gos_messageTx(&gosRespMsg);
 						}
 					}
-
+					else
+					{
+						// Request cannot be served.
+					}
 					break;
 				}
 				case SDH_STATE_BINARY_DOWNLOAD_REQ:
@@ -487,7 +628,6 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 										);
 
 								newBinaryDescriptor.binaryLocation = binaryDescriptor.binaryLocation + binaryDescriptor.binaryInfo.size;
-
 							}
 							else
 							{
@@ -541,6 +681,10 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 						(void_t) memcpy((void_t*)gosRespMsg.messageBytes, (void_t*)&result, sizeof(result));
 						(void_t) gos_messageTx(&gosRespMsg);
 					}
+					else
+					{
+						// Request cannot be served.
+					}
 					break;
 				}
 				case SDH_STATE_DOWNLOADING_BINARY:
@@ -570,7 +714,7 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 						// Save chunk.
 						(void_t) sdhWriteFunction(
 								newBinaryDescriptor.binaryLocation + chunkDesc.chunkIdx * SVL_SDH_CHUNK_SIZE,
-								(u8_t*)(sdhBuffer + sizeof(chunkDesc)),
+								(u8_t*)(controlMsg.pData + sizeof(chunkDesc)),
 								SVL_SDH_CHUNK_SIZE
 						);
 
@@ -601,6 +745,100 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 						{
 							// Continue reception.
 						}
+					}
+					break;
+				}
+				case SDH_STATE_BINARY_ERASE_REQ:
+				{
+					if (sdhReadFunction != NULL && sdhWriteFunction != NULL && sdhState == SDH_STATE_IDLE)
+					{
+						u16_t index = 0u;
+						u16_t numOfBinaries = 0u;
+						svl_sdhBinaryDesc_t binaryDescriptor = {0};
+						u32_t startAddress = 0u;
+						u32_t fromAddress  = 0u;
+						u32_t totalCopySize = 0u;
+						bool_t defragment = GOS_FALSE;
+
+						(void_t) memcpy((void_t*)&index, (void_t*)controlMsg.pData, sizeof(index));
+						(void_t) memcpy((void_t*)&defragment, (void_t*)controlMsg.pData + sizeof(index), sizeof(defragment));
+#if SVL_SDH_TRACE_LEVEL > 0
+						(void_t) gos_traceTraceFormatted(GOS_TRUE, "SDH binary erase request received. Index: %u\r\n", index);
+#endif
+
+						(void_t) sdhReadFunction(SVL_SDH_STORAGE_DESC_AREA_START, (u8_t*)&numOfBinaries, sizeof(numOfBinaries));
+
+						if (index < numOfBinaries)
+						{
+							svl_sdhGetBinaryData(index, &binaryDescriptor);
+
+							// Start address to copy is the binary location of
+							// the binary that is being deleted.
+							startAddress = binaryDescriptor.binaryLocation;
+
+							// Reorganize descriptors and binary.
+							if (index != (numOfBinaries - 1))
+							{
+								// Move descriptors.
+								for (u16_t idx = 0u; idx < (numOfBinaries - (index + 1)); idx++)
+								{
+									svl_sdhGetBinaryData((index + 1 + idx), &binaryDescriptor);
+									svl_sdhSetBinaryData((index + idx), &binaryDescriptor);
+								}
+
+								// Move binaries and update descriptor data.
+								// Prepare variables.
+								if (defragment == GOS_TRUE)
+								{
+									svl_sdhGetBinaryData(index, &binaryDescriptor);
+									fromAddress = binaryDescriptor.binaryLocation;
+
+									svl_sdhGetBinaryData((numOfBinaries - 2), &binaryDescriptor);
+									totalCopySize = binaryDescriptor.binaryLocation + binaryDescriptor.binaryInfo.size - fromAddress;
+
+									// Move in chunks using SDH buffer.
+									for (u32_t cntr = 0u; (cntr * 2048) < totalCopySize; cntr++)
+									{
+										if ((cntr + 1) * 2048 < totalCopySize)
+										{
+											(void_t) sdhReadFunction(fromAddress + (cntr * 2048), sdhBuffer, 2048);
+											(void_t) sdhWriteFunction(startAddress + (cntr * 2048), sdhBuffer, 2048);
+										}
+										else
+										{
+											(void_t) sdhReadFunction(fromAddress + (cntr * 2048), sdhBuffer, totalCopySize - (cntr * 2048));
+											(void_t) sdhWriteFunction(startAddress + (cntr * 2048), sdhBuffer, totalCopySize - (cntr * 2048));
+										}
+									}
+								}
+								else
+								{
+									// No defragmentation needed.
+								}
+							}
+							else
+							{
+								// No moving required.
+							}
+
+							// Decrease number of binaries.
+							numOfBinaries--;
+							(void_t) sdhWriteFunction(SVL_SDH_STORAGE_DESC_AREA_START, (u8_t*)&numOfBinaries, sizeof(numOfBinaries));
+
+							gosRespMsg.messageId = SVL_SDH_STATE_CONT_RESP_MSG_ID;
+							gosRespMsg.messageSize = sizeof(u16_t);
+
+							(void_t) memcpy((void_t*)gosRespMsg.messageBytes, (void_t*)&index, sizeof(index));
+							(void_t) gos_messageTx(&gosRespMsg);
+						}
+						else
+						{
+							// Wrong request.
+						}
+					}
+					else
+					{
+						// Request cannot be served.
 					}
 					break;
 				}
@@ -647,6 +885,10 @@ GOS_STATIC void_t svl_sdhSysmonBinaryNumReqCallback (void_t)
 				sizeof(u16_t),
 				0xFFFF);
 	}
+	else
+	{
+		// Nothing to do.
+	}
 }
 
 GOS_STATIC void_t svl_sdhSysmonBinaryInfoReqCallback (void_t)
@@ -671,6 +913,10 @@ GOS_STATIC void_t svl_sdhSysmonBinaryInfoReqCallback (void_t)
 				(void_t*)respMsg.messageBytes,
 				sizeof(svl_sdhBinaryDesc_t),
 				0xFFFF);
+	}
+	else
+	{
+		// Nothing to do.
 	}
 }
 
@@ -697,6 +943,10 @@ GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback (void_t)
 				sizeof(u8_t),
 				0xFFFF);
 	}
+	else
+	{
+		// Nothing to do.
+	}
 }
 
 GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback (void_t)
@@ -721,6 +971,10 @@ GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback (void_t)
 				(void_t*)respMsg.messageBytes,
 				sizeof(svl_sdhChunkDesc_t),
 				0xFFFF);
+	}
+	else
+	{
+		// Nothing to do.
 	}
 }
 
@@ -747,15 +1001,189 @@ GOS_STATIC void_t svl_sdhSysmonSoftwareInstallReqCallback (void_t)
 				sizeof(u16_t),
 				0xFFFF);
 	}
+	else
+	{
+		// Nothing to do.
+	}
+}
+
+GOS_STATIC void_t svl_sdhSysmonBinaryEraseReqCallback (void_t)
+{
+	svl_sdhControlMsg_t controlMsg = {0};
+	gos_messageId_t respMsgId [] = { SVL_SDH_STATE_CONT_RESP_MSG_ID, 0 };
+	gos_message_t respMsg = {0};
+
+	controlMsg.requiredState = SDH_STATE_BINARY_ERASE_REQ;
+	controlMsg.pData = sdhBuffer;
+	controlMsg.dataSize = sizeof(u16_t) + sizeof(bool_t);
+
+	(void_t) memcpy((void_t*)sdhStateControlMsg.messageBytes, (void_t*)&controlMsg, sizeof(controlMsg));
+
+	(void_t) gos_messageTx(&sdhStateControlMsg);
+
+	if (gos_messageRx(respMsgId, &respMsg, 300000) == GOS_SUCCESS)
+	{
+		(void_t) gos_gcpTransmitMessage(
+	    		CFG_SYSMON_GCP_CHANNEL_NUM,
+				0xB106,
+				(void_t*)respMsg.messageBytes,
+				sizeof(u16_t),
+				0xFFFF);
+	}
+	else
+	{
+		// Nothing to do.
+	}
+}
+
+GOS_STATIC void_t svl_sdhIplBinaryNumReqCallback (u8_t* pData, u32_t size, u32_t crc)
+{
+	svl_sdhControlMsg_t controlMsg = {0};
+	gos_messageId_t respMsgId [] = { SVL_SDH_STATE_CONT_RESP_MSG_ID, 0 };
+	gos_message_t respMsg = {0};
+
+	controlMsg.requiredState = SDH_STATE_BINARY_NUM_REQ;
+
+	(void_t) memcpy((void_t*)sdhStateControlMsg.messageBytes, (void_t*)&controlMsg, sizeof(controlMsg));
+
+	(void_t) gos_messageTx(&sdhStateControlMsg);
+
+	if (gos_messageRx(respMsgId, &respMsg, 3000) == GOS_SUCCESS)
+	{
+		(void_t) svl_iplSendMessage(0xA02, (u8_t*)respMsg.messageBytes, sizeof(u16_t));
+	}
+	else
+	{
+		// Nothing to do.
+	}
 }
 
 GOS_STATIC void_t svl_sdhIplBinaryInfoReqCallback (u8_t* pData, u32_t size, u32_t crc)
 {
-	// TODO
-#if 0
-	/*
-	 * Function code.
-	 */
-	(void_t) svl_iplSendMessage(0xA02, pData, dataLength);
-#endif
+	svl_sdhControlMsg_t controlMsg = {0};
+	gos_messageId_t respMsgId [] = { SVL_SDH_STATE_CONT_RESP_MSG_ID, 0 };
+	gos_message_t respMsg = {0};
+
+	controlMsg.requiredState = SDH_STATE_BINARY_INFO_REQ;
+	controlMsg.pData = pData;
+	controlMsg.dataSize = size; //sizeof(u16_t);
+
+	(void_t) memcpy((void_t*)sdhStateControlMsg.messageBytes, (void_t*)&controlMsg, sizeof(controlMsg));
+
+	(void_t) gos_messageTx(&sdhStateControlMsg);
+
+	if (gos_messageRx(respMsgId, &respMsg, 3000) == GOS_SUCCESS)
+	{
+		(void_t) svl_iplSendMessage(0xA12, (u8_t*)respMsg.messageBytes, sizeof(svl_sdhBinaryDesc_t));
+	}
+	else
+	{
+		// Nothing to do.
+	}
+}
+
+GOS_STATIC void_t svl_sdhIplDownloadReqCallback (u8_t* pData, u32_t size, u32_t crc)
+{
+	svl_sdhControlMsg_t controlMsg = {0};
+	gos_messageId_t respMsgId [] = { SVL_SDH_STATE_CONT_RESP_MSG_ID, 0 };
+	gos_message_t respMsg = {0};
+
+	controlMsg.requiredState = SDH_STATE_BINARY_DOWNLOAD_REQ;
+	controlMsg.pData = pData;
+	controlMsg.dataSize = size; //sizeof(u32_t);
+
+	(void_t) memcpy((void_t*)sdhStateControlMsg.messageBytes, (void_t*)&controlMsg, sizeof(controlMsg));
+
+	(void_t) gos_messageTx(&sdhStateControlMsg);
+
+	if (gos_messageRx(respMsgId, &respMsg, 3000) == GOS_SUCCESS)
+	{
+		(void_t) svl_iplSendMessage(0xA22, (u8_t*)respMsg.messageBytes, sizeof(u8_t));
+	}
+	else
+	{
+		// Nothing to do.
+	}
+}
+
+GOS_STATIC void_t svl_sdhIplBinaryChunkReqCallback (u8_t* pData, u32_t size, u32_t crc)
+{
+	svl_sdhControlMsg_t controlMsg = {0};
+	gos_messageId_t respMsgId [] = { SVL_SDH_STATE_CONT_RESP_MSG_ID, 0 };
+	gos_message_t respMsg = {0};
+
+	if (drv_crcCheckCrc32(pData, size, crc, NULL) != DRV_CRC_CHECK_OK)
+	{
+		svl_sdhChunkDesc_t chunkDesc = { .result = 0 };
+		(void_t) svl_iplSendMessage(0xA32, (u8_t*)&chunkDesc, sizeof(svl_sdhChunkDesc_t));
+	}
+	else
+	{
+		(void_t) memcpy((void_t*)sdhBuffer, (void_t*)pData, size);
+
+		controlMsg.requiredState = SDH_STATE_DOWNLOADING_BINARY;
+		controlMsg.pData = sdhBuffer;
+		controlMsg.dataSize = size; //sizeof(svl_sdhChunkDesc_t) + SVL_SDH_CHUNK_SIZE;
+
+		(void_t) memcpy((void_t*)sdhStateControlMsg.messageBytes, (void_t*)&controlMsg, sizeof(controlMsg));
+
+		(void_t) gos_messageTx(&sdhStateControlMsg);
+
+		if (gos_messageRx(respMsgId, &respMsg, 3000) == GOS_SUCCESS)
+		{
+			(void_t) svl_iplSendMessage(0xA32, (u8_t*)respMsg.messageBytes, sizeof(svl_sdhChunkDesc_t));
+		}
+		else
+		{
+			// Nothing to do.
+		}
+	}
+}
+
+GOS_STATIC void_t svl_sdhIplSoftwareInstallReqCallback (u8_t* pData, u32_t size, u32_t crc)
+{
+	svl_sdhControlMsg_t controlMsg = {0};
+	gos_messageId_t respMsgId [] = { SVL_SDH_STATE_CONT_RESP_MSG_ID, 0 };
+	gos_message_t respMsg = {0};
+
+	controlMsg.requiredState = SDH_STATE_BINARY_INSTALL_REQ;
+	controlMsg.pData = pData;
+	controlMsg.dataSize = size; //sizeof(u16_t);
+
+	(void_t) memcpy((void_t*)sdhStateControlMsg.messageBytes, (void_t*)&controlMsg, sizeof(controlMsg));
+
+	(void_t) gos_messageTx(&sdhStateControlMsg);
+
+	if (gos_messageRx(respMsgId, &respMsg, 3000) == GOS_SUCCESS)
+	{
+		(void_t) svl_iplSendMessage(0xA42, (u8_t*)respMsg.messageBytes, sizeof(u16_t));
+	}
+	else
+	{
+		// Nothing to do.
+	}
+}
+
+GOS_STATIC void_t svl_sdhIplBinaryEraseReqCallback (u8_t* pData, u32_t size, u32_t crc)
+{
+	svl_sdhControlMsg_t controlMsg = {0};
+	gos_messageId_t respMsgId [] = { SVL_SDH_STATE_CONT_RESP_MSG_ID, 0 };
+	gos_message_t respMsg = {0};
+
+	controlMsg.requiredState = SDH_STATE_BINARY_ERASE_REQ;
+	controlMsg.pData = pData;
+	controlMsg.dataSize = size; //sizeof(u16_t) + sizeof(bool_t);
+
+	(void_t) memcpy((void_t*)sdhStateControlMsg.messageBytes, (void_t*)&controlMsg, sizeof(controlMsg));
+
+	(void_t) gos_messageTx(&sdhStateControlMsg);
+
+	if (gos_messageRx(respMsgId, &respMsg, 300000) == GOS_SUCCESS)
+	{
+		(void_t) svl_iplSendMessage(0xA52, (u8_t*)respMsg.messageBytes, sizeof(u16_t));
+	}
+	else
+	{
+		// Nothing to do.
+	}
 }

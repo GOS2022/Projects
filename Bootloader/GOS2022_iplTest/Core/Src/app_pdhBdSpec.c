@@ -27,16 +27,16 @@ GOS_STATIC svl_pdhOsInfo_t appOsInfo =
 GOS_STATIC svl_pdhSwVerInfo_t appSwVerInfo =
 {
 	.author      = "Ahmed Ibrahim Gazar",
-	.name        = "GOS_ipl_pdh_sdh_test_app",
-	.description = "IPL, PDH, and SDH service test application.",
+	.name        = "GOS_sdh_test_app",
+	.description = "SDH service test application.",
 	.major       = 2,
-	.minor       = 1,
+	.minor       = 2,
 	.build       = 0,
 	.date        =
 	{
 		.years   = 2024,
 		.months  = GOS_TIME_DECEMBER,
-		.days    = 24
+		.days    = 28
 	}
 };
 
@@ -110,14 +110,22 @@ GOS_STATIC void_t app_pdhBdSpecCheckSoftwareInfo (void_t)
 {
 	u32_t swInfoCrc     = 0u;
 	u32_t testSwInfoCrc = 0u;
+	u32_t libVerCrc     = 0u;
+	u32_t testLibVerCrc = 0u;
+	svl_pdhSwVerInfo_t libVerInfo = {0};
 
+	(void_t) svl_pdhGetLibVersion(&libVerInfo);
 	(void_t) svl_pdhGetSwInfo(&testSwInfo);
 
 	(void_t) drv_crcGetCrc32((u8_t*)&appSwVerInfo, sizeof(appSwVerInfo), &swInfoCrc);
 	(void_t) drv_crcGetCrc32((u8_t*)&testSwInfo.appSwVerInfo, sizeof(testSwInfo.appSwVerInfo), &testSwInfoCrc);
 
+	(void_t) drv_crcGetCrc32((u8_t*)&libVerInfo, sizeof(libVerInfo), &libVerCrc);
+	(void_t) drv_crcGetCrc32((u8_t*)&testSwInfo.appLibVerInfo, sizeof(testSwInfo.appLibVerInfo), &testLibVerCrc);
+
 	// Check if application information has been modified.
-	if (swInfoCrc != testSwInfoCrc)
+	if ((swInfoCrc != testSwInfoCrc) || (libVerCrc != testLibVerCrc) ||
+		(testSwInfo.appOsInfo.major != GOS_VERSION_MAJOR) || (testSwInfo.appOsInfo.minor != GOS_VERSION_MINOR))
 	{
 		(void_t) svl_pdhGetLibVersion(&testSwInfo.appLibVerInfo);
 		(void_t) memcpy((void_t*)&testSwInfo.appOsInfo, (void_t*)&appOsInfo, sizeof(svl_pdhOsInfo_t));
