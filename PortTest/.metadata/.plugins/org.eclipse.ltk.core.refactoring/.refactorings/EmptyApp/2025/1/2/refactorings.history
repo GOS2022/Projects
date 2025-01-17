@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;EmptyApp/GOSLib/Inc&apos; to &apos;inc&apos;" description="Rename resource &apos;Inc&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="GOSLib/Inc" name="inc" stamp="1736452528644" updateReferences="true"/>
+</session>

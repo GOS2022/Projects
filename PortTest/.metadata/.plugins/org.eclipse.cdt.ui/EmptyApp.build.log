@@ -1,0 +1,19 @@
+17:22:40 **** Incremental Build of configuration Debug for project EmptyApp ****
+make -j4 all 
+arm-none-eabi-gcc -o "EmptyApp.elf" @"objects.list"  -lGOS2022 -lGOS2022_lib -mcpu=cortex-m4 -T"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\EmptyApp\STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="EmptyApp.map" -Wl,--gc-sections -static -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug" -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f401xe" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: EmptyApp.elf
+ 
+arm-none-eabi-size  EmptyApp.elf 
+arm-none-eabi-objdump -h -S EmptyApp.elf  > "EmptyApp.list"
+arm-none-eabi-objcopy  -O binary EmptyApp.elf  "EmptyApp.bin"
+   text	   data	    bss	    dec	    hex	filename
+  58352	   6736	  42696	 107784	  1a508	EmptyApp.elf
+Finished building: default.size.stdout
+ 
+Finished building: EmptyApp.bin
+ 
+Finished building: EmptyApp.list
+ 
+
+17:22:42 Build Finished. 0 errors, 0 warnings. (took 1s.290ms)
+

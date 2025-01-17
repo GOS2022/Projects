@@ -1,0 +1,20 @@
+16:28:38 **** Incremental Build of configuration Debug for project EmptyAppF411 ****
+make -j4 all 
+arm-none-eabi-gcc "../Core/Src/app_led.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F411xE -c -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022" -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022/os/driver/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022/os/kernel/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022/os/services/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/EmptyAppF411/Driver/cfg" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/EmptyAppF411/Driver/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/drv/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/svl/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/bld/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/Inc" -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/app_led.d" -MT"Core/Src/app_led.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/app_led.o"
+arm-none-eabi-gcc -o "EmptyAppF411.elf" @"objects.list"  -lGOS2022_lib -lGOS2022 -mcpu=cortex-m4 -T"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\EmptyAppF411\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="EmptyAppF411.map" -Wl,--gc-sections -static -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe" -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: EmptyAppF411.elf
+ 
+arm-none-eabi-size  EmptyAppF411.elf 
+arm-none-eabi-objdump -h -S EmptyAppF411.elf  > "EmptyAppF411.list"
+arm-none-eabi-objcopy  -O binary EmptyAppF411.elf  "EmptyAppF411.bin"
+   text	   data	    bss	    dec	    hex	filename
+  58384	   6740	  42700	 107824	  1a530	EmptyAppF411.elf
+Finished building: default.size.stdout
+ 
+Finished building: EmptyAppF411.bin
+ 
+Finished building: EmptyAppF411.list
+ 
+
+16:28:40 Build Finished. 0 errors, 0 warnings. (took 1s.898ms)
+
