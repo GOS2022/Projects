@@ -11,19 +11,19 @@
 
 #define LED_TASK_PERIOD     ( 1000u )
 
-GOS_STATIC void_t APP_LedTask (void_t);
+GOS_STATIC void_t app_ledTask (void_t);
 
 
 GOS_STATIC gos_taskDescriptor_t ledTaskDesc =
 {
-	.taskFunction       = APP_LedTask,
+	.taskFunction       = app_ledTask,
 	.taskName           = "app_led_task",
 	.taskPriority       = 0,
 	.taskPrivilegeLevel = GOS_TASK_PRIVILEGE_USER,
 	.taskStackSize      = 0x300
 };
 
-gos_result_t APP_LedInit (void_t)
+gos_result_t app_ledInit (void_t)
 {
 	gos_result_t ledInitResult = GOS_SUCCESS;
 
@@ -37,11 +37,11 @@ gos_result_t APP_LedInit (void_t)
 	return ledInitResult;
 }
 
-GOS_STATIC void_t APP_LedTask (void_t)
+GOS_STATIC void_t app_ledTask (void_t)
 {
 	for (;;)
 	{
-		drv_gpioTgglePin(IO_USER_LED);
-		gos_taskSleep(LED_TASK_PERIOD);
+		(void_t) drv_gpioTgglePin(IO_USER_LED);
+		(void_t) gos_taskSleep(LED_TASK_PERIOD);
 	}
 }

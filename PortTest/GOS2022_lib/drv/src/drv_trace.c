@@ -112,7 +112,7 @@ GOS_INLINE gos_result_t drv_traceTransmit (char_t* pMessage)
     {
         instance = uartServiceConfig[DRV_UART_TRACE_INSTANCE];
 
-        uartTransmitResult = drv_uartTransmitDMA(instance, (u8_t*)pMessage, strlen(pMessage),
+        uartTransmitResult = drv_uartTransmitIT(instance, (u8_t*)pMessage, strlen(pMessage),
                 uartServiceTmoConfig.traceMutexTmo, uartServiceTmoConfig.traceTriggerTmo);
     }
     else

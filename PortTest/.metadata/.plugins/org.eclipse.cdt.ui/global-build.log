@@ -1,32 +1,27 @@
-16:28:36 **** Incremental Build of configuration Debug for project GOS2022 ****
+18:40:39 **** Incremental Build of configuration Debug for project GOS2022 ****
 make -j4 all 
 make: Nothing to be done for 'all'.
-16:28:36 **** Incremental Build of configuration Debug for project GOS2022 ****
+18:40:40 **** Incremental Build of configuration Debug for project GOS2022 ****
 make -j4 all 
 make: Nothing to be done for 'all'.
-16:28:37 **** Incremental Build of configuration Build_stm32f411xe for project GOS2022_lib ****
+18:40:40 **** Incremental Build of configuration Build_stm32f411xe for project GOS2022_lib ****
 make -j4 all 
-make: Nothing to be done for 'all'.
-16:28:37 **** Incremental Build of configuration Debug for project GOS2022 ****
-make -j4 all 
-make: Nothing to be done for 'all'.
-16:28:38 **** Incremental Build of configuration Build_stm32f411xe for project GOS2022_lib ****
-make -j4 all 
-make: Nothing to be done for 'all'.
-16:28:38 **** Incremental Build of configuration Debug for project EmptyAppF411 ****
-make -j4 all 
-arm-none-eabi-gcc "../Core/Src/app_led.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F411xE -c -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022" -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022/os/driver/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022/os/kernel/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022/os/services/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/EmptyAppF411/Driver/cfg" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/EmptyAppF411/Driver/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/drv/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/svl/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/bld/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/Inc" -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/app_led.d" -MT"Core/Src/app_led.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/app_led.o"
-arm-none-eabi-gcc -o "EmptyAppF411.elf" @"objects.list"  -lGOS2022_lib -lGOS2022 -mcpu=cortex-m4 -T"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\EmptyAppF411\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="EmptyAppF411.map" -Wl,--gc-sections -static -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe" -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: EmptyAppF411.elf
- 
-arm-none-eabi-size  EmptyAppF411.elf 
-arm-none-eabi-objdump -h -S EmptyAppF411.elf  > "EmptyAppF411.list"
-arm-none-eabi-objcopy  -O binary EmptyAppF411.elf  "EmptyAppF411.bin"
-   text	   data	    bss	    dec	    hex	filename
-  58384	   6740	  42700	 107824	  1a530	EmptyAppF411.elf
-Finished building: default.size.stdout
- 
-Finished building: EmptyAppF411.bin
- 
-Finished building: EmptyAppF411.list
+arm-none-eabi-gcc "../drv/src/drv_trace.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DSTM32 -DSTM32F4 -DSTM32F411xE -c -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022/os/kernel/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022/os/driver/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022/os/services/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/drv/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/bld/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/Inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/hal/STM32F4xx_HAL_Driver/Inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/hal/STM32F4xx_HAL_Driver/Inc/Legacy" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/hal/CMSIS/Include" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/hal/CMSIS/Device/ST/STM32F4xx/Include" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/PortTest/GOS2022_lib/svl/inc" -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"drv/src/drv_trace.d" -MT"drv/src/drv_trace.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "drv/src/drv_trace.o"
+../drv/src/drv_trace.c: In function 'drv_traceTransmitUnsafe':
+../drv/src/drv_trace.c:82:27: warning: the comparison will always evaluate as 'true' for the address of 'uartServiceConfig' will never be NULL [-Waddress]
+   82 |     if (uartServiceConfig != NULL)
+      |                           ^~
+../drv/src/drv_trace.c:61:47: note: 'uartServiceConfig' declared here
+   61 | GOS_EXTERN GOS_CONST drv_uartPeriphInstance_t uartServiceConfig [];
+      |                                               ^~~~~~~~~~~~~~~~~
+../drv/src/drv_trace.c: In function 'drv_traceTransmit':
+../drv/src/drv_trace.c:111:27: warning: the comparison will always evaluate as 'true' for the address of 'uartServiceConfig' will never be NULL [-Waddress]
+  111 |     if (uartServiceConfig != NULL)
+      |                           ^~
+../drv/src/drv_trace.c:61:47: note: 'uartServiceConfig' declared here
+   61 | GOS_EXTERN GOS_CONST drv_uartPeriphInstance_t uartServiceConfig [];
+      |                                               ^~~~~~~~~~~~~~~~~
+arm-none-eabi-ar -r  "libGOS2022_lib.a" @"objects.list"  
+arm-none-eabi-ar: creating libGOS2022_lib.a
+Finished building target: libGOS2022_lib.a
  

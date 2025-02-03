@@ -1,8 +1,63 @@
+//*************************************************************************************************
+//
+//                            #####             #####             #####
+//                          #########         #########         #########
+//                         ##                ##       ##       ##
+//                        ##                ##         ##        #####
+//                        ##     #####      ##         ##           #####
+//                         ##       ##       ##       ##                ##
+//                          #########         #########         #########
+//                            #####             #####             #####
+//
+//                                      (c) Ahmed Gazar, 2025
+//
+//*************************************************************************************************
+//! @file       svl_pdh.c
+//! @author     Ahmed Gazar
+//! @date       2025-01-30
+//! @version    1.0
+//!
+//! @brief      GOS2022 Library / Project Data Handler source.
+//! @details    For a more detailed description of this driver, please refer to @ref svl_pdh.h
+//*************************************************************************************************
+// History
+// ------------------------------------------------------------------------------------------------
+// Version    Date          Author          Description
+// ------------------------------------------------------------------------------------------------
+// 1.0        2025-01-30    Ahmed Gazar     Initial version created.
+//*************************************************************************************************
+//
+// Copyright (c) 2025 Ahmed Gazar
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+//*************************************************************************************************
 /*
  * Includes
  */
 #include <svl_pdh.h>
 #include <string.h>
+
+/*
+ * Macros
+ */
+/**
+ * PDH buffer size.
+ */
+#define PDH_BUFFER_SIZE ( 1024 )
 
 /*
  * Static variables
@@ -27,11 +82,22 @@ GOS_STATIC gos_mutex_t            pdhMutex;
  */
 GOS_STATIC bool_t                 pdhInited        = GOS_FALSE;
 
+/**
+ * PDH buffer for sysmon messages.
+ */
+GOS_STATIC u8_t                   pdhBuffer [PDH_BUFFER_SIZE];
+
 /*
  * Function prototypes
  */
 GOS_STATIC void_t svl_pdhSoftwareInfoReqMsgReceived (void_t);
 GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (void_t);
+GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived      (void_t);
+GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived       (void_t);
+GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (void_t);
+GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (void_t);
+GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived      (void_t);
+GOS_STATIC void_t svl_pdhBldCfgSetMsgReceived       (void_t);
 
 /**
  * System monitoring software information request message.
@@ -57,6 +123,79 @@ GOS_STATIC gos_sysmonUserMessageDescriptor_t hardwareInfoReqMsg =
 	.protocolVersion = 1u
 };
 
+/**
+ * WiFi configuration information request message.
+ */
+GOS_STATIC gos_sysmonUserMessageDescriptor_t wifiCfgReqMsg =
+{
+	.callback        = svl_pdhWifiCfgReqMsgReceived,
+	.messageId       = 0x2002,
+	.payload         = NULL,
+	.payloadSize     = 0u,
+	.protocolVersion = 1u
+};
+
+/**
+ * Bootloader configuration information request message.
+ */
+GOS_STATIC gos_sysmonUserMessageDescriptor_t bldCfgReqMsg =
+{
+	.callback        = svl_pdhBldCfgReqMsgReceived,
+	.messageId       = 0x2003,
+	.payload         = NULL,
+	.payloadSize     = 0u,
+	.protocolVersion = 1u
+};
+
+/**
+ * System monitoring software information set message.
+ */
+GOS_STATIC gos_sysmonUserMessageDescriptor_t softwareInfoSetMsg =
+{
+	.callback        = svl_pdhSoftwareInfoSetMsgReceived,
+	.messageId       = 0x2011,
+	.payload         = (void_t*)pdhBuffer,
+	.payloadSize     = sizeof(svl_pdhSwInfo_t),
+	.protocolVersion = 1u
+};
+
+/**
+ * System monitoring hardware information set message.
+ */
+GOS_STATIC gos_sysmonUserMessageDescriptor_t hardwareInfoSetMsg =
+{
+	.callback        = svl_pdhHardwareInfoSetMsgReceived,
+	.messageId       = 0x2012,
+	.payload         = (void_t*)pdhBuffer,
+	.payloadSize     = sizeof(svl_pdhHwInfo_t),
+	.protocolVersion = 1u
+};
+
+/**
+ * System monitoring WiFi configuration set message.
+ */
+GOS_STATIC gos_sysmonUserMessageDescriptor_t wifiCfgSetMsg =
+{
+	.callback        = svl_pdhWifiCfgSetMsgReceived,
+	.messageId       = 0x2013,
+	.payload         = (void_t*)pdhBuffer,
+	.payloadSize     = sizeof(svl_pdhWifiCfg_t),
+	.protocolVersion = 1u
+};
+
+/**
+ * System monitoring bootloader configuration set message.
+ */
+GOS_STATIC gos_sysmonUserMessageDescriptor_t bldCfgSetMsg =
+{
+	.callback        = svl_pdhBldCfgSetMsgReceived,
+	.messageId       = 0x2014,
+	.payload         = (void_t*)pdhBuffer,
+	.payloadSize     = sizeof(svl_pdhBldCfg_t),
+	.protocolVersion = 1u
+};
+
+
 /*
  * Function: svl_pdhInit
  */
@@ -72,6 +211,13 @@ gos_result_t svl_pdhInit (void_t)
 	 */
 	initResult = gos_sysmonRegisterUserMessage(&softwareInfoReqMsg);
 	initResult &= gos_sysmonRegisterUserMessage(&hardwareInfoReqMsg);
+	initResult &= gos_sysmonRegisterUserMessage(&wifiCfgReqMsg);
+	initResult &= gos_sysmonRegisterUserMessage(&bldCfgReqMsg);
+	initResult &= gos_sysmonRegisterUserMessage(&softwareInfoSetMsg);
+	initResult &= gos_sysmonRegisterUserMessage(&hardwareInfoSetMsg);
+	initResult &= gos_sysmonRegisterUserMessage(&wifiCfgSetMsg);
+	initResult &= gos_sysmonRegisterUserMessage(&bldCfgSetMsg);
+
 	initResult &= gos_mutexInit(&pdhMutex);
 
 	pdhInited = GOS_TRUE;
@@ -422,5 +568,137 @@ GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (void_t)
 			0xB001,
 			(void_t*)&hwInfoMsg,
 			sizeof(hwInfoMsg),
+			0xFFFF);
+}
+
+GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	svl_pdhWifiCfg_t wifiCfgMsg = {0};
+
+	/*
+	 * Function code.
+	 */
+	(void_t) svl_pdhGetWifiCfg(&wifiCfgMsg);
+
+	(void_t) gos_gcpTransmitMessage(
+    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			0xB002,
+			(void_t*)&wifiCfgMsg,
+			sizeof(wifiCfgMsg),
+			0xFFFF);
+}
+
+GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	svl_pdhBldCfg_t bldCfgMsg = {0};
+
+	/*
+	 * Function code.
+	 */
+	(void_t) svl_pdhGetBldCfg(&bldCfgMsg);
+
+	(void_t) gos_gcpTransmitMessage(
+    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			0xB002,
+			(void_t*)&bldCfgMsg,
+			sizeof(bldCfgMsg),
+			0xFFFF);
+}
+
+GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	svl_pdhSwInfo_t swInfoMsg = {0};
+
+	/*
+	 * Function code.
+	 */
+	(void_t) memcpy((void_t*)&swInfoMsg, (void_t*)pdhBuffer, sizeof(svl_pdhSwInfo_t));
+
+	(void_t) svl_pdhSetSwInfo(&swInfoMsg);
+	(void_t) svl_pdhGetSwInfo(&swInfoMsg);
+
+	(void_t) gos_gcpTransmitMessage(
+    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			0xB011,
+			(void_t*)&swInfoMsg,
+			sizeof(swInfoMsg),
+			0xFFFF);
+}
+
+GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	svl_pdhHwInfo_t hwInfoMsg = {0};
+
+	/*
+	 * Function code.
+	 */
+	(void_t) memcpy((void_t*)&hwInfoMsg, (void_t*)pdhBuffer, sizeof(svl_pdhHwInfo_t));
+
+	(void_t) svl_pdhSetHwInfo(&hwInfoMsg);
+	(void_t) svl_pdhGetHwInfo(&hwInfoMsg);
+
+	(void_t) gos_gcpTransmitMessage(
+    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			0xB012,
+			(void_t*)&hwInfoMsg,
+			sizeof(hwInfoMsg),
+			0xFFFF);
+}
+
+GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	svl_pdhWifiCfg_t wifiCfgMsg = {0};
+
+	/*
+	 * Function code.
+	 */
+	(void_t) memcpy((void_t*)&wifiCfgMsg, (void_t*)pdhBuffer, sizeof(svl_pdhWifiCfg_t));
+
+	(void_t) svl_pdhSetWifiCfg(&wifiCfgMsg);
+	(void_t) svl_pdhGetWifiCfg(&wifiCfgMsg);
+
+	(void_t) gos_gcpTransmitMessage(
+    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			0xB013,
+			(void_t*)&wifiCfgMsg,
+			sizeof(wifiCfgMsg),
+			0xFFFF);
+}
+
+GOS_STATIC void_t svl_pdhBldCfgSetMsgReceived (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	svl_pdhBldCfg_t bldCfgMsg = {0};
+
+	/*
+	 * Function code.
+	 */
+	(void_t) memcpy((void_t*)&bldCfgMsg, (void_t*)pdhBuffer, sizeof(svl_pdhBldCfg_t));
+
+	(void_t) svl_pdhSetBldCfg(&bldCfgMsg);
+	(void_t) svl_pdhGetBldCfg(&bldCfgMsg);
+
+	(void_t) gos_gcpTransmitMessage(
+    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			0xB014,
+			(void_t*)&bldCfgMsg,
+			sizeof(bldCfgMsg),
 			0xFFFF);
 }

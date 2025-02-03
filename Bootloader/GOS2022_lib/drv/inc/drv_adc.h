@@ -86,11 +86,19 @@ typedef struct
     u32_t                   nbrOfDiscConversion;   //!< Number of discontinuous conversion.
     u32_t                   dmaContinuousRequests; //!< DMA continuous requests.
     u32_t                   eocSelection;          //!< EOC selection.
+    drv_dmaDescriptor_t*    dmaConfig;             //!< DMA configuration.
+}drv_adcDescriptor_t;
+
+/**
+ * ADC channel descriptor type.
+ */
+typedef struct
+{
+	drv_adcPeriphInstance_t periphInstance;        //!< Periphery instance.
     u32_t                   channel;               //!< Channel.
     u32_t                   rank;                  //!< Rank.
     u32_t                   samplingTime;          //!< Sampling time.
-    drv_dmaDescriptor_t*    dmaConfig;             //!< DMA configuration.
-}drv_adcDescriptor_t;
+}drv_adcChannelDesc_t;
 
 // TODO
 gos_result_t drv_adcInit (
@@ -104,13 +112,19 @@ gos_result_t drv_adcInitInstance (
 
 // TODO
 gos_result_t drv_adcGetValueBlocking (
-        drv_adcPeriphInstance_t instance, u16_t* pValue,
+        drv_adcPeriphInstance_t instance, u32_t* pValue,
         u32_t                   mutexTmo, u32_t  readTmo
         );
 
 // TODO
 gos_result_t drv_adcGetValueIT (
         drv_adcPeriphInstance_t instance, u16_t* pValue,
+        u32_t                   mutexTmo, u32_t  triggerTmo
+        );
+
+// TODO
+gos_result_t drv_adcGetValueDMA (
+        drv_adcPeriphInstance_t instance, u32_t* pValue, u32_t size,
         u32_t                   mutexTmo, u32_t  triggerTmo
         );
 #endif

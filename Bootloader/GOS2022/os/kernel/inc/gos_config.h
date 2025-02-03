@@ -299,7 +299,7 @@
 /**
  * Maximum number of user messages.
  */
-#define CFG_SYSMON_MAX_USER_MESSAGES    ( 10 )
+#define CFG_SYSMON_MAX_USER_MESSAGES    ( 24 )
 
 /*
  * Error handling parameters.

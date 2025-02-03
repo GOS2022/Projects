@@ -11,7 +11,7 @@
  */
 GOS_CONST drv_i2cDescriptor_t i2cConfig [] =
 {
-	/*{
+	{
 		.periphInstance  = DRV_I2C_INSTANCE_1,
 		.clockSpeed      = 400000,
 		.dutyCycle       = I2C_DUTYCYCLE_2,
@@ -21,7 +21,7 @@ GOS_CONST drv_i2cDescriptor_t i2cConfig [] =
 		.ownAddress2     = 0,
 		.generalCallMode = I2C_GENERALCALL_DISABLE,
 		.noStretchMode   = I2C_NOSTRETCH_DISABLE
-	}*/
+	}
 };
 
 /**

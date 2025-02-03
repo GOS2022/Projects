@@ -8,3 +8,6 @@
 /PortTest/GOS2022_lib/Build_stm32f401xe
 /PortTest/GOS2022/Release
 /PortTest/GOS2022/Debug
+/Bootloader/GOS2022_lib/Debug
+/Bootloader/GOS2022_iplTest/Debug
+/Bootloader/.metadata

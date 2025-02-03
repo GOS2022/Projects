@@ -16,10 +16,11 @@ GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 		// Phase: SVL
 		"Initializing SVL...",
 		{
-			{ "Bootloader handler initialization",  svl_bldHandlerInit          },
 			{ "PDH initialization",                 svl_pdhInit                 },
 			{ "IPL initialization",                 svl_iplInit                 },
-			{ "SDH initialization",                 svl_sdhInit                 }
+			{ "SDH initialization",                 svl_sdhInit                 },
+			{ "MDI initialization",                 svl_mdiInit                 },
+			{ "ERS initialization",                 svl_ersInit                 },
 		}
 	},
 	{
@@ -29,7 +30,12 @@ GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 			{ "IPL board-specific initialization",  app_iplBdSpecInit           },
 			{ "PDH board-specific initialization",  app_pdhBdSpecInit           },
 			{ "SDH board-specific initialization",  app_sdhBdSpecInit           },
-			{ "LED initialization",                 APP_LedInit                 },
+			{ "MDI board-specific initialization",  app_mdiBdSpecInit           },
+			{ "ERS board-specific initialization",  app_ersBdSpecInit           },
+			{ "LED initialization",                 app_ledInit                 },
+			{ "LCD initialization",                 app_lcdInit                 },
+			{ "Debouncer initialization",           app_debouncerInit           },
+			{ "RTC handler initialization",         bsp_rtcHandlerInit          },
 		}
 	}
 };

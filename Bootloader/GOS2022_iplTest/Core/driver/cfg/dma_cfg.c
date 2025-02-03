@@ -58,6 +58,20 @@ drv_dmaDescriptor_t dmaConfig [] =
 	    .mode                = DMA_NORMAL,
 	    .priority            = DMA_PRIORITY_LOW,
 	    .fifoMode            = DMA_FIFOMODE_DISABLE,
+	},
+	// DMA2 stream 4 -> ADC1
+	[DMA_CFG_ADC1] =
+	{
+		.dmaStream           = DRV_DMA_2_STREAM_4,
+		.channel             = DMA_CHANNEL_0,
+		.direction           = DMA_PERIPH_TO_MEMORY,
+	    .periphInc           = DMA_PINC_DISABLE,
+	    .memInc              = DMA_MINC_ENABLE,
+	    .periphDataAlignment = DMA_PDATAALIGN_HALFWORD,
+	    .memDataAlignment    = DMA_MDATAALIGN_HALFWORD,
+	    .mode                = DMA_CIRCULAR,
+	    .priority            = DMA_PRIORITY_HIGH,
+	    .fifoMode            = DMA_FIFOMODE_DISABLE,
 	}
 };
 
@@ -84,7 +98,7 @@ drv_dmaDescriptor_t* pDMADescriptorLut [DRV_DMA_X_STREAM_NUM] =
 	[DRV_DMA_2_STREAM_1] = NULL,
 	[DRV_DMA_2_STREAM_2] = NULL,
 	[DRV_DMA_2_STREAM_3] = NULL,
-	[DRV_DMA_2_STREAM_4] = NULL,
+	[DRV_DMA_2_STREAM_4] = &dmaConfig[DMA_CFG_ADC1],
 	[DRV_DMA_2_STREAM_5] = NULL,
 	[DRV_DMA_2_STREAM_6] = NULL,
 	[DRV_DMA_2_STREAM_7] = &dmaConfig[DMA_CFG_USART1],

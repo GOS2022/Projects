@@ -331,7 +331,7 @@ GOS_INLINE void_t svl_dsmWaitForState (svl_dsmState_t requiredState)
 	 */
 	while (deviceState != requiredState)
 	{
-		gos_taskSleep(20);
+		(void_t) gos_taskSleep(20);
 	}
 }
 
@@ -344,7 +344,7 @@ GOS_INLINE void_t svl_dsmSetState (svl_dsmState_t requiredState)
 	 * Function code.
 	 */
 	devicePrevState = deviceState;
-	deviceState = requiredState;
+	deviceState     = requiredState;
 }
 
 /**

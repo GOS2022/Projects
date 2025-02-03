@@ -8,6 +8,8 @@
 #include <drv_gpio.h>
 #include "iodef.h"
 
+GOS_EXTERN void_t gpio_cfgUserButtonCallback (void_t);
+
 /**
  * TODO
  */
@@ -19,6 +21,13 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.pin  = GPIO_PIN_5,
 			.mode = GPIO_MODE_OUTPUT_PP,
 			.pull = GPIO_NOPULL,
+		},
+		[IO_USER_BUTTON] =
+		{
+			.port = GPIOC,
+			.pin  = GPIO_PIN_13,
+			.mode = GPIO_MODE_IT_FALLING,
+			.pull = GPIO_NOPULL
 		},
 		[IO_UART_1_RX] =
 		{
@@ -127,7 +136,25 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.pull = GPIO_NOPULL,
 			.speed = GPIO_SPEED_FREQ_HIGH,
 			.defaultState = GPIO_STATE_HIGH
-		}
+		},
+		[IO_I2C1_SCL] =
+		{
+			.port = GPIOB,
+			.pin = GPIO_PIN_6,
+			.mode = GPIO_MODE_AF_OD,
+			.pull = GPIO_NOPULL, //GPIO_PULLUP,
+			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
+			.alternate = GPIO_AF4_I2C1
+		},
+		[IO_I2C1_SDA] =
+		{
+			.port = GPIOB,
+			.pin = GPIO_PIN_7,
+			.mode = GPIO_MODE_AF_OD,
+			.pull = GPIO_NOPULL, //GPIO_PULLUP,
+			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
+			.alternate = GPIO_AF4_I2C1
+		},
 };
 
 /**
@@ -135,6 +162,12 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
  */
 u32_t gpioConfigSize = sizeof(gpioConfig);
 
-GOS_CONST drv_gpioItCallbackDescriptor_t gpioItConfig [] = {};
+GOS_CONST drv_gpioItCallbackDescriptor_t gpioItConfig [] =
+{
+	{
+		.callback = gpio_cfgUserButtonCallback,
+		.pin      = gpioConfig[IO_USER_BUTTON].pin
+	}
+};
 
 u32_t gpioItConfigSize = sizeof(gpioItConfig);

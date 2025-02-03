@@ -66,7 +66,7 @@ gos_result_t gos_userApplicationInit (void_t)
 	appInitResult &= svl_dsmInit();
 
 	// Welcome message.
-	(void_t) gos_traceTrace(GOS_FALSE, "Welcome to IPL test application!");
+	(void_t) gos_traceTrace(GOS_FALSE, "Welcome to the GOS test application!");
 
 	if (appInitResult != GOS_SUCCESS)
 	{

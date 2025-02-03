@@ -18,7 +18,8 @@
 //! @version    1.0
 //!
 //! @brief      GOS2022 Library / Device State Manager header.
-//! @details    This component TODO
+//! @details    This component implements the execution of the startup functions, and the
+//!             pre-defined reactions to state changes.
 //*************************************************************************************************
 // History
 // ------------------------------------------------------------------------------------------------
@@ -52,50 +53,123 @@
 #include <svl_cfg.h>
 
 /**
- * TODO
+ * DSM initializer block.
  */
 typedef struct
 {
-    char_t* description;
-    gos_result_t (*pInitializer)(void_t);
+    char_t*      description;             //!< Initializer description.
+    gos_result_t (*pInitializer)(void_t); //!< Initializer function.
 }svl_dsmInitBlock_t;
 
+/**
+ * DSM initialization phase configuration structure.
+ */
 typedef struct
 {
-	char_t* phaseName;
-	GOS_CONST svl_dsmInitBlock_t initBlock [SVL_DSM_MAX_INITIALIZERS];
+	char_t*                      phaseName;                            //!< Initialization phase name.
+	GOS_CONST svl_dsmInitBlock_t initBlock [SVL_DSM_MAX_INITIALIZERS]; //!< Initializer block array.
 }svl_dsmInitPhaseDesc_t;
 
+/**
+ * DSM states.
+ */
 typedef enum
 {
-	DSM_STATE_STARTUP,
-	DSM_STATE_STARTUP_READY,
-	DSM_STATE_NORMAL,
-	DSM_STATE_CRITICAL,
-	DSM_STATE_FATAL,
-	DSM_STATE_REDUCED,
-	DSM_STATE_MAINTENANCE
+	DSM_STATE_STARTUP,       //!< Startup.
+	DSM_STATE_STARTUP_READY, //!< Startup ready.
+	DSM_STATE_NORMAL,        //!< Normal.
+	DSM_STATE_CRITICAL,      //!< Critical.
+	DSM_STATE_FATAL,         //!< Fatal.
+	DSM_STATE_REDUCED,       //!< Reduced.
+	DSM_STATE_MAINTENANCE    //!< Maintenance.
 }svl_dsmState_t;
 
+/**
+ * DSM reaction descriptor structure.
+ */
 typedef struct
 {
-	svl_dsmState_t prevState;
-	svl_dsmState_t currState;
-	void_t (*pReaction) (void_t);
+	svl_dsmState_t prevState;     //!< Previous state for change detection.
+	svl_dsmState_t currState;     //!< Current state for change detection.
+	void_t (*pReaction) (void_t); //!< Reaction to be executed.
 }svl_dsmReaction_t;
 
+/**
+ * @brief   Initializes the DSM service.
+ * @details TODO
+ *
+ * @return  Result of
+ *
+ * @retval  GOS_SUCCESS :
+ * @retval  GOS_ERROR   :
+ */
 gos_result_t svl_dsmInit (void_t);
 
+/**
+ * @brief   Prints the OS info.
+ * @details TODO
+ *
+ * @return  Result of
+ *
+ * @retval  GOS_SUCCESS :
+ * @retval  GOS_ERROR   :
+ */
 gos_result_t svl_dsmPrintOSInfo (void_t);
 
+/**
+ * @brief   Prints the library info.
+ * @details TODO
+ *
+ * @return  Result of
+ *
+ * @retval  GOS_SUCCESS :
+ * @retval  GOS_ERROR   :
+ */
 gos_result_t svl_dsmPrintLibInfo (void_t);
 
+/**
+ * @brief   Prints the hardware info.
+ * @details TODO
+ *
+ * @return  Result of
+ *
+ * @retval  GOS_SUCCESS :
+ * @retval  GOS_ERROR   :
+ */
 gos_result_t svl_dsmPrintHwInfo (void_t);
 
+/**
+ * @brief   Prints the application info.
+ * @details TODO
+ *
+ * @param
+ *
+ * @return  Result of
+ *
+ * @retval  GOS_SUCCESS :
+ * @retval  GOS_ERROR   :
+ */
 gos_result_t svl_dsmPrintAppInfo (void_t);
 
+/**
+ * @brief   Waits for a specific state.
+ * @details Sends the current task to sleep until the required state
+ *          has been set.
+ *
+ * @param   requiredState : State to wait for.
+ *
+ * @return  -
+ */
 void_t svl_dsmWaitForState (svl_dsmState_t requiredState);
 
+/**
+ * @brief   Sets the required state.
+ * @details Sets the previous and current states.
+ *
+ * @param   requiredState : State to be set.
+ *
+ * @return  -
+ */
 void_t svl_dsmSetState (svl_dsmState_t requiredState);
 
 #endif

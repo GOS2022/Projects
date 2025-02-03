@@ -27,16 +27,16 @@ GOS_STATIC svl_pdhOsInfo_t appOsInfo =
 GOS_STATIC svl_pdhSwVerInfo_t appSwVerInfo =
 {
 	.author      = "Ahmed Ibrahim Gazar",
-	.name        = "GOS_sdh_test_app",
-	.description = "SDH service test application.",
+	.name        = "GOS_test_app",
+	.description = "GOS test application.",
 	.major       = 2,
-	.minor       = 2,
+	.minor       = 3,
 	.build       = 0,
 	.date        =
 	{
-		.years   = 2024,
-		.months  = GOS_TIME_DECEMBER,
-		.days    = 28
+		.years   = 2025,
+		.months  = GOS_TIME_JANUARY,
+		.days    = 29
 	}
 };
 
@@ -76,6 +76,7 @@ gos_result_t app_pdhBdSpecInit (void_t)
 	return pdhBdSpecInitRes;
 }
 
+#if 0
 svl_pdhWifiCfg_t wifiCfg =
 {
 	.ssid      = "HUAWEI-2.4G-Qwa6",
@@ -85,6 +86,7 @@ svl_pdhWifiCfg_t wifiCfg =
 	.gateway   = { 192, 168, 100, 1   },
 	.subnet    = { 255, 255, 0,   0   }
 };
+#endif
 
 GOS_STATIC void_t app_pdhTestTask (void_t)
 {
@@ -94,13 +96,11 @@ GOS_STATIC void_t app_pdhTestTask (void_t)
 
 	for (;;)
 	{
-		// Fake load generation.
-		gos_kernelDelayMs(1);
-		(void_t) gos_taskSleep(5);
+		(void_t) gos_taskSleep(50);
 
 		if (gos_kernelGetSysTicks() - sysTicks >= 1000)
 		{
-			//gos_traceTrace(GOS_TRUE, "\r");
+			(void_t) gos_traceTrace(GOS_TRUE, "\r");
 			sysTicks = gos_kernelGetSysTicks();
 		}
 	}
@@ -108,14 +108,31 @@ GOS_STATIC void_t app_pdhTestTask (void_t)
 
 GOS_STATIC void_t app_pdhBdSpecCheckSoftwareInfo (void_t)
 {
-	u32_t swInfoCrc     = 0u;
-	u32_t testSwInfoCrc = 0u;
-	u32_t libVerCrc     = 0u;
-	u32_t testLibVerCrc = 0u;
+	u32_t  swInfoCrc     = 0u;
+	u32_t  testSwInfoCrc = 0u;
+	u32_t  libVerCrc     = 0u;
+	u32_t  testLibVerCrc = 0u;
+	u32_t  bldCrc        = 0u;
+	bool_t forceReset    = GOS_FALSE;
 	svl_pdhSwVerInfo_t libVerInfo = {0};
 
 	(void_t) svl_pdhGetLibVersion(&libVerInfo);
 	(void_t) svl_pdhGetSwInfo(&testSwInfo);
+
+	(void_t) drv_crcGetCrc32((u8_t*)testSwInfo.bldBinaryInfo.startAddress, testSwInfo.bldBinaryInfo.size, &bldCrc);
+
+	if (bldCrc != testSwInfo.bldBinaryInfo.crc)
+	{
+		(void_t) memset((void_t*)&testSwInfo.bldBinaryInfo, 0, sizeof(testSwInfo.bldBinaryInfo));
+		(void_t) memset((void_t*)&testSwInfo.bldSwVerInfo, 0, sizeof(testSwInfo.bldSwVerInfo));
+		(void_t) memset((void_t*)&testSwInfo.bldLibVerInfo, 0, sizeof(testSwInfo.bldLibVerInfo));
+		(void_t) memset((void_t*)&testSwInfo.bldOsInfo, 0, sizeof(testSwInfo.bldOsInfo));
+		forceReset = GOS_TRUE;
+	}
+	else
+	{
+		// Bootloader data OK.
+	}
 
 	(void_t) drv_crcGetCrc32((u8_t*)&appSwVerInfo, sizeof(appSwVerInfo), &swInfoCrc);
 	(void_t) drv_crcGetCrc32((u8_t*)&testSwInfo.appSwVerInfo, sizeof(testSwInfo.appSwVerInfo), &testSwInfoCrc);
@@ -124,7 +141,7 @@ GOS_STATIC void_t app_pdhBdSpecCheckSoftwareInfo (void_t)
 	(void_t) drv_crcGetCrc32((u8_t*)&testSwInfo.appLibVerInfo, sizeof(testSwInfo.appLibVerInfo), &testLibVerCrc);
 
 	// Check if application information has been modified.
-	if ((swInfoCrc != testSwInfoCrc) || (libVerCrc != testLibVerCrc) ||
+	if (forceReset == GOS_TRUE || (swInfoCrc != testSwInfoCrc) || (libVerCrc != testLibVerCrc) ||
 		(testSwInfo.appOsInfo.major != GOS_VERSION_MAJOR) || (testSwInfo.appOsInfo.minor != GOS_VERSION_MINOR))
 	{
 		(void_t) svl_pdhGetLibVersion(&testSwInfo.appLibVerInfo);

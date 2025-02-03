@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       svl_cfg.h
 //! @author     Ahmed Gazar
-//! @date       2024-06-27
-//! @version    1.0
+//! @date       2025-01-30
+//! @version    1.1
 //!
 //! @brief      GOS2022 Library / Service Layer Configuration header.
 //! @details    This file contains the configurable parameters of the SVL.
@@ -25,6 +25,8 @@
 // Version    Date          Author          Description
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-06-27    Ahmed Gazar     Initial version created.
+// 1.1        2025-01-29    Ahmed Gazar     +    ERS and MDI parameters added
+//                                          -    FRS parameters removed
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -54,86 +56,29 @@
 /*
  * DHS Service Configuration
  */
-/**
- * TODO
- */
-#define SVL_DHS_MAX_DEVICES            ( 8u )
+//! TODO
+#define SVL_DHS_MAX_DEVICES                  ( 8u )
 
-/**
- * TODO
- */
-#define SVL_DHS_DAEMON_PRIO            ( 200 )
+//! TODO
+#define SVL_DHS_DAEMON_PRIO                  ( 200 )
 
 /*
- * FRS Service Configuration
+ * ERS Service Configuration
  */
-/**
- * TODO
- */
-#define SVL_FRS_FAULT_DATA_SIZE        ( 64u )
+//! Event description length.
+#define SVL_ERS_DESC_LENGTH                  ( 64u )
 
-/**
- * TODO
- */
-#define SVL_FRS_ENTRY_NUM_ADDR         ( 0u  )
+//! Event data size.
+#define SVL_ERS_DATA_SIZE                    ( 8u )
 
-/**
- * TODO
- */
-#define SVL_FRS_ENTRY_START_ADDR       ( SVL_FRS_ENTRY_NUM_ADDR + sizeof(u32_t) )
+//! ERS mutex timeout in [ms].
+#define SVL_ERS_MUTEX_TMO_MS                 ( 2000u )
 
-/**
- * TODO
- */
-#define SVL_FRS_ENTRY_SIZE             ( sizeof(svl_frsFault_t) )
+//! Address of ERS entries number.
+#define SVL_ERS_ENTRY_NUM_ADDR               ( 0u  )
 
-/**
- * TODO
- */
-#define SVL_FRS_MUTEX_TMO_MS           ( 2000u )
-
-/*
- * HWI Service Configuration
- */
-/**
- * TODO
- */
-#define SVL_HWI_CRC_ADDR               ( 0u  )
-
-/**
- * TODO
- */
-#define SVL_HWI_ENTRY_START_ADDR       ( SVL_HWI_CRC_ADDR + sizeof(u32_t) )
-
-/**
- * TODO
- */
-#define SVL_HWI_ENTRY_SIZE             ( sizeof(svl_hwiInfo_t) )
-
-/**
- * TODO
- */
-#define SVL_HWI_BOARD_NAME_LENGTH      ( 32u )
-
-/**
- * TODO
- */
-#define SVL_HWI_REVISION_LENGTH        ( 8u  )
-
-/**
- * TODO
- */
-#define SVL_HWI_AUTHOR_LENGTH          ( 32u )
-
-/**
- * TODO
- */
-#define SVL_HWI_DESCRIPTION_LENGTH     ( 64u )
-
-/**
- * TODO
- */
-#define SVL_HWI_SERIAL_NUMBER_LENGTH   ( 64u )
+//! Start address of ERS entries.
+#define SVL_ERS_ENTRY_START_ADDR             ( SVL_ERS_ENTRY_NUM_ADDR + sizeof(u32_t) )
 
 /*
  * IPL Service Configuration
@@ -196,20 +141,19 @@
 /*
  * DSM Service Configuration
  */
-/**
- * TODO
- */
-#define SVL_DSM_MAX_INITIALIZERS       ( 32u )
+//! TODO
+#define SVL_DSM_MAX_INITIALIZERS             ( 32u )
 
-/**
- * TODO
- */
-#define SVL_DSM_DAEMON_PRIO            ( 200 )
+//! TODO
+#define SVL_DSM_DAEMON_PRIO                  ( 200 )
 
-/**
- * TODO
- */
-#define SVL_DSM_DAEMON_POLL_MS         ( 20u )
+//! TODO
+#define SVL_DSM_DAEMON_POLL_MS               ( 20u )
 
+/*
+ * MDI Service Configuration
+ */
+//! TODO
+#define SVL_MDI_VAR_NAME_LENGTH              ( 16u )
 
 #endif

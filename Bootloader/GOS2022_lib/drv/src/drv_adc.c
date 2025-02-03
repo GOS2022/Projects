@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_adc.c
 //! @author     Ahmed Gazar
-//! @date       2024-04-04
-//! @version    1.0
+//! @date       2025-01-30
+//! @version    1.1
 //!
 //! @brief      GOS2022 Library / ADC driver source.
 //! @details    For a more detailed description of this driver, please refer to @ref drv_adc.h
@@ -25,6 +25,8 @@
 // Version    Date          Author          Description
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-04-04    Ahmed Gazar     Initial version created.
+// 1.1        2025-01-30    Ahmed Gazar     *    Instance and channel configurations separated
+//                                          +    DMA-based interface added
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -93,6 +95,16 @@ GOS_EXTERN GOS_CONST drv_adcDescriptor_t     adcConfig [];
  */
 GOS_EXTERN u32_t                             adcConfigSize;
 
+/**
+ * ADC channel configuration array (shall be defined by user).
+ */
+GOS_EXTERN GOS_CONST drv_adcChannelDesc_t    adcChannelConfig[];
+
+/**
+ * ADC channel configuration array size (shall be defined by user).
+ */
+GOS_EXTERN u32_t                             adcChannelConfigSize;
+
 /*
  * Function: drv_adcInit
  */
@@ -101,8 +113,10 @@ gos_result_t drv_adcInit (void_t)
     /*
      * Local variables.
      */
-    gos_result_t adcDriverInitResult = GOS_SUCCESS;
-    u8_t         adcIdx              = 0u;
+    gos_result_t            adcDriverInitResult = GOS_SUCCESS;
+    u8_t                    adcIdx              = 0u;
+    ADC_ChannelConfTypeDef  sConfig             = {0};
+    drv_adcPeriphInstance_t instance            = 0u;
 
     /*
      * Function code.
@@ -112,6 +126,21 @@ gos_result_t drv_adcInit (void_t)
         for (adcIdx = 0u; adcIdx < adcConfigSize / sizeof(drv_adcDescriptor_t); adcIdx++)
         {
             GOS_CONCAT_RESULT(adcDriverInitResult, drv_adcInitInstance(adcIdx));
+        }
+
+        for (adcIdx = 0u; adcIdx < adcChannelConfigSize / sizeof(drv_adcChannelDesc_t); adcIdx++)
+        {
+            /*
+             *  Configure for the selected ADC regular channel its corresponding rank
+             *  in the sequencer and its sample time.
+             */
+            sConfig.Channel      = adcChannelConfig[adcIdx].channel;
+            sConfig.Rank         = adcChannelConfig[adcIdx].rank;
+            sConfig.SamplingTime = adcChannelConfig[adcIdx].samplingTime;
+
+            instance = adcConfig[adcIdx].periphInstance;
+
+            GOS_CONCAT_RESULT(adcDriverInitResult, HAL_ADC_ConfigChannel(&hadcs[instance], &sConfig) == HAL_OK ? GOS_SUCCESS : GOS_ERROR);
         }
     }
     else
@@ -133,7 +162,7 @@ gos_result_t drv_adcInitInstance (u8_t adcInstanceIndex)
      */
     gos_result_t            adcInitResult = GOS_ERROR;
     drv_adcPeriphInstance_t instance      = 0u;
-    ADC_ChannelConfTypeDef  sConfig       = {0};
+
 
     /*
      * Function code.
@@ -156,19 +185,10 @@ gos_result_t drv_adcInitInstance (u8_t adcInstanceIndex)
         hadcs[instance].Init.Resolution = adcConfig[adcInstanceIndex].resolution;
         hadcs[instance].Init.ScanConvMode = adcConfig[adcInstanceIndex].scanConvMode;
 
-        /*
-         *  Configure for the selected ADC regular channel its corresponding rank
-         *  in the sequencer and its sample time.
-         */
-        sConfig.Channel      = adcConfig[adcInstanceIndex].channel;
-        sConfig.Rank         = adcConfig[adcInstanceIndex].rank;
-        sConfig.SamplingTime = adcConfig[adcInstanceIndex].samplingTime;
-
-        if (HAL_ADC_Init         (&hadcs[instance])                 == HAL_OK      &&
-            HAL_ADC_ConfigChannel(&hadcs[instance], &sConfig)       == HAL_OK      &&
-            gos_mutexInit        (&adcMutexes[instance])            == GOS_SUCCESS &&
-            gos_triggerInit      (&adcReadyTriggers[instance])    == GOS_SUCCESS   &&
-            gos_triggerReset     (&adcReadyTriggers[instance])    == GOS_SUCCESS
+        if (HAL_ADC_Init         (&hadcs[instance])            == HAL_OK      &&
+            gos_mutexInit        (&adcMutexes[instance])       == GOS_SUCCESS &&
+            gos_triggerInit      (&adcReadyTriggers[instance]) == GOS_SUCCESS   &&
+            gos_triggerReset     (&adcReadyTriggers[instance]) == GOS_SUCCESS
             )
         {
             adcInitResult = GOS_SUCCESS;
@@ -190,7 +210,7 @@ gos_result_t drv_adcInitInstance (u8_t adcInstanceIndex)
  * Function: drv_adcGetValueBlocking
  */
 gos_result_t drv_adcGetValueBlocking (
-        drv_adcPeriphInstance_t instance, u16_t* pValue,
+        drv_adcPeriphInstance_t instance, u32_t* pValue,
         u32_t                   mutexTmo, u32_t  readTmo
         )
 {
@@ -275,6 +295,46 @@ gos_result_t drv_adcGetValueIT (
     else
     {
         // Mutex error.
+    }
+
+    (void_t) gos_mutexUnlock(&adcMutexes[instance]);
+
+    return adcDriverGetValueResult;
+}
+
+/*
+ * Function: drv_adcGetValueDMA
+ */
+gos_result_t drv_adcGetValueDMA (
+        drv_adcPeriphInstance_t instance, u32_t* pValue, u32_t size,
+        u32_t                   mutexTmo, u32_t  triggerTmo
+        )
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t adcDriverGetValueResult = GOS_ERROR;
+
+    /*
+     * Function code.
+     */
+    if (pValue                                               != NULL &&
+        gos_mutexLock(&adcMutexes[instance], mutexTmo)       == GOS_SUCCESS &&
+        HAL_ADC_Start_DMA(&hadcs[instance], pValue, size)    == HAL_OK)
+    {
+        //if (gos_triggerWait(&adcReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
+        //	gos_triggerReset(&adcReadyTriggers[instance])               == GOS_SUCCESS)
+        {
+        	adcDriverGetValueResult = GOS_SUCCESS;
+        }
+        //else
+        {
+        	// Timeout.
+        }
+    }
+    else
+    {
+        // Mutex or ADC error.
     }
 
     (void_t) gos_mutexUnlock(&adcMutexes[instance]);

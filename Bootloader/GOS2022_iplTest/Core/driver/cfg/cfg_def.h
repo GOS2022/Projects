@@ -13,6 +13,7 @@ typedef enum
 	DMA_CFG_UART5_RX,
 	DMA_CFG_USART1,
 	DMA_CFG_UART4_RX,
+	DMA_CFG_ADC1
 }dma_cfgInstance_t;
 
 #endif /* DRIVER_CFG_CFG_DEF_H_ */

@@ -107,10 +107,10 @@
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
-				<externalSettings containerId="GOS2022;" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+				<externalSettings containerId="GOS2022;com.st.stm32cube.ide.mcu.gnu.managedbuild.config.lib.debug.381248160" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/GOS2022"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GOS2022/GOS2022_bootloader"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GOS2022/Debug"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="GOS2022" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
