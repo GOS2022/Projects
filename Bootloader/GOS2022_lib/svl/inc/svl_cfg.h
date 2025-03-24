@@ -112,7 +112,7 @@
  * 1 : Only state machine state info.
  * 2 : All debug info.
  */
-#define SVL_IPL_TRACE_LEVEL                  ( 0 )
+#define SVL_IPL_TRACE_LEVEL                  ( 2 )
 
 //! IPL daemon task priority.
 #define SVL_IPL_DAEMON_PRIORITY              ( 190 )

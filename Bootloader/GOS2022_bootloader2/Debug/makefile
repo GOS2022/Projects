@@ -65,8 +65,8 @@ all: main-build
 main-build: GOS2022_bootloader2.elf secondary-outputs
 
 dependents:
-	-cd C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022/GOS2022_bootloader && $(MAKE) clean all
-	-cd C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022_lib/Debug && $(MAKE) clean all
+	-cd C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022/GOS2022_bootloader && $(MAKE) all
+	-cd C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022_lib/Debug && $(MAKE) all
 
 # Tool invocations
 GOS2022_bootloader2.elf GOS2022_bootloader2.map: $(OBJS) $(USER_OBJS) C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022/GOS2022_bootloader/libGOS2022.a C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022_lib/Debug/libGOS2022_lib.a C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\Bootloader\GOS2022_bootloader2\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)

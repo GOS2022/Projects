@@ -566,10 +566,10 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 				(void_t) strcpy(discoveryMsg.masterDeviceId, "STM32F446-0001");
 				(void_t) drv_crcGetCrc32((u8_t*)&discoveryMsg, sizeof(discoveryMsg), &msgHeader.messageCrc);
 
-				if (svl_iplTransmit((u8_t*)&msgHeader,    sizeof(svl_iplMsgHeader_t), 100u) == GOS_SUCCESS &&
-					svl_iplTransmit((u8_t*)&discoveryMsg, sizeof(discoveryMsg),       100u) == GOS_SUCCESS &&
-					svl_iplReceive((u8_t*)&msgHeader,     sizeof(msgHeader),          200u) == GOS_SUCCESS &&
-					svl_iplReceive(iplRxBuffer,           msgHeader.messageLength,    200u) == GOS_SUCCESS &&
+				if (svl_iplTransmit((u8_t*)&msgHeader,    sizeof(svl_iplMsgHeader_t), 500u) == GOS_SUCCESS &&
+					svl_iplTransmit((u8_t*)&discoveryMsg, sizeof(discoveryMsg),       500u) == GOS_SUCCESS &&
+					svl_iplReceive((u8_t*)&msgHeader,     sizeof(msgHeader),          500u) == GOS_SUCCESS &&
+					svl_iplReceive(iplRxBuffer,           msgHeader.messageLength,    500u) == GOS_SUCCESS &&
 					msgHeader.messageId == IPL_MSG_ID_DISCOVERY_ACK &&
 					drv_crcCheckCrc32(iplRxBuffer, msgHeader.messageLength, msgHeader.messageCrc, NULL) == DRV_CRC_CHECK_OK)
 				{

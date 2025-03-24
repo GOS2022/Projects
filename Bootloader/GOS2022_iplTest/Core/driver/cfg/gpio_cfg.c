@@ -142,7 +142,7 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.port = GPIOB,
 			.pin = GPIO_PIN_6,
 			.mode = GPIO_MODE_AF_OD,
-			.pull = GPIO_NOPULL, //GPIO_PULLUP,
+			.pull = GPIO_NOPULL,
 			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
 			.alternate = GPIO_AF4_I2C1
 		},
@@ -151,10 +151,18 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.port = GPIOB,
 			.pin = GPIO_PIN_7,
 			.mode = GPIO_MODE_AF_OD,
-			.pull = GPIO_NOPULL, //GPIO_PULLUP,
+			.pull = GPIO_NOPULL,
 			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
 			.alternate = GPIO_AF4_I2C1
 		},
+		[IO_WEMOS_RST] =
+		{
+			.port = GPIOB,
+			.pin  = GPIO_PIN_14,
+			.mode = GPIO_MODE_OUTPUT_PP,
+			.pull = GPIO_NOPULL,
+			.defaultState = GPIO_STATE_LOW
+		}
 };
 
 /**

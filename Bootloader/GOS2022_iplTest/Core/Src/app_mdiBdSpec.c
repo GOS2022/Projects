@@ -26,6 +26,11 @@
 #define ADC_SAMPLES          ( 100 )
 
 /*
+ * Global variables
+ */
+gos_mutex_t mdiMutex;
+
+/*
  * Function prototypes
  */
 GOS_STATIC void_t app_mdiTask (void_t);
@@ -50,9 +55,22 @@ GOS_EXTERN svl_mdiVariable_t mdiVariables [];
 gos_result_t app_mdiBdSpecInit (void_t)
 {
 	/*
+	 * Local variables.
+	 */
+	gos_result_t initResult = GOS_SUCCESS;
+
+	/*
 	 * Function code.
 	 */
-	return gos_taskRegister(&mdiTaskDesc, NULL);
+	initResult &= gos_mutexInit(&mdiMutex);
+	initResult &= gos_taskRegister(&mdiTaskDesc, NULL);
+
+	if (initResult != GOS_SUCCESS)
+	{
+		initResult = GOS_ERROR;
+	}
+
+	return initResult;
 }
 
 // TODO
@@ -94,9 +112,14 @@ GOS_STATIC void_t app_mdiTask (void_t)
 	                           / (float_t) (*TEMPSENSOR_CAL2_ADDR - *TEMPSENSOR_CAL1_ADDR))
 	                           * (temp_avg - *TEMPSENSOR_CAL1_ADDR) + TEMPSENSOR_CAL1_TEMP);
 
-	    mdiVariables[MDI_VDDA].value.floatValue     = roundf(vdda * 100) / 100;
-		mdiVariables[MDI_VREF].value.floatValue     = roundf(vref * 100) / 100;
-		mdiVariables[MDI_CPU_TEMP].value.floatValue = roundf(temp * 10) / 10;
+	    if (gos_mutexLock(&mdiMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+	    {
+		    mdiVariables[MDI_VDDA].value.floatValue     = roundf(vdda * 100) / 100;
+			mdiVariables[MDI_VREF].value.floatValue     = roundf(vref * 100) / 100;
+			mdiVariables[MDI_CPU_TEMP].value.floatValue = roundf(temp * 10) / 10;
+
+			(void_t) gos_mutexUnlock(&mdiMutex);
+	    }
 
 		(void_t) gos_taskSleep(250);
 	}

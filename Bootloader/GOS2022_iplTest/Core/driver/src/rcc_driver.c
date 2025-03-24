@@ -2,10 +2,9 @@
  * rcc_driver.c
  *
  *  Created on: Nov 10, 2022
- *      Author: Gabor
+ *      Author: Ahmed Ibrahim Gazar
  */
 #include "rcc_driver.h"
-//#include "stm32f4xx_hal.h"
 #include "stm32f4xx.h"
 
 gos_result_t rcc_driver_init (void_t)

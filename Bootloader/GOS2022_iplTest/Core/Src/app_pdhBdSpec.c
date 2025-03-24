@@ -2,7 +2,7 @@
  * app_pdhBdSpec.c
  *
  *  Created on: Dec 17, 2024
- *      Author: Gabor
+ *      Author: Ahmed Ibrahim Gazar
  */
 #include "gos_lib.h"
 #include "app.h"
@@ -29,14 +29,14 @@ GOS_STATIC svl_pdhSwVerInfo_t appSwVerInfo =
 	.author      = "Ahmed Ibrahim Gazar",
 	.name        = "GOS_test_app",
 	.description = "GOS test application.",
-	.major       = 2,
-	.minor       = 3,
-	.build       = 0,
+	.major       = 3,
+	.minor       = 0,
+	.build       = 2,
 	.date        =
 	{
 		.years   = 2025,
-		.months  = GOS_TIME_JANUARY,
-		.days    = 29
+		.months  = GOS_TIME_MARCH,
+		.days    = 24
 	}
 };
 
@@ -75,18 +75,6 @@ gos_result_t app_pdhBdSpecInit (void_t)
 
 	return pdhBdSpecInitRes;
 }
-
-#if 0
-svl_pdhWifiCfg_t wifiCfg =
-{
-	.ssid      = "HUAWEI-2.4G-Qwa6",
-	.pwd       = "bXxACd4P",
-	.ipAddress = { 192, 168, 100, 184 },
-	.port      = 3000,
-	.gateway   = { 192, 168, 100, 1   },
-	.subnet    = { 255, 255, 0,   0   }
-};
-#endif
 
 GOS_STATIC void_t app_pdhTestTask (void_t)
 {

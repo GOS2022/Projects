@@ -17,6 +17,7 @@
  * Extern variables
  */
 GOS_EXTERN svl_mdiVariable_t mdiVariables [];
+GOS_EXTERN gos_mutex_t mdiMutex;
 
 /*
  * Function prototypes
@@ -71,8 +72,13 @@ GOS_STATIC void_t bsp_rtcHandlerTask (void_t)
 		(void_t) drv_rtcTimeSet(&time, dow);
 
 		// Update RTC temperature in MDI.
-		drv_rtcTempGet(&temp);
-		mdiVariables[MDI_RTC_TEMP].value.floatValue = (float_t)(temp / 100.0f);
+		(void_t) drv_rtcTempGet(&temp);
+
+		if (gos_mutexLock(&mdiMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+		{
+			mdiVariables[MDI_RTC_TEMP].value.floatValue = (float_t)(temp / 100.0f);
+			(void_t) gos_mutexUnlock(&mdiMutex);
+		}
 
 		(void_t) gos_taskSleep(1000);
 	}

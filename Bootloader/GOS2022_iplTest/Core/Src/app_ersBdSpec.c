@@ -62,6 +62,7 @@ GOS_STATIC svl_ersCfg_t ersCfg =
  * Extern variables
  */
 GOS_EXTERN svl_mdiVariable_t mdiVariables [];
+GOS_EXTERN gos_mutex_t mdiMutex;
 
 /*
  * Function: app_ersBdSpecInit
@@ -102,37 +103,27 @@ GOS_STATIC void_t app_ersTask (void_t)
 	 * Function code.
 	 */
 	(void_t) gos_taskSleep(1000);
-	/*(void_t) svl_ersGetNumOfEntries(&numOfEntries);
-
-	if (numOfEntries < 12u)
-	{
-		eventData[0] = numOfEntries;
-		eventData[1] = 125;
-		eventData[2] = 125;
-		eventData[3] = 12 - numOfEntries;
-
-		(void_t) svl_ersCreate(numOfEntries % 3, 12 + numOfEntries, eventData);
-	}
-	else
-	{
-		// Stop event creation.
-	}*/
 
 	// Create startup event.
 	(void_t) svl_ersCreate(ERS_STARTUP_EVENT, 0, NULL);
 
 	for (;;)
 	{
-		if (mdiVariables[MDI_CPU_TEMP].value.floatValue > 35.0 && errorState == GOS_FALSE)
+		if (gos_mutexLock(&mdiMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
 		{
-			(void_t) memcpy(eventData, mdiVariables[MDI_CPU_TEMP].value.arrayValue, 4);
-			(void_t) svl_ersCreate(ERS_OVERHEAT_EVENT, 0, eventData);
-			errorState = GOS_TRUE;
-		}
+			if ((mdiVariables[MDI_CPU_TEMP].value.floatValue > 35.0) && (errorState == GOS_FALSE))
+			{
+				(void_t) memcpy(eventData, mdiVariables[MDI_CPU_TEMP].value.arrayValue, 4);
+				(void_t) svl_ersCreate(ERS_OVERHEAT_EVENT, 0, eventData);
+				errorState = GOS_TRUE;
+			}
 
-		if (errorState == GOS_TRUE && mdiVariables[MDI_CPU_TEMP].value.floatValue < 30.0)
-		{
-			errorState = GOS_FALSE;
+			if ((errorState == GOS_TRUE) && (mdiVariables[MDI_CPU_TEMP].value.floatValue < 30.0))
+			{
+				errorState = GOS_FALSE;
+			}
+
+			(void_t) gos_mutexUnlock(&mdiMutex);
 		}
 
 		(void_t) gos_taskSleep(100);

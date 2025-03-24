@@ -11,6 +11,7 @@
 
 GOS_EXTERN app_button_block_t buttonBlock;
 GOS_EXTERN svl_mdiVariable_t mdiVariables [];
+GOS_EXTERN gos_mutex_t mdiMutex;
 
 typedef enum
 {
@@ -46,7 +47,6 @@ gos_result_t app_lcdInit (void_t)
 {
 	gos_result_t lcdInitResult = GOS_SUCCESS;
 
-	//lcdInitResult &= BSP_LCD_HandlerInit();
 	lcdInitResult &= gos_taskRegister(&appLcdTask, NULL);
 
 	if (lcdInitResult != GOS_SUCCESS)
@@ -214,7 +214,12 @@ GOS_STATIC void_t app_lcdTask (void_t)
 			case PROGRAM_TEMP_VALUE_DISPLAY:
 			{
 				normalConfig.line = 0;
-				temperatureValue = (u16_t)(mdiVariables[MDI_CPU_TEMP].value.floatValue * 10);
+				if (gos_mutexLock(&mdiMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+				{
+					temperatureValue = (u16_t)(mdiVariables[MDI_CPU_TEMP].value.floatValue * 10);
+
+					(void_t) gos_mutexUnlock(&mdiMutex);
+				}
 				BSP_LCD_HandlerDisplayText(&normalConfig, "Temp.: %u.%u C   ", (temperatureValue / 10), (temperatureValue % 10));
 
 				gos_taskSleep(1000);

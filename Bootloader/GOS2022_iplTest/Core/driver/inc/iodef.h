@@ -33,6 +33,8 @@ typedef enum
 	IO_I2C1_SCL,
 	IO_I2C1_SDA,
 
+	IO_WEMOS_RST,
+
 	IO_NUMBER
 }io_pin_t;
 
