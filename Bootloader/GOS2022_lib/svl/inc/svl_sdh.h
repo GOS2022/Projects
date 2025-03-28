@@ -54,6 +54,14 @@
 #include <svl_pdh.h>
 
 /*
+ * Macros
+ */
+/**
+ * SDH binary name length.
+ */
+#define SVL_SDH_BINARY_NAME_LENGTH ( 32u )
+
+/*
  * Type definitions
  */
 /**
@@ -66,8 +74,8 @@ typedef gos_result_t (*svl_sdhReadWriteFunc_t)(u32_t address, u8_t* pData, u32_t
  */
 typedef struct
 {
-	svl_sdhReadWriteFunc_t readFunction;
-	svl_sdhReadWriteFunc_t writeFunction;
+	svl_sdhReadWriteFunc_t readFunction;  //!< Read function pointer.
+	svl_sdhReadWriteFunc_t writeFunction; //!< Write function pointer.
 }svl_sdhCfg_t;
 
 /**
@@ -75,9 +83,9 @@ typedef struct
  */
 typedef struct __attribute__((packed))
 {
-	char_t              name [32];
-	u32_t               binaryLocation;
-	svl_pdhBinaryInfo_t binaryInfo;
+	char_t              name [SVL_SDH_BINARY_NAME_LENGTH]; //!< Name of the binary.
+	u32_t               binaryLocation;                    //!< Memory address of the binary.
+	svl_pdhBinaryInfo_t binaryInfo;                        //!< Binary info.
 }svl_sdhBinaryDesc_t;
 
 // TODO

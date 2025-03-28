@@ -75,7 +75,7 @@
 /**
  * Maximum number of tasks.
  */
-#define CFG_TASK_MAX_NUMBER             ( 18 )
+#define CFG_TASK_MAX_NUMBER             ( 16 )
 
 /*
  * OS task stack sizes.
@@ -95,7 +95,7 @@
 /**
  * System task stack size.
  */
-#define CFG_SYSTEM_TASK_STACK_SIZE      ( 0x400 )
+#define CFG_SYSTEM_TASK_STACK_SIZE      ( 0x800 )
 /**
  * Signal daemon task stack size.
  */
@@ -163,7 +163,7 @@
 /**
  * Maximum number of queue elements.
  */
-#define CFG_QUEUE_MAX_ELEMENTS          ( 40 )
+#define CFG_QUEUE_MAX_ELEMENTS          ( 30 )
 /**
  * Maximum queue length.
  */
@@ -196,7 +196,7 @@
 /**
  * Maximum number of messages handled at once.
  */
-#define CFG_MESSAGE_MAX_NUMBER          ( 8 )
+#define CFG_MESSAGE_MAX_NUMBER          ( 16 )
 /**
  * Maximum length of a message in bytes.
  */
@@ -204,15 +204,11 @@
 /**
  * Maximum number of message waiters.
  */
-#define CFG_MESSAGE_MAX_WAITERS         ( 10 )
+#define CFG_MESSAGE_MAX_WAITERS         ( 16 )
 /**
  * Maximum number of message IDs a task can wait for (includes the terminating 0).
  */
 #define CFG_MESSAGE_MAX_WAITER_IDS      ( 8 )
-/**
- * Maximum number of message addressees.
- */
-#define CFG_MESSAGE_MAX_ADDRESSEES      ( 8 )
 
 /*
  * Shell service parameters.
@@ -224,7 +220,7 @@
 /**
  * Maximum number of shell commands.
  */
-#define CFG_SHELL_MAX_COMMAND_NUMBER    ( 16 )
+#define CFG_SHELL_MAX_COMMAND_NUMBER    ( 8 )
 /**
  * Maximum command length.
  */
@@ -232,7 +228,7 @@
 /**
  * Maximum parameters length.
  */
-#define CFG_SHELL_MAX_PARAMS_LENGTH     ( 128 )
+#define CFG_SHELL_MAX_PARAMS_LENGTH     ( 64 )
 /**
  * Command buffer size.
  */

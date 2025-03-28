@@ -13,12 +13,12 @@
 GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 {
 	{
-		// Phase: SVL.
+		// Phase: SVL
 		"Initializing SVL...",
 		{
 			{ "BLD initialization",                 bld_init                    },
 			{ "PDH initialization",                 svl_pdhInit                 },
-			{ "SDH initialization",                 svl_sdhInit                 }
+			{ "SDH initialization",                 svl_sdhInit                 },
 		}
 	},
 	{
@@ -26,8 +26,9 @@ GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 		"Initializing user tasks...",
 		{
 			{ "IPL board-specific initialization",  app_iplBdSpecInit           },
+			{ "PDH board-specific initialization",  app_pdhBdSpecInit           },
 			{ "SDH board-specific initialization",  app_sdhBdSpecInit           },
-			{ "LED task initialization",            app_ledInit                 },
+			{ "BLD task initialization",            app_bldTaskInit             },
 		}
 	}
 };

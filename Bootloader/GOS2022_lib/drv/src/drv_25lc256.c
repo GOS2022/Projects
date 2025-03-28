@@ -60,25 +60,25 @@
 /**
  * Page size in bytes.
  */
-#define PAGE_SIZE  ( 64u )
+#define PAGE_SIZE       ( 64u )
 
 /**
  * Number of pages.
  */
-#define W25Q64_PAGE_NUM   ( 512u )
+#define W25Q64_PAGE_NUM ( 512u )
 
 /**
  * Total memory size.
  */
-#define TOTAL_SIZE ( PAGE_SIZE * W25Q64_PAGE_NUM )
+#define TOTAL_SIZE      ( PAGE_SIZE * W25Q64_PAGE_NUM )
 
 /*
  * Static variables
  */
 /**
- * Empty buffer for clear operation (one page).
+ * Empty buffer for write / clear operation (one page).
  */
-GOS_STATIC u8_t emptyBuffer [PAGE_SIZE + 3];
+GOS_STATIC u8_t txBuffer [PAGE_SIZE + 3];
 
 /*
  * Function: drv_25lc256Init
@@ -172,7 +172,6 @@ GOS_INLINE gos_result_t drv_25lc256Read (void_t* pDevice, u16_t address, u8_t* p
     u16_t        bytesRem      = 0u;
     int32_t      paddrposition = 0;
     u32_t        errorFlags    = 0u;
-    u8_t         txBuffer[3];
 
     /*
      * Function code.
@@ -275,7 +274,6 @@ GOS_INLINE gos_result_t drv_25lc256Write (void_t* pDevice, u16_t address, u8_t* 
     int32_t      paddrposition   = 0;
     u32_t        errorFlags      = 0u;
     u8_t         wrenInstruction = 0x06;
-    u8_t         txBuffer [PAGE_SIZE + 3];
 
     /*
      * Function code.
@@ -379,7 +377,7 @@ gos_result_t drv_25lc256Erase (void_t* pDevice)
 	/*
 	 * Function code.
 	 */
-	(void_t) memset((void_t*)emptyBuffer, 0, (PAGE_SIZE + 3));
+	(void_t) memset((void_t*)txBuffer, 0, (PAGE_SIZE + 3));
 
     DRV_ERROR_CHK_SET(
             gos_mutexLock(&((drv_25lc256Descriptor_t*)pDevice)->deviceMutex, ((drv_25lc256Descriptor_t*)pDevice)->writeMutexTmo),
@@ -390,9 +388,9 @@ gos_result_t drv_25lc256Erase (void_t* pDevice)
 
     for (idx = 0u; idx < W25Q64_PAGE_NUM && eraseResult == GOS_SUCCESS; idx++)
     {
-    	emptyBuffer[0] = 0x02;
-    	emptyBuffer[1] = ((idx * PAGE_SIZE) >> 8);
-    	emptyBuffer[2] = (idx * PAGE_SIZE) & 0xFF;
+    	txBuffer[0] = 0x02;
+    	txBuffer[1] = ((idx * PAGE_SIZE) >> 8);
+    	txBuffer[2] = (idx * PAGE_SIZE) & 0xFF;
 
         (void_t) drv_gpioWritePin(((drv_25lc256Descriptor_t*)pDevice)->csPin, GPIO_STATE_LOW);
 
@@ -415,7 +413,7 @@ gos_result_t drv_25lc256Erase (void_t* pDevice)
         DRV_ERROR_CHK_SET(
                 drv_spiTransmitIT(
                 		((drv_25lc256Descriptor_t*)pDevice)->spiInstance,
-						emptyBuffer,
+						txBuffer,
 						PAGE_SIZE + 3,
     					((drv_25lc256Descriptor_t*)pDevice)->readMutexTmo,
     					((drv_25lc256Descriptor_t*)pDevice)->readTriggerTmo

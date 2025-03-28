@@ -27,17 +27,11 @@ GOS_STATIC svl_pdhOsInfo_t appOsInfo =
 GOS_STATIC svl_pdhSwVerInfo_t appSwVerInfo =
 {
 	.author      = "Ahmed Ibrahim Gazar",
-	.name        = "GOS_test_app",
-	.description = "GOS test application.",
-	.major       = 3,
-	.minor       = 0,
-	.build       = 2,
-	.date        =
-	{
-		.years   = 2025,
-		.months  = GOS_TIME_MARCH,
-		.days    = 24
-	}
+	.name        = "GOS_new_test_app",
+	.description = "GOS new test application.",
+	.major       = 4,
+	.minor       = 1,
+	.build       = 0,
 };
 
 GOS_STATIC svl_pdhSwInfo_t testSwInfo;
@@ -88,7 +82,8 @@ GOS_STATIC void_t app_pdhTestTask (void_t)
 
 		if (gos_kernelGetSysTicks() - sysTicks >= 1000)
 		{
-			(void_t) gos_traceTrace(GOS_TRUE, "\r");
+			(void_t) gos_traceTrace(GOS_FALSE, "\r");
+			(void_t) gos_traceTrace(GOS_TRUE, "");
 			sysTicks = gos_kernelGetSysTicks();
 		}
 	}
@@ -121,6 +116,8 @@ GOS_STATIC void_t app_pdhBdSpecCheckSoftwareInfo (void_t)
 	{
 		// Bootloader data OK.
 	}
+
+	gos_libGetBuildDate(&appSwVerInfo.date.years, &appSwVerInfo.date.months, &appSwVerInfo.date.days);
 
 	(void_t) drv_crcGetCrc32((u8_t*)&appSwVerInfo, sizeof(appSwVerInfo), &swInfoCrc);
 	(void_t) drv_crcGetCrc32((u8_t*)&testSwInfo.appSwVerInfo, sizeof(testSwInfo.appSwVerInfo), &testSwInfoCrc);

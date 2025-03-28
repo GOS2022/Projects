@@ -24,6 +24,12 @@ typedef struct
 	u16_t  buttonXBlockCounter [APP_DEBOUNCE_BUTTON_NUM];
 }app_button_block_t;
 
+typedef enum
+{
+	APP_SYSMON_MSG_RTC_SET_REQ = 0x8001,
+	APP_SYSMON_MSG_RTC_SET_RESP = 0x8A01
+}app_sysmonMsgId_t;
+
 gos_result_t app_iplBdSpecInit (void_t);
 
 gos_result_t app_pdhBdSpecInit (void_t);

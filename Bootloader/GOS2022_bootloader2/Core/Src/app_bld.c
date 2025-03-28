@@ -12,7 +12,6 @@
  */
 GOS_STATIC svl_pdhBldCfg_t bldCfg;
 GOS_STATIC svl_pdhSwInfo_t swInfo;
-
 GOS_STATIC svl_pdhSwVerInfo_t bldVerInfo =
 {
 	.author      = "Ahmed Ibrahim Gazar",
@@ -20,13 +19,7 @@ GOS_STATIC svl_pdhSwVerInfo_t bldVerInfo =
 	.description = "GOS2022 bootloader for STM32F4 devices.",
 	.major       = 1,
 	.minor       = 0,
-	.build       = 4,
-	.date        =
-	{
-		.years   = 2025,
-		.months  = GOS_TIME_JANUARY,
-		.days    = 2
-	}
+	.build       = 5,
 };
 
 /*
@@ -42,6 +35,9 @@ gos_result_t app_bld_init (void_t)
 	/*
 	 * Function code.
 	 */
+	// Update build date.
+	gos_libGetBuildDate(&bldVerInfo.date.years, &bldVerInfo.date.months, &bldVerInfo.date.days);
+
 	if (bld_initData(&bldVerInfo) == GOS_SUCCESS)
 	{
 		(void_t) bld_initConfig();
@@ -49,15 +45,14 @@ gos_result_t app_bld_init (void_t)
 		(void_t) svl_pdhGetSwInfo(&swInfo);
 		(void_t) bld_printConfig();
 
-		if ((bldCfg.updateMode == GOS_TRUE) || (bldCfg.installRequested == GOS_TRUE) ||
-			(bldCfg.waitForConnectionOnStartup == GOS_TRUE && bldCfg.startupCounter == 0u))
+		if ((bldCfg.updateMode == GOS_TRUE) || (bldCfg.installRequested == GOS_TRUE))
 		{
 			// Increase startup counter (so next startup will skip boot mode enter).
 			bldCfg.startupCounter++;
 			(void_t) svl_pdhSetBldCfg(&bldCfg);
 
-			// IPL shall only be initialized if wireless update is requested.
-			if (bldCfg.wirelessUpdate == GOS_TRUE)
+			// IPL shall only be initialized if update is requested.
+			if (bldCfg.updateMode == GOS_TRUE)
 			{
 				(void_t) svl_iplInit();
 			}

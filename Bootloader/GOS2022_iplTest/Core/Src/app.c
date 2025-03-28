@@ -80,6 +80,7 @@ gos_result_t gos_userApplicationInit (void_t)
 
 	// Welcome message.
 	(void_t) gos_traceTrace(GOS_FALSE, "Welcome to the GOS test application!");
+
 	// Enable WiFi module.
 	(void_t) drv_gpioWritePin(IO_WEMOS_RST, GPIO_STATE_HIGH);
 

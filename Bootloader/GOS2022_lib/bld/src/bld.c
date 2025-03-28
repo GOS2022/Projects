@@ -96,30 +96,47 @@ typedef struct
 /**
  * Bootloader configuration.
  */
-GOS_STATIC svl_pdhBldCfg_t bldConfig     = {0};
+GOS_STATIC svl_pdhBldCfg_t     bldConfig     = {0};
 
 /**
  * Current software info.
  */
-GOS_STATIC svl_pdhSwInfo_t currentSwInfo = {0};
+GOS_STATIC svl_pdhSwInfo_t     currentSwInfo = {0};
 
 /**
  * Bootloader state.
  */
-GOS_STATIC bld_state_t     bldState;
+GOS_STATIC bld_state_t         bldState;
 
-// TODO
-GOS_STATIC u8_t            bldInstallBuffer [BLD_INSTALL_CHUNK_SIZE];
+/**
+ * Bootloader install buffer.
+ */
+GOS_STATIC u8_t                bldInstallBuffer [BLD_INSTALL_CHUNK_SIZE];
 
 /**
  * Buffer for progress printing.
  */
-GOS_STATIC char_t          progressBuffer   [PROGRESS_BUFFER_SIZE];
+GOS_STATIC char_t              progressBuffer   [PROGRESS_BUFFER_SIZE];
 
 /**
  * Buffer for progress percentage formatting.
  */
-GOS_STATIC char_t          percentageBuffer [PERCENTAGE_BUFFER_SIZE];
+GOS_STATIC char_t              percentageBuffer [PERCENTAGE_BUFFER_SIZE];
+
+/**
+ * SDH binary descriptor.
+ */
+GOS_STATIC svl_sdhBinaryDesc_t binaryDescriptor = {0};
+
+/**
+ * GOS message for internal communication.
+ */
+GOS_STATIC gos_message_t       gosMsg           = {0};
+
+/**
+ * Library version info.
+ */
+GOS_STATIC svl_pdhSwVerInfo_t  libVerInfo       = {0};
 
 /*
  * Function prototypes
@@ -153,10 +170,6 @@ gos_result_t bld_init (void_t)
     if (bldConfig.installRequested == GOS_TRUE)
     {
         bldState = BLD_STATE_INSTALL;
-    }
-    else if (bldConfig.waitForConnectionOnStartup == GOS_TRUE)
-    {
-        bldState = BLD_STATE_CONNECT_WAIT;
     }
     else if (bldConfig.updateMode == GOS_TRUE)
     {
@@ -203,15 +216,11 @@ GOS_STATIC void_t bld_task (void_t)
     /*
      * Local variables.
      */
-    svl_sdhBinaryDesc_t binaryDescriptor = {0};
     u32_t               installChunkNum  = 0u;
     u32_t               installChunkCntr = 0u;
     u32_t               perc             = 0u;
     u32_t               startTick        = 0u;
     bool_t              connectTmo       = GOS_FALSE;
-    gos_message_t       gosMsg           = {0};
-    //gos_message_t       gosRespMsg       = {0};
-    //svl_sdhControlMsg_t controlMsg = {0}; TODO
     gos_messageId_t     msgIds []        = { BLD_STATE_CONT_MSG_ID, 0 };
     u32_t               byteCounter      = 0u;
 
@@ -222,7 +231,7 @@ GOS_STATIC void_t bld_task (void_t)
     (void_t) gos_taskSleep(500);
 
     (void_t) svl_pdhGetSwInfo(&currentSwInfo);
-    (void_t) memcpy((void_t*)&binaryDescriptor.binaryInfo, (void_t*)&currentSwInfo.appBinaryInfo, sizeof(binaryDescriptor));
+    (void_t) memcpy((void_t*)&binaryDescriptor.binaryInfo, (void_t*)&currentSwInfo.appBinaryInfo, sizeof(svl_pdhBinaryInfo_t));
 
     for (;;)
     {
@@ -330,64 +339,19 @@ GOS_STATIC void_t bld_task (void_t)
 
                 break;
             }
-            case BLD_STATE_CONNECT_WAIT:
-            {
-                // In this state, bootloader is waiting for a connection
-                // request.
-                (void_t) gos_traceTrace(GOS_TRUE, "Waiting for bootloader connection");
-
-                connectTmo = GOS_TRUE;
-                startTick  = gos_kernelGetSysTicks();
-
-                while ((gos_kernelGetSysTicks() - startTick) <= bldConfig.connectionTimeout)
-                {
-                    (void_t) gos_traceTrace(GOS_FALSE, ".");
-
-                    if (gos_messageRx(msgIds, &gosMsg, 250u) == GOS_SUCCESS)
-                    {
-                        // TODO: if connected
-                        connectTmo = GOS_FALSE;
-                        break;
-                    }
-                    else
-                    {
-                        // RX timeout.
-                    }
-                }
-
-                (void_t) gos_traceTrace(GOS_FALSE, "\r\n");
-
-                if (connectTmo == GOS_TRUE)
-                {
-                    (void_t) gos_traceTrace(GOS_TRUE, "Connection timed out.\r\n");
-                    bldState = BLD_STATE_APP_CHECK;
-                }
-                else
-                {
-                    (void_t) gos_traceTrace(GOS_TRUE, "Connection successful.\r\n");
-                    bldState = BLD_STATE_WAIT;
-                }
-
-                break;
-            }
             case BLD_STATE_WAIT:
             {
                 // In this state, bootloader is waiting for a software install
                 // request or other requests.
-                (void_t) gos_traceTrace(GOS_TRUE, "Waiting for requests");
+                (void_t) gos_traceTrace(GOS_TRUE, "Boot mode entered\r\n");
 
                 connectTmo = GOS_TRUE;
                 startTick = gos_kernelGetSysTicks();
 
                 while ((gos_kernelGetSysTicks() - startTick) <= bldConfig.requestTimeout)
                 {
-                    (void_t) gos_traceTrace(GOS_FALSE, ".");
-
                     if (gos_messageRx(msgIds, &gosMsg, 1000u) == GOS_SUCCESS)
                     {
-                        // TODO: if connected
-                        //connectTmo = GOS_FALSE;
-
                         // Update start tick to restart timeout.
                         startTick = gos_kernelGetSysTicks();
                         break;
@@ -651,7 +615,6 @@ gos_result_t bld_initData (svl_pdhSwVerInfo_t* pBldSwVer)
     u32_t              desiredBldSwVerCrc = 0u;
 	u32_t              libVerCrc          = 0u;
 	u32_t              testLibVerCrc      = 0u;
-	svl_pdhSwVerInfo_t libVerInfo         = {0};
 
     /*
      * Function code.
@@ -732,18 +695,14 @@ gos_result_t bld_initConfig (void_t)
 
     // If boolean values are incorrect, it indicates an uninitialized
     // bootloader configuration.
-    if ((bldConfig.updateMode       != GOS_TRUE && bldConfig.updateMode       != GOS_FALSE &&
-        bldConfig.wirelessUpdate   != GOS_TRUE && bldConfig.wirelessUpdate   != GOS_FALSE &&
+    if ((bldConfig.updateMode      != GOS_TRUE && bldConfig.updateMode       != GOS_FALSE &&
         bldConfig.installRequested != GOS_TRUE && bldConfig.installRequested != GOS_FALSE) ||
-    	bldConfig.connectionTimeout == 0 || bldConfig.requestTimeout == 0 || bldConfig.installTimeout == 0)
+    	bldConfig.requestTimeout == 0 || bldConfig.installTimeout == 0)
     {
-        bldConfig.connectionTimeout          = BLD_DEFAULT_CONN_TMO_MS;
-        bldConfig.waitForConnectionOnStartup = BLD_DEFAULT_CONN_ON_STARTUP;
         bldConfig.requestTimeout             = BLD_DEFAULT_REQ_TMO_MS;
         bldConfig.installTimeout             = BLD_DEFAULT_INSTALL_TMO_MS;
         bldConfig.startupCounter             = 0u;
         bldConfig.updateMode                 = GOS_FALSE;
-        bldConfig.wirelessUpdate             = GOS_FALSE;
         bldConfig.installRequested           = GOS_FALSE;
 
         (void_t) svl_pdhSetBldCfg(&bldConfig);
@@ -766,9 +725,7 @@ gos_result_t bld_printConfig (void_t)
      */
     (void_t) svl_pdhGetBldCfg(&bldConfig);
 
-    (void_t) gos_traceTraceFormattedUnsafe(TRACE_BG_BLUE_START "BOOTLOADER CONFIGURATION" TRACE_FORMAT_RESET "\r\n");
-    (void_t) gos_traceTraceFormattedUnsafe("Connection on startup:\t%s\r\n", bldConfig.waitForConnectionOnStartup == GOS_TRUE ? "yes" : "no");
-    (void_t) gos_traceTraceFormattedUnsafe("Connection timeout:   \t%u ms\r\n", bldConfig.connectionTimeout);
+    (void_t) gos_traceTraceFormattedUnsafe(TRACE_BG_BLUE_START"BOOTLOADER CONFIGURATION"TRACE_FORMAT_RESET"\r\n");
     (void_t) gos_traceTraceFormattedUnsafe("Request timeout:      \t%u ms\r\n", bldConfig.requestTimeout);
     (void_t) gos_traceTraceFormattedUnsafe("Install timeout:      \t%u ms\r\n\r\n", bldConfig.installTimeout);
 

@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_signal.c
 //! @author     Ahmed Gazar
-//! @date       2023-10-04
-//! @version    1.8
+//! @date       2025-03-28
+//! @version    1.9
 //!
 //! @brief      GOS signal service source.
 //! @details    For a more detailed description of this service, please refer to @ref gos_signal.h
@@ -37,6 +37,7 @@
 // 1.7        2023-07-12    Ahmed Gazar     +    Signal handler privilege-handling added
 // 1.8        2023-10-04    Ahmed Gazar     *    Signal daemon polling replaced by async unblocking
 //                                          -    GOS_SIGNAL_DAEMON_POLL_TIME_MS removed
+// 1.9        2025-03-28    Ahmed Gazar     +    GOS_SIGNAL_DAEMON_POLL_TIME_MS added back
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -64,6 +65,14 @@
 #include <gos_error.h>
 #include <gos_trigger.h>
 #include <string.h>
+
+/*
+ * Macros
+ */
+/**
+ * Signal daemon poll time [ms].
+ */
+#define GOS_SIGNAL_DAEMON_POLL_TIME_MS ( 50u )
 
 /*
  * Type definitions
@@ -101,6 +110,11 @@ GOS_STATIC gos_signalDescriptor_t signalArray [CFG_SIGNAL_MAX_NUMBER];
  * Invoke trigger (to count the number of signal invokings).
  */
 GOS_STATIC gos_trigger_t          signalInvokeTrigger;
+
+/**
+ * Caller task descriptor.
+ */
+GOS_STATIC gos_taskDescriptor_t   callerTaskDesc = {0};
 
 /*
  * External variables
@@ -249,7 +263,6 @@ GOS_INLINE gos_result_t gos_signalInvoke (gos_signalId_t signalId, gos_signalSen
      */
     gos_result_t         signalInvokeResult = GOS_ERROR;
     gos_tid_t            callerTaskId       = GOS_INVALID_TASK_ID;
-    gos_taskDescriptor_t callerTaskDesc     = {0};
 
     /*
      * Function code.
@@ -345,5 +358,7 @@ GOS_STATIC void_t gos_signalDaemonTask (void_t)
         {
             // Unexpected error.
         }
+
+        (void_t) gos_taskSleep(GOS_SIGNAL_DAEMON_POLL_TIME_MS);
     }
 }

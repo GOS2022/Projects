@@ -20,6 +20,6 @@ will be published later.
 Contribution to this project is encouraged and appriciated.
 If you have any questions or ideas, feel free to contact me: gaborr97@gmail.com
 
-Current OS version: 0.11
-Last updated: 2024-07-18
+Current OS version: 1.1
+Last updated: 2025-03-26
 (c) 2023, Ahmed Gazar

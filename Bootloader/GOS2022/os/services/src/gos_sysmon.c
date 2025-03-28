@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_sysmon.c
 //! @author     Ahmed Gazar
-//! @date       2024-07-18
-//! @version    1.5
+//! @date       2025-03-26
+//! @version    1.6
 //!
 //! @brief      GOS system monitoring service source.
 //! @details    For a more detailed description of this service, please refer to @ref gos_sysmon.h
@@ -34,6 +34,7 @@
 // 1.4        2024-04-22    Ahmed Gazar     *    Task modification options extended
 // 1.5        2024-07-18    Ahmed Gazar     *    GCP update
 //                                          *    Get all task data loop bug fixed
+// 1.6        2025-03-26    Ahmed Gazar     *    Message IDs updated for proper separation
 //*************************************************************************************************
 //
 // Copyright (c) 2023 Ahmed Gazar
@@ -81,21 +82,21 @@
 typedef enum
 {
     GOS_SYSMON_MSG_UNKNOWN_ID                = 0,        //!< Unknown message ID.
-    GOS_SYSMON_MSG_PING_ID                   = 0x1010,   //!< Ping message ID.
-    GOS_SYSMON_MSG_PING_RESP_ID              = 0x50A0,   //!< Ping response message ID.
-    GOS_SYSMON_MSG_CPU_USAGE_GET_ID          = 0x1023,   //!< CPU usage get message ID.
-    GOS_SYSMON_MSG_CPU_USAGE_GET_RESP_ID     = 0x5C20,   //!< CPU usage get response message ID.
-    GOS_SYSMON_MSG_TASK_GET_DATA_ID          = 0x1B67,   //!< Task data get message ID.
-    GOS_SYSMON_MSG_TASK_GET_DATA_RESP_ID     = 0x5F8A,   //!< Task data get response message ID.
-    GOS_SYSMON_MSG_TASK_GET_VAR_DATA_ID      = 0x12D5,   //!< Task variable data get message ID.
-    GOS_SYSMON_MSG_TASK_GET_VAR_DATA_RESP_ID = 0x596B,   //!< Task variable data get response message ID.
-    GOS_SYSMON_MSG_TASK_MODIFY_STATE_ID      = 0xA917,   //!< Task modify state message ID.
-    GOS_SYSMON_MSG_TASK_MODIFY_STATE_RESP_ID = 0x4AB2,   //!< Task modify state response ID.
-    GOS_SYSMON_MSG_SYSRUNTIME_GET_ID         = 0x33AF,   //!< System runtime get message ID.
-    GOS_SYSMON_MSG_SYSRUNTIME_GET_RESP_ID    = 0xD91E,   //!< System runtime get response message ID.
-    GOS_SYSMON_MSG_SYSTIME_SET_ID            = 0xBB53,   //!< System time set message ID.
-    GOS_SYSMON_MSG_SYSTIME_SET_RESP_ID       = 0x174C,   //!< System time set response ID.
-    GOS_SYSMON_MSG_RESET_REQ_ID              = 0x0A78,   //!< System reset request ID.
+    GOS_SYSMON_MSG_PING_ID                   = 0x0001,   //!< Ping message ID.
+    GOS_SYSMON_MSG_PING_RESP_ID              = 0x0A01,   //!< Ping response message ID.
+    GOS_SYSMON_MSG_CPU_USAGE_GET_ID          = 0x0002,   //!< CPU usage get message ID.
+    GOS_SYSMON_MSG_CPU_USAGE_GET_RESP_ID     = 0x0A02,   //!< CPU usage get response message ID.
+    GOS_SYSMON_MSG_TASK_GET_DATA_ID          = 0x0003,   //!< Task data get message ID.
+    GOS_SYSMON_MSG_TASK_GET_DATA_RESP_ID     = 0x0A03,   //!< Task data get response message ID.
+    GOS_SYSMON_MSG_TASK_GET_VAR_DATA_ID      = 0x0004,   //!< Task variable data get message ID.
+    GOS_SYSMON_MSG_TASK_GET_VAR_DATA_RESP_ID = 0x0A04,   //!< Task variable data get response message ID.
+    GOS_SYSMON_MSG_TASK_MODIFY_STATE_ID      = 0x0005,   //!< Task modify state message ID.
+    GOS_SYSMON_MSG_TASK_MODIFY_STATE_RESP_ID = 0x0A05,   //!< Task modify state response ID.
+    GOS_SYSMON_MSG_SYSRUNTIME_GET_ID         = 0x0006,   //!< System runtime get message ID.
+    GOS_SYSMON_MSG_SYSRUNTIME_GET_RESP_ID    = 0x0A06,   //!< System runtime get response message ID.
+    GOS_SYSMON_MSG_SYSTIME_SET_ID            = 0x0007,   //!< System time set message ID.
+    GOS_SYSMON_MSG_SYSTIME_SET_RESP_ID       = 0x0A07,   //!< System time set response ID.
+    GOS_SYSMON_MSG_RESET_REQ_ID              = 0x0FFF,   //!< System reset request ID.
 }gos_sysmonMessageId_t;
 
 typedef enum

@@ -7,8 +7,8 @@
 #include "trace_driver.h"
 #include <string.h>
 
-#define TRACE_MESSAGE_MAX_LENGTH ( 80u )
-#define TRACE_ENTRY_MAX_NUM      ( 24u )
+#define TRACE_MESSAGE_MAX_LENGTH ( 48u )
+#define TRACE_ENTRY_MAX_NUM      ( 12u )
 
 typedef struct
 {

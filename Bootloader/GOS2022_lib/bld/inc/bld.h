@@ -52,10 +52,7 @@
  * Includes
  */
 #include <gos.h>
-//#include <gos_libdef.h>
-#include <bld_data.h>
 #include <bld_cfg.h>
-#include <bld_com.h>
 #include <svl_pdh.h>
 
 /*
@@ -64,22 +61,10 @@
 /**
  * Bootloader state enumerator.
  */
-/*
-typedef enum
-{
-    BLD_STATE_CONNECTION_ESTABLISHMENT,    //!< Conncetion establishment phase.
-    BLD_STATE_REQUEST_WAIT,                //!< Request wait phase.
-    BLD_STATE_DATA_REQUEST,                //!< Data request phase.
-    BLD_STATE_CONNECTION_CLOSE,            //!< Connection close phase.
-    BLD_STATE_APP_INSTALL,                 //!< Application install phase.
-    //BLD_STATE_APP_CHECK                    //!< Application check phase.
-}bld_state_old_t;*/
-
-// TODO
 typedef enum
 {
 	BLD_STATE_INSTALL,
-	BLD_STATE_CONNECT_WAIT,
+	//BLD_STATE_CONNECT_WAIT,
 	BLD_STATE_WAIT,
 	BLD_STATE_APP_CHECK
 }bld_state_t;
@@ -87,7 +72,14 @@ typedef enum
 /*
  * Function prototypes
  */
-// TODO
+/**
+ * @brief   TODO
+ * @details TODO
+ *
+ * @return  TODO
+ *
+ * @retval  TODO
+ */
 gos_result_t bld_init (void_t);
 
 /**
@@ -117,24 +109,12 @@ gos_result_t bld_jumpToApplication (void_t);
  * @brief   TODO
  * @details TODO
  *
- * @return  TODO
- *
- * @retval  TODO
- */
-//gos_result_t bld_stateMachineInitialize (void_t);
-//gos_result_t bld_stateMachineInit (void_t);
-
-/**
- * @brief   TODO
- * @details TODO
- *
  * @param pState
  *
  * @return  TODO
  *
  * @retval  TODO
  */
-//gos_result_t bld_getState (bld_state_t* pState);
 gos_result_t bld_stateMachineGetState (bld_state_t* pState);
 
 /**
@@ -145,17 +125,46 @@ gos_result_t bld_stateMachineGetState (bld_state_t* pState);
  *
  * @retval  TODO
  */
-//gos_result_t bld_stateMachineRun (void_t);
-//gos_result_t bld_stateMachineRun (void_t);
-
 gos_result_t bld_getBootloaderSize (u32_t* pSize);
 
+/**
+ * @brief   TODO
+ * @details TODO
+ *
+ * @return  TODO
+ *
+ * @retval  TODO
+ */
 gos_result_t bld_getBootloaderCrc (u32_t* pCrc);
 
+/**
+ * @brief   TODO
+ * @details TODO
+ *
+ * @return  TODO
+ *
+ * @retval  TODO
+ */
 gos_result_t bld_initData (svl_pdhSwVerInfo_t* pBldSwVer);
 
+/**
+ * @brief   TODO
+ * @details TODO
+ *
+ * @return  TODO
+ *
+ * @retval  TODO
+ */
 gos_result_t bld_initConfig (void_t);
 
+/**
+ * @brief   TODO
+ * @details TODO
+ *
+ * @return  TODO
+ *
+ * @retval  TODO
+ */
 gos_result_t bld_printConfig (void_t);
 
 #endif

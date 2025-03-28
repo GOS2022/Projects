@@ -8,6 +8,7 @@ C_SRCS += \
 ../Core/driver/cfg/dma_cfg.c \
 ../Core/driver/cfg/dsm_cfg.c \
 ../Core/driver/cfg/gpio_cfg.c \
+../Core/driver/cfg/i2c_cfg.c \
 ../Core/driver/cfg/it_cfg.c \
 ../Core/driver/cfg/spi_cfg.c \
 ../Core/driver/cfg/tmr_cfg.c \
@@ -17,6 +18,7 @@ OBJS += \
 ./Core/driver/cfg/dma_cfg.o \
 ./Core/driver/cfg/dsm_cfg.o \
 ./Core/driver/cfg/gpio_cfg.o \
+./Core/driver/cfg/i2c_cfg.o \
 ./Core/driver/cfg/it_cfg.o \
 ./Core/driver/cfg/spi_cfg.o \
 ./Core/driver/cfg/tmr_cfg.o \
@@ -26,6 +28,7 @@ C_DEPS += \
 ./Core/driver/cfg/dma_cfg.d \
 ./Core/driver/cfg/dsm_cfg.d \
 ./Core/driver/cfg/gpio_cfg.d \
+./Core/driver/cfg/i2c_cfg.d \
 ./Core/driver/cfg/it_cfg.d \
 ./Core/driver/cfg/spi_cfg.d \
 ./Core/driver/cfg/tmr_cfg.d \
@@ -39,7 +42,7 @@ Core/driver/cfg/%.o Core/driver/cfg/%.su Core/driver/cfg/%.cyclo: ../Core/driver
 clean: clean-Core-2f-driver-2f-cfg
 
 clean-Core-2f-driver-2f-cfg:
-	-$(RM) ./Core/driver/cfg/dma_cfg.cyclo ./Core/driver/cfg/dma_cfg.d ./Core/driver/cfg/dma_cfg.o ./Core/driver/cfg/dma_cfg.su ./Core/driver/cfg/dsm_cfg.cyclo ./Core/driver/cfg/dsm_cfg.d ./Core/driver/cfg/dsm_cfg.o ./Core/driver/cfg/dsm_cfg.su ./Core/driver/cfg/gpio_cfg.cyclo ./Core/driver/cfg/gpio_cfg.d ./Core/driver/cfg/gpio_cfg.o ./Core/driver/cfg/gpio_cfg.su ./Core/driver/cfg/it_cfg.cyclo ./Core/driver/cfg/it_cfg.d ./Core/driver/cfg/it_cfg.o ./Core/driver/cfg/it_cfg.su ./Core/driver/cfg/spi_cfg.cyclo ./Core/driver/cfg/spi_cfg.d ./Core/driver/cfg/spi_cfg.o ./Core/driver/cfg/spi_cfg.su ./Core/driver/cfg/tmr_cfg.cyclo ./Core/driver/cfg/tmr_cfg.d ./Core/driver/cfg/tmr_cfg.o ./Core/driver/cfg/tmr_cfg.su ./Core/driver/cfg/uart_cfg.cyclo ./Core/driver/cfg/uart_cfg.d ./Core/driver/cfg/uart_cfg.o ./Core/driver/cfg/uart_cfg.su
+	-$(RM) ./Core/driver/cfg/dma_cfg.cyclo ./Core/driver/cfg/dma_cfg.d ./Core/driver/cfg/dma_cfg.o ./Core/driver/cfg/dma_cfg.su ./Core/driver/cfg/dsm_cfg.cyclo ./Core/driver/cfg/dsm_cfg.d ./Core/driver/cfg/dsm_cfg.o ./Core/driver/cfg/dsm_cfg.su ./Core/driver/cfg/gpio_cfg.cyclo ./Core/driver/cfg/gpio_cfg.d ./Core/driver/cfg/gpio_cfg.o ./Core/driver/cfg/gpio_cfg.su ./Core/driver/cfg/i2c_cfg.cyclo ./Core/driver/cfg/i2c_cfg.d ./Core/driver/cfg/i2c_cfg.o ./Core/driver/cfg/i2c_cfg.su ./Core/driver/cfg/it_cfg.cyclo ./Core/driver/cfg/it_cfg.d ./Core/driver/cfg/it_cfg.o ./Core/driver/cfg/it_cfg.su ./Core/driver/cfg/spi_cfg.cyclo ./Core/driver/cfg/spi_cfg.d ./Core/driver/cfg/spi_cfg.o ./Core/driver/cfg/spi_cfg.su ./Core/driver/cfg/tmr_cfg.cyclo ./Core/driver/cfg/tmr_cfg.d ./Core/driver/cfg/tmr_cfg.o ./Core/driver/cfg/tmr_cfg.su ./Core/driver/cfg/uart_cfg.cyclo ./Core/driver/cfg/uart_cfg.d ./Core/driver/cfg/uart_cfg.o ./Core/driver/cfg/uart_cfg.su
 
 .PHONY: clean-Core-2f-driver-2f-cfg
 

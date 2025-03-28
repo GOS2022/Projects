@@ -25,3 +25,25 @@ arm-none-eabi-ar -r  "libGOS2022_lib.a" @"objects.list"
 arm-none-eabi-ar: creating libGOS2022_lib.a
 Finished building target: libGOS2022_lib.a
  
+19:54:29 **** Incremental Build of configuration Debug for project GOS2022 ****
+make -j4 all 
+make: Nothing to be done for 'all'.
+19:54:30 **** Incremental Build of configuration Build_stm32f411xe for project GOS2022_lib ****
+make -j4 all 
+make: Nothing to be done for 'all'.
+19:54:30 **** Build of configuration Debug for project EmptyAppF411 ****
+make -j4 all 
+arm-none-eabi-gcc -o "EmptyAppF411.elf" @"objects.list"  -lGOS2022_lib -lGOS2022 -mcpu=cortex-m4 -T"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\EmptyAppF411\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="EmptyAppF411.map" -Wl,--gc-sections -static -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe" -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: EmptyAppF411.elf
+ 
+arm-none-eabi-size  EmptyAppF411.elf 
+arm-none-eabi-objdump -h -S EmptyAppF411.elf  > "EmptyAppF411.list"
+arm-none-eabi-objcopy  -O binary EmptyAppF411.elf  "EmptyAppF411.bin"
+   text	   data	    bss	    dec	    hex	filename
+  57564	   6740	  42700	 107004	  1a1fc	EmptyAppF411.elf
+Finished building: default.size.stdout
+ 
+Finished building: EmptyAppF411.bin
+ 
+Finished building: EmptyAppF411.list
+ 

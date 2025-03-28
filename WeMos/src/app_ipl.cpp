@@ -1048,16 +1048,17 @@ gos_result_t iplSendDownloadRequest (void_t* pBinaryInfo, u8_t* pResult)
     return result;
 }
 
-u8_t chunkBuffer [4096];
+u8_t chunkBuffer [2048];
+#define CHUNK_SIZE ( 1024u )
 
 gos_result_t iplSendBinaryChunk (void_t* pBinaryChunk, void_t* pResult)
 {
     gos_result_t result = GOS_ERROR;
     //svl_sdhChunkDesc_t chunkDesc;
-    memcpy(chunkBuffer, pBinaryChunk, 2048 + sizeof(svl_sdhChunkDesc_t));
+    memcpy(chunkBuffer, pBinaryChunk, CHUNK_SIZE + sizeof(svl_sdhChunkDesc_t));
 
     header.messageId = IPL_MSG_ID_BINARY_CHUNK_REQ;
-    header.messageLength = sizeof(svl_sdhChunkDesc_t) + 2048;
+    header.messageLength = sizeof(svl_sdhChunkDesc_t) + CHUNK_SIZE;
 
     (void_t) drv_crcGetCrc32((u8_t*)chunkBuffer, header.messageLength, &header.messageCrc);
 

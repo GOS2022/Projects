@@ -120,7 +120,7 @@
 /**
  * System task stack size.
  */
-#define CFG_SYSTEM_TASK_STACK_SIZE      ( 0x400 )
+#define CFG_SYSTEM_TASK_STACK_SIZE      ( 0x800 )
 /**
  * Signal daemon task stack size.
  */
@@ -132,7 +132,7 @@
 /**
  * Message daemon task stack size.
  */
-#define CFG_TASK_MESSAGE_DAEMON_STACK   ( 0x300 )
+#define CFG_TASK_MESSAGE_DAEMON_STACK   ( 0x600 )
 /**
  * Shell daemon task stack size.
  */

@@ -6,16 +6,19 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../Core/driver/src/driver.c \
+../Core/driver/src/drv_rtc.c \
 ../Core/driver/src/rcc_driver.c \
 ../Core/driver/src/trace_driver.c 
 
 OBJS += \
 ./Core/driver/src/driver.o \
+./Core/driver/src/drv_rtc.o \
 ./Core/driver/src/rcc_driver.o \
 ./Core/driver/src/trace_driver.o 
 
 C_DEPS += \
 ./Core/driver/src/driver.d \
+./Core/driver/src/drv_rtc.d \
 ./Core/driver/src/rcc_driver.d \
 ./Core/driver/src/trace_driver.d 
 
@@ -27,7 +30,7 @@ Core/driver/src/%.o Core/driver/src/%.su Core/driver/src/%.cyclo: ../Core/driver
 clean: clean-Core-2f-driver-2f-src
 
 clean-Core-2f-driver-2f-src:
-	-$(RM) ./Core/driver/src/driver.cyclo ./Core/driver/src/driver.d ./Core/driver/src/driver.o ./Core/driver/src/driver.su ./Core/driver/src/rcc_driver.cyclo ./Core/driver/src/rcc_driver.d ./Core/driver/src/rcc_driver.o ./Core/driver/src/rcc_driver.su ./Core/driver/src/trace_driver.cyclo ./Core/driver/src/trace_driver.d ./Core/driver/src/trace_driver.o ./Core/driver/src/trace_driver.su
+	-$(RM) ./Core/driver/src/driver.cyclo ./Core/driver/src/driver.d ./Core/driver/src/driver.o ./Core/driver/src/driver.su ./Core/driver/src/drv_rtc.cyclo ./Core/driver/src/drv_rtc.d ./Core/driver/src/drv_rtc.o ./Core/driver/src/drv_rtc.su ./Core/driver/src/rcc_driver.cyclo ./Core/driver/src/rcc_driver.d ./Core/driver/src/rcc_driver.o ./Core/driver/src/rcc_driver.su ./Core/driver/src/trace_driver.cyclo ./Core/driver/src/trace_driver.d ./Core/driver/src/trace_driver.o ./Core/driver/src/trace_driver.su
 
 .PHONY: clean-Core-2f-driver-2f-src
 

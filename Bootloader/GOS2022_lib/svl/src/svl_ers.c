@@ -60,6 +60,17 @@
 #define ERS_BUFFER_SIZE ( 1024u )
 
 /*
+ * Type definitions
+ */
+typedef enum
+{
+    SVL_ERS_SYSMON_MSG_EVENTS_GET_REQ = 0x4001,
+    SVL_ERS_SYSMON_MSG_EVENTS_GET_RESP = 0x4A01,
+    SVL_ERS_SYSMON_MSG_EVENTS_CLEAR_REQ = 0x4002,
+    SVL_ERS_SYSMON_MSG_EVENTS_CLEAR_RESP = 0x4A02,
+}svl_ersSysmonMsgId_t;
+
+/*
  * Static variables
  */
 /**
@@ -105,7 +116,7 @@ GOS_STATIC void_t       svl_ersEventsClrCallback (void_t);
 gos_sysmonUserMessageDescriptor_t ersEventsRequestMsg =
 {
 	.callback        = svl_ersEventsReqCallback,
-	.messageId       = 0x4101,
+	.messageId       = SVL_ERS_SYSMON_MSG_EVENTS_GET_REQ,
 	.payloadSize     = 0u,
 	.protocolVersion = 1,
 	.payload         = NULL
@@ -117,7 +128,7 @@ gos_sysmonUserMessageDescriptor_t ersEventsRequestMsg =
 gos_sysmonUserMessageDescriptor_t ersEventsClearMsg =
 {
 	.callback        = svl_ersEventsClrCallback,
-	.messageId       = 0x4102,
+	.messageId       = SVL_ERS_SYSMON_MSG_EVENTS_CLEAR_REQ,
 	.payloadSize     = 0u,
 	.protocolVersion = 1,
 	.payload         = NULL
@@ -372,7 +383,7 @@ GOS_STATIC void_t svl_ersEventsReqCallback (void_t)
 
 	(void_t) gos_gcpTransmitMessage(
     		CFG_SYSMON_GCP_CHANNEL_NUM,
-			0xD101,
+			SVL_ERS_SYSMON_MSG_EVENTS_GET_RESP,
 			(void_t*)ersBuffer,
 			numOfEvents * sizeof(svl_ersEventDesc_t),
 			0xFFFF);
@@ -400,7 +411,7 @@ GOS_STATIC void_t svl_ersEventsClrCallback (void_t)
 
 	(void_t) gos_gcpTransmitMessage(
     		CFG_SYSMON_GCP_CHANNEL_NUM,
-			0xD102,
+			SVL_ERS_SYSMON_MSG_EVENTS_CLEAR_RESP,
 			(void_t*)&eventNum,
 			sizeof(eventNum),
 			0xFFFF);

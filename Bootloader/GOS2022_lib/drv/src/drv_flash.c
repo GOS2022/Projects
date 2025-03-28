@@ -52,6 +52,8 @@
 #include <stm32f4xx_hal_flash.h>
 #include <stm32f4xx_hal_flash_ex.h>
 
+GOS_STATIC FLASH_EraseInitTypeDef eraseInitStruct  = {0}; // TODO
+
 /*
  * Function prototypes.
  */
@@ -67,7 +69,6 @@ gos_result_t drv_flashErase (u32_t address, u32_t requiredSize)
      * Local variables.
      */
     gos_result_t           flashEraseResult = GOS_ERROR;
-    FLASH_EraseInitTypeDef eraseInitStruct  = {0};
     u32_t                  startSector      = 0u;
     u32_t                  endSector        = 0u;
     u32_t                  endSectorAddress = 0u;

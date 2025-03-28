@@ -50,6 +50,9 @@
 #ifndef SVL_CONFIG_H
 #define SVL_CONFIG_H
 
+#if defined(GOS2022_BOOTLOADER)
+#include <svl_cfg_bootloader.h>
+#else
 /*
  * Macros
  */
@@ -57,7 +60,7 @@
  * DHS Service Configuration
  */
 //! TODO
-#define SVL_DHS_MAX_DEVICES                  ( 8u )
+#define SVL_DHS_MAX_DEVICES                  ( 2u )
 
 //! TODO
 #define SVL_DHS_DAEMON_PRIO                  ( 200 )
@@ -100,10 +103,10 @@
 #define SVL_IPL_DEVCFG_SUBNET_ADDR_ELEMENTS  ( 4 )
 
 //! IPL RX buffer size.
-#define SVL_IPL_RX_BUFF_SIZE                 ( 4096u )
+#define SVL_IPL_RX_BUFF_SIZE                 ( 2560u )
 
 //! Maximum number of user-defined message callbacks.
-#define SVL_IPL_USER_MSG_CALLBACK_MAX_NUM    ( 16 )
+#define SVL_IPL_USER_MSG_CALLBACK_MAX_NUM    ( 8 )
 
 /**
  * Trace level for IPL debugging.
@@ -112,7 +115,7 @@
  * 1 : Only state machine state info.
  * 2 : All debug info.
  */
-#define SVL_IPL_TRACE_LEVEL                  ( 2 )
+#define SVL_IPL_TRACE_LEVEL                  ( 0 )
 
 //! IPL daemon task priority.
 #define SVL_IPL_DAEMON_PRIORITY              ( 190 )
@@ -124,7 +127,7 @@
  * SDH Service Configuration
  */
 /**
- * Trace level for IPL debugging.
+ * Trace level for SDH debugging.
  *
  * 0 : Debug messages disabled.
  * 1 : Only state machine state info.
@@ -136,13 +139,19 @@
 #define SVL_SDH_DAEMON_PRIORITY              ( 189 )
 
 //! SDH daemon task stack size.
-#define SVL_SDH_DAEMON_STACK_SIZE            ( 0x800 )
+#define SVL_SDH_DAEMON_STACK_SIZE            ( 0x1600 )
 
 /*
  * DSM Service Configuration
  */
 //! TODO
-#define SVL_DSM_MAX_INITIALIZERS             ( 32u )
+#define SVL_DSM_MAX_BLOCK_NAME_LENGTH        ( 24u )
+
+//! TODO
+#define SVL_DSM_MAX_PHASE_NAME_LENGTH        ( 64u )
+
+//! TODO
+#define SVL_DSM_MAX_INITIALIZERS             ( 16u )
 
 //! TODO
 #define SVL_DSM_DAEMON_PRIO                  ( 200 )
@@ -150,10 +159,14 @@
 //! TODO
 #define SVL_DSM_DAEMON_POLL_MS               ( 20u )
 
+//! TODO
+#define SVL_DSM_DAEMON_STACK_SIZE            ( 0x800u )
+
 /*
  * MDI Service Configuration
  */
 //! TODO
 #define SVL_MDI_VAR_NAME_LENGTH              ( 16u )
 
+#endif
 #endif

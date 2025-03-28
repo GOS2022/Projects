@@ -20,6 +20,13 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.mode = GPIO_MODE_OUTPUT_PP,
 			.pull = GPIO_NOPULL,
 		},
+		[IO_USER_BUTTON] =
+		{
+			.port = GPIOC,
+			.pin  = GPIO_PIN_13,
+			.mode = GPIO_MODE_IT_FALLING,
+			.pull = GPIO_NOPULL
+		},
 		[IO_UART_1_RX] =
 		{
 			.port = GPIOA,
@@ -127,6 +134,32 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.pull = GPIO_NOPULL,
 			.speed = GPIO_SPEED_FREQ_HIGH,
 			.defaultState = GPIO_STATE_HIGH
+		},
+		[IO_I2C1_SCL] =
+		{
+			.port = GPIOB,
+			.pin = GPIO_PIN_6,
+			.mode = GPIO_MODE_AF_OD,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
+			.alternate = GPIO_AF4_I2C1
+		},
+		[IO_I2C1_SDA] =
+		{
+			.port = GPIOB,
+			.pin = GPIO_PIN_7,
+			.mode = GPIO_MODE_AF_OD,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
+			.alternate = GPIO_AF4_I2C1
+		},
+		[IO_WEMOS_RST] =
+		{
+			.port = GPIOB,
+			.pin  = GPIO_PIN_14,
+			.mode = GPIO_MODE_OUTPUT_PP,
+			.pull = GPIO_NOPULL,
+			.defaultState = GPIO_STATE_LOW
 		}
 };
 
@@ -135,6 +168,9 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
  */
 u32_t gpioConfigSize = sizeof(gpioConfig);
 
-GOS_CONST drv_gpioItCallbackDescriptor_t gpioItConfig [] = {};
+GOS_CONST drv_gpioItCallbackDescriptor_t gpioItConfig [] =
+{
+
+};
 
 u32_t gpioItConfigSize = sizeof(gpioItConfig);

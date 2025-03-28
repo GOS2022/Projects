@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       svl_dsm.c
 //! @author     Ahmed Gazar
-//! @date       2024-07-16
-//! @version    1.0
+//! @date       2025-03-26
+//! @version    1.1
 //!
 //! @brief      GOS2022 Library / Device State Manager source.
 //! @details    For a more detailed description of this driver, please refer to @ref svl_dsm.h
@@ -25,6 +25,7 @@
 // Version    Date          Author          Description
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-07-16    Ahmed Gazar     Initial version created.
+// 1.1        2025-03-26    Ahmed Gazar     *    Startup info print made atomic
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -54,48 +55,48 @@
 #include <string.h>
 
 /**
- * TODO
+ * Initialization phase configuration array.
  */
 GOS_EXTERN GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [];
 
 /**
- * TODO
+ * Reaction configuration array.
  */
 GOS_EXTERN GOS_CONST svl_dsmReaction_t      reactionConfig [];
 
 /**
- * TODO (shall be defined by user).
+ * Number of the initialization phases (shall be defined by user).
  */
 GOS_EXTERN u32_t                            initPhaseConfigSize;
 
 /**
- * TODO
+ * Size of the reaction configuration (shall be defined by user).
  */
 GOS_EXTERN u32_t                            reactionConfigSize;
 
 /**
- * TODO
+ * Device actual state.
  */
 GOS_STATIC svl_dsmState_t                   deviceState     = DSM_STATE_STARTUP;
 
 /**
- * TODO
+ * Device previous state.
  */
 GOS_STATIC svl_dsmState_t                   devicePrevState = DSM_STATE_STARTUP;
 
 /*
  * Static function prototypes.
  */
-GOS_STATIC void_t svl_dsmTask (void_t);
+GOS_STATIC void_t svl_dsmDaemonTask (void_t);
 
 /**
- * TODO
+ * DSM daemon task descriptor.
  */
 gos_taskDescriptor_t svlDsmDaemonDesc =
 {
-	.taskFunction	    = svl_dsmTask,
+	.taskFunction	    = svl_dsmDaemonTask,
 	.taskName		    = "svl_dsm_daemon",
-	.taskStackSize 	    = 0x600,
+	.taskStackSize 	    = SVL_DSM_DAEMON_STACK_SIZE,
 	.taskPriority 	    = 0u,
 	.taskPrivilegeLevel	= GOS_TASK_PRIVILEGE_KERNEL
 };
@@ -138,7 +139,7 @@ gos_result_t svl_dsmInit (void_t)
 				else
 				{
 					// End of initializers.
-					break;
+					//break;
 				}
 			}
 		}
@@ -348,11 +349,17 @@ GOS_INLINE void_t svl_dsmSetState (svl_dsmState_t requiredState)
 }
 
 /**
- * TODO
- * @param
- * @return
+ * @brief   DSM daemon task.
+ * @details During initialization, this task starts as the highest
+ *          priority task and print all the related software info
+ *          on the trace output. After this initialization phase,
+ *          the task changes its priority to become a background task,
+ *          and polls for change in the state. If a state-change occurs,
+ *          it activates the related reactions - if any.
+ *
+ * @return  -
  */
-GOS_STATIC void_t svl_dsmTask (void_t)
+GOS_STATIC void_t svl_dsmDaemonTask (void_t)
 {
 	/*
 	 * Local variables.
@@ -362,6 +369,9 @@ GOS_STATIC void_t svl_dsmTask (void_t)
 	/*
 	 * Function code.
 	 */
+	// Disable scheduling to keep printed info consistent.
+	GOS_DISABLE_SCHED
+
 	// Print out OS info.
 	(void_t) svl_dsmPrintOSInfo();
 
@@ -373,6 +383,9 @@ GOS_STATIC void_t svl_dsmTask (void_t)
 
 	// Print out Application Info.
 	(void_t) svl_dsmPrintAppInfo();
+
+	// Enable scheduling, data printed.
+	GOS_ENABLE_SCHED
 
 	// Change priority.
 	(void_t) gos_taskSetPriority(svlDsmDaemonDesc.taskId, SVL_DSM_DAEMON_PRIO);

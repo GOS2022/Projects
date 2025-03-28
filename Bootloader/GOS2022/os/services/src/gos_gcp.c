@@ -346,20 +346,6 @@ GOS_STATIC GOS_INLINE gos_result_t gos_gcpTransmitMessageInternal (
         requestHeaderFrame.dataCrc       = gos_crcDriverGetCrc((u8_t*)pMessagePayload, payloadSize);
         requestHeaderFrame.headerCrc     = gos_crcDriverGetCrc((u8_t*)&requestHeaderFrame, (u32_t)(sizeof(requestHeaderFrame) - sizeof(requestHeaderFrame.headerCrc)));
 
-        /*if (channelFunctions[channel].gcpTransmitFunction((u8_t*)&requestHeaderFrame, (u16_t)sizeof(requestHeaderFrame)) == GOS_SUCCESS &&
-            channelFunctions[channel].gcpTransmitFunction((u8_t*)pMessagePayload, requestHeaderFrame.dataSize) == GOS_SUCCESS &&
-            channelFunctions[channel].gcpReceiveFunction((u8_t*)&responseHeaderFrame, (u16_t)sizeof(responseHeaderFrame)) == GOS_SUCCESS &&
-            gos_gcpValidateHeader(&responseHeaderFrame, &headerAck) == GOS_SUCCESS &&
-            responseHeaderFrame.ackType == GCP_ACK_OK)
-        {
-            // Transmission successful.
-            transmitMessageResult = GOS_SUCCESS;
-        }
-        else
-        {
-            // Error.
-        }*/
-
         if (channelFunctions[channel].gcpTransmitFunction((u8_t*)&requestHeaderFrame, (u16_t)sizeof(requestHeaderFrame)) == GOS_SUCCESS)
         {
         	if (requestHeaderFrame.dataSize == 0u)
@@ -482,35 +468,6 @@ GOS_STATIC GOS_INLINE gos_result_t gos_gcpReceiveMessageInternal (
         responseHeaderFrame.dataCrc       = 0u;
         responseHeaderFrame.protocolMajor = GCP_PROTOCOL_VERSION_MAJOR;
         responseHeaderFrame.protocolMinor = GCP_PROTOCOL_VERSION_MINOR;
-
-        // Receive header and data frame.
-        /*if (channelFunctions[channel].gcpReceiveFunction((u8_t*)&requestHeaderFrame, (u16_t)sizeof(requestHeaderFrame)) == GOS_SUCCESS &&
-            gos_gcpValidateHeader(&requestHeaderFrame, &headerAck) == GOS_SUCCESS &&
-            (requestHeaderFrame.dataSize == 0 || (requestHeaderFrame.dataSize > 0 &&
-            channelFunctions[channel].gcpReceiveFunction((u8_t*)pPayloadTarget, requestHeaderFrame.dataSize) == GOS_SUCCESS &&
-            gos_gcpValidateData(&requestHeaderFrame, pPayloadTarget, &headerAck) == GOS_SUCCESS)))
-        {
-            // Data OK. Send response.
-            *pMessageId = requestHeaderFrame.messageId;
-            responseHeaderFrame.ackType = GCP_ACK_OK;
-            responseHeaderFrame.headerCrc = gos_crcDriverGetCrc((u8_t*)&responseHeaderFrame, (u16_t)(sizeof(responseHeaderFrame) - sizeof(responseHeaderFrame.headerCrc)));
-            if (channelFunctions[channel].gcpTransmitFunction((u8_t*)&responseHeaderFrame, (u16_t)sizeof(responseHeaderFrame)) == GOS_SUCCESS)
-            {
-                // Reception successful.
-                receiveMessageResult = GOS_SUCCESS;
-            }
-            else
-            {
-                // Transmit error.
-            }
-        }
-        else
-        {
-            // Send response.
-            responseHeaderFrame.ackType   = (u8_t)headerAck;
-            responseHeaderFrame.headerCrc = gos_crcDriverGetCrc((u8_t*)&responseHeaderFrame, (u16_t)(sizeof(responseHeaderFrame) - sizeof(responseHeaderFrame.headerCrc)));
-            (void_t) channelFunctions[channel].gcpTransmitFunction((u8_t*)&responseHeaderFrame, (u16_t)sizeof(responseHeaderFrame));
-        }*/
 
         if (channelFunctions[channel].gcpReceiveFunction((u8_t*)&requestHeaderFrame, (u16_t)sizeof(requestHeaderFrame)) == GOS_SUCCESS &&
             gos_gcpValidateHeader(&requestHeaderFrame, &headerAck) == GOS_SUCCESS)

@@ -57,10 +57,6 @@
 /*
  * Macros
  */
-/**
- * Total memory size.
- */
-#define TOTAL_SIZE  ( W25Q64_PAGE_SIZE * W25Q64_PAGE_NUM )
 
 /**
  * Size of a sector.
@@ -309,7 +305,7 @@ GOS_INLINE void_t drv_w25q64WriteData (void_t* pDevice, u32_t address, u8_t* pDa
 		{
 			u32_t _startPage = startSector * 16;
 
-			(void_t) memset(sectorBuffer, 0, SECTOR_SIZE);
+			//(void_t) memset(sectorBuffer, 0, SECTOR_SIZE);
 
 			drv_w25q64ReadDataFast(pDevice, _startPage, 0, sectorBuffer, SECTOR_SIZE);
 

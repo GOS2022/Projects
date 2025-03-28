@@ -57,7 +57,7 @@
  */
 typedef struct
 {
-    char_t*      description;             //!< Initializer description.
+    char_t*       description;            //!< Initializer description.
     gos_result_t (*pInitializer)(void_t); //!< Initializer function.
 }svl_dsmInitBlock_t;
 
@@ -66,7 +66,7 @@ typedef struct
  */
 typedef struct
 {
-	char_t*                      phaseName;                            //!< Initialization phase name.
+	char_t*                       phaseName;                           //!< Initialization phase name.
 	GOS_CONST svl_dsmInitBlock_t initBlock [SVL_DSM_MAX_INITIALIZERS]; //!< Initializer block array.
 }svl_dsmInitPhaseDesc_t;
 

@@ -238,7 +238,6 @@ gos_result_t gos_errorTraceInit (const char_t* initDescription, gos_result_t ini
     /*
      * Function code.
      */
-
     (void_t) gos_traceTraceFormattedUnsafe("[%-5lu]    %-51s [ "
             "%s"
             " ]\r\n",

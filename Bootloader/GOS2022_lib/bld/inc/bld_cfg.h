@@ -56,37 +56,17 @@
 /*
  * Macros
  */
-/*#define BLD_VERSION_MAJOR              ( 0                   )
-#define BLD_VERSION_MINOR              ( 1                   )
-#define BLD_VERSION_BUILD              ( 2                   )
-
-#define BLD_VERSION_DATE_YEAR          ( 2024                )
-#define BLD_VERSION_DATE_MONTH         ( GOS_TIME_MAY        )
-#define BLD_VERSION_DATE_DAY           ( 23                  )
-#define BLD_NAME                       "GOS2022_bld_stm32f4"
-#define BLD_DESCRIPTION                "GOS2022 bootloader for STM32F4 devices."
-#define BLD_AUTHOR                     "Ahmed Ibrahim Gazar"*/
-
-/*#define BLD_DATA_START_ADDRESS         ( (u32_t)0x08004000   )
-#define BLD_DATA_SIZE                  ( 16 * 1024           )
-#define BLD_DATA_END_ADDRESS           ( BLD_DATA_START_ADDRESS + BLD_DATA_SIZE - 1 )*/
-
 #define BLD_ROM_START_ADDRESS          ( (u32_t)0x08004000   )
 #define BLD_ROM_SIZE                   ( (u32_t)(112 * 1024)  )
 #define BLD_ROM_END_ADDRESS            ( BLD_ROM_START_ADDRESS + BLD_ROM_SIZE - 1 )
-#define BLD_INIT_PATTERN               ( (u32_t)0xAE55EA55   )
 
 #define BLD_APP_ROM_START_ADDRESS      ( (u32_t)0x08020000   )
 #define BLD_APP_ROM_SIZE               ( (u32_t)(384 * 1024) )
 #define BLD_APP_ROM_END_ADDRESS        ( BLD_APP_ROM_START_ADDRESS + BLD_APP_ROM_SIZE - 1 )
 
-#define BLD_INSTALL_PACKET_MAX_SIZE    ( (u16_t)2048         )
-#define BLD_GCP_CHANNEL_NUM            ( 1                   )
-#define BLD_GCP_RECEIVE_BUFFER_SIZE    ( 1024 + 64           )
-
 #define BLD_DEFAULT_CONN_TMO_MS        ( 3000u               )
 #define BLD_DEFAULT_REQ_TMO_MS         ( 60000u              )
 #define BLD_DEFAULT_INSTALL_TMO_MS     ( 120000u             )
-#define BLD_DEFAULT_CONN_ON_STARTUP    ( GOS_TRUE            )
+#define BLD_DEFAULT_CONN_ON_STARTUP    ( GOS_FALSE            )
 
 #endif

@@ -100,6 +100,7 @@ GOS_STATIC void_t app_mdiTask (void_t)
 	    	(void_t) drv_adcGetValueDMA(DRV_ADC_INSTANCE_1, (u32_t*)adcResult, 2, 1000, 10);
 	        sum1 += adcResult[0];
 	        sum2 += adcResult[1];
+	        gos_taskSleep(1);
 	    }
 
 	    vref_avg = sum2 / ADC_SAMPLES;

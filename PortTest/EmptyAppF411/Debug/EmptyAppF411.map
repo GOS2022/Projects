@@ -2114,6 +2114,8 @@ Discarded input sections
                 0x00000000       0xbc ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
  .text.HAL_DMA_Start
                 0x00000000       0x76 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
+ .text.HAL_DMA_Start_IT
+                0x00000000       0xb0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
  .text.HAL_DMA_PollForTransfer
                 0x00000000      0x1be ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
  .text.HAL_DMA_IRQHandler
@@ -2124,6 +2126,8 @@ Discarded input sections
                 0x00000000       0xd4 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
  .text.HAL_DMA_GetState
                 0x00000000       0x1c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
+ .text.DMA_SetConfig
+                0x00000000       0x5c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
  .text.DMA_CalcBaseAndBitshift
                 0x00000000       0x6c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
  .text.DMA_CheckFifoParam
@@ -4475,10 +4479,10 @@ Discarded input sections
                 0x00000000       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.HAL_UART_Receive
                 0x00000000      0x12e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
- .text.HAL_UART_Transmit_IT
-                0x00000000       0x6c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.HAL_UART_Receive_IT
                 0x00000000       0x4a ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .text.HAL_UART_Transmit_DMA
+                0x00000000       0xe0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.HAL_UART_Receive_DMA
                 0x00000000       0x4a ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.HAL_UART_DMAPause
@@ -4505,6 +4509,8 @@ Discarded input sections
                 0x00000000      0x164 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.HAL_UART_TxCpltCallback
                 0x00000000       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .text.HAL_UART_TxHalfCpltCallback
+                0x00000000       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.HAL_UART_RxCpltCallback
                 0x00000000       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.HAL_UART_RxHalfCpltCallback
@@ -4527,14 +4533,22 @@ Discarded input sections
                 0x00000000       0x3c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.HAL_UART_GetError
                 0x00000000       0x18 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .text.UART_DMATransmitCplt
+                0x00000000       0x9a ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .text.UART_DMATxHalfCplt
+                0x00000000       0x1c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_DMAReceiveCplt
                 0x00000000      0x12c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_DMARxHalfCplt
                 0x00000000       0x3c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .text.UART_DMAError
+                0x00000000       0x94 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_Start_Receive_IT
                 0x00000000       0x74 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_Start_Receive_DMA
                 0x00000000      0x134 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .text.UART_EndTxTransfer
+                0x00000000       0x50 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_DMATxOnlyAbortCallback
                 0x00000000       0x2a ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_DMARxOnlyAbortCallback
@@ -5346,9 +5360,9 @@ Discarded input sections
                 0x00000000       0x2c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
  .text.drv_uartReceiveBlocking
                 0x00000000       0x98 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
- .text.drv_uartReceiveDMA
+ .text.drv_uartTransmitDMA
                 0x00000000       0xe0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
- .text.drv_uartTransmitIT
+ .text.drv_uartReceiveDMA
                 0x00000000       0xe0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
  .text.drv_uartReceiveIT
                 0x00000000       0xe0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
@@ -6981,7 +6995,7 @@ LOAD C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                 0x08000000                g_pfnVectors
                 0x08000198                        . = ALIGN (0x4)
 
-.text           0x080001a0     0xcad4
+.text           0x080001a0     0xc7a0
                 0x080001a0                        . = ALIGN (0x4)
  *(.text)
  .text          0x080001a0       0x40 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
@@ -7122,854 +7136,835 @@ LOAD C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .text.HAL_SYSTICK_Config
                 0x08000dc6       0x18 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
                 0x08000dc6                HAL_SYSTICK_Config
- .text.HAL_DMA_Start_IT
-                0x08000dde       0xb0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
-                0x08000dde                HAL_DMA_Start_IT
  .text.HAL_DMA_Abort
-                0x08000e8e       0xe0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
-                0x08000e8e                HAL_DMA_Abort
+                0x08000dde       0xe0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
+                0x08000dde                HAL_DMA_Abort
  .text.HAL_DMA_Abort_IT
-                0x08000f6e       0x44 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
-                0x08000f6e                HAL_DMA_Abort_IT
+                0x08000ebe       0x44 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
+                0x08000ebe                HAL_DMA_Abort_IT
  .text.HAL_DMA_GetError
-                0x08000fb2       0x18 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
-                0x08000fb2                HAL_DMA_GetError
- .text.DMA_SetConfig
-                0x08000fca       0x5c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
- *fill*         0x08001026        0x2 
+                0x08000f02       0x18 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
+                0x08000f02                HAL_DMA_GetError
+ *fill*         0x08000f1a        0x2 
  .text.HAL_GPIO_Init
-                0x08001028      0x308 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
-                0x08001028                HAL_GPIO_Init
+                0x08000f1c      0x308 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+                0x08000f1c                HAL_GPIO_Init
  .text.HAL_GPIO_WritePin
-                0x08001330       0x32 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
-                0x08001330                HAL_GPIO_WritePin
+                0x08001224       0x32 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+                0x08001224                HAL_GPIO_WritePin
  .text.HAL_GPIO_TogglePin
-                0x08001362       0x34 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
-                0x08001362                HAL_GPIO_TogglePin
- *fill*         0x08001396        0x2 
+                0x08001256       0x34 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+                0x08001256                HAL_GPIO_TogglePin
+ *fill*         0x0800128a        0x2 
  .text.HAL_GPIO_EXTI_IRQHandler
-                0x08001398       0x30 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
-                0x08001398                HAL_GPIO_EXTI_IRQHandler
+                0x0800128c       0x30 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+                0x0800128c                HAL_GPIO_EXTI_IRQHandler
  .text.HAL_RCC_OscConfig
-                0x080013c8      0x4f0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
-                0x080013c8                HAL_RCC_OscConfig
+                0x080012bc      0x4f0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+                0x080012bc                HAL_RCC_OscConfig
  .text.HAL_RCC_ClockConfig
-                0x080018b8      0x1cc ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
-                0x080018b8                HAL_RCC_ClockConfig
+                0x080017ac      0x1cc ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+                0x080017ac                HAL_RCC_ClockConfig
  .text.HAL_RCC_GetSysClockFreq
-                0x08001a84      0x20c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
-                0x08001a84                HAL_RCC_GetSysClockFreq
+                0x08001978      0x20c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+                0x08001978                HAL_RCC_GetSysClockFreq
  .text.HAL_RCC_GetHCLKFreq
-                0x08001c90       0x18 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
-                0x08001c90                HAL_RCC_GetHCLKFreq
+                0x08001b84       0x18 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+                0x08001b84                HAL_RCC_GetHCLKFreq
  .text.HAL_RCC_GetPCLK1Freq
-                0x08001ca8       0x28 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
-                0x08001ca8                HAL_RCC_GetPCLK1Freq
+                0x08001b9c       0x28 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+                0x08001b9c                HAL_RCC_GetPCLK1Freq
  .text.HAL_RCC_GetPCLK2Freq
-                0x08001cd0       0x28 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
-                0x08001cd0                HAL_RCC_GetPCLK2Freq
+                0x08001bc4       0x28 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+                0x08001bc4                HAL_RCC_GetPCLK2Freq
  .text.HAL_TIM_Base_Init
-                0x08001cf8       0x9e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x08001cf8                HAL_TIM_Base_Init
+                0x08001bec       0x9e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x08001bec                HAL_TIM_Base_Init
  .text.HAL_TIM_Base_MspInit
-                0x08001d96       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x08001d96                HAL_TIM_Base_MspInit
- *fill*         0x08001daa        0x2 
+                0x08001c8a       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x08001c8a                HAL_TIM_Base_MspInit
+ *fill*         0x08001c9e        0x2 
  .text.HAL_TIM_Base_Start
-                0x08001dac       0xb4 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x08001dac                HAL_TIM_Base_Start
+                0x08001ca0       0xb4 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x08001ca0                HAL_TIM_Base_Start
  .text.HAL_TIM_IRQHandler
-                0x08001e60      0x1e0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x08001e60                HAL_TIM_IRQHandler
+                0x08001d54      0x1e0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x08001d54                HAL_TIM_IRQHandler
  .text.HAL_TIM_ConfigClockSource
-                0x08002040      0x18e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x08002040                HAL_TIM_ConfigClockSource
+                0x08001f34      0x18e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x08001f34                HAL_TIM_ConfigClockSource
  .text.HAL_TIM_OC_DelayElapsedCallback
-                0x080021ce       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x080021ce                HAL_TIM_OC_DelayElapsedCallback
+                0x080020c2       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x080020c2                HAL_TIM_OC_DelayElapsedCallback
  .text.HAL_TIM_IC_CaptureCallback
-                0x080021e2       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x080021e2                HAL_TIM_IC_CaptureCallback
+                0x080020d6       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x080020d6                HAL_TIM_IC_CaptureCallback
  .text.HAL_TIM_PWM_PulseFinishedCallback
-                0x080021f6       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x080021f6                HAL_TIM_PWM_PulseFinishedCallback
+                0x080020ea       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x080020ea                HAL_TIM_PWM_PulseFinishedCallback
  .text.HAL_TIM_TriggerCallback
-                0x0800220a       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x0800220a                HAL_TIM_TriggerCallback
- *fill*         0x0800221e        0x2 
+                0x080020fe       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x080020fe                HAL_TIM_TriggerCallback
+ *fill*         0x08002112        0x2 
  .text.TIM_Base_SetConfig
-                0x08002220      0x118 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x08002220                TIM_Base_SetConfig
+                0x08002114      0x118 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x08002114                TIM_Base_SetConfig
  .text.TIM_TI1_ConfigInputStage
-                0x08002338       0x5e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x0800222c       0x5e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
  .text.TIM_TI2_ConfigInputStage
-                0x08002396       0x60 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x0800228a       0x60 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
  .text.TIM_ITRx_SetConfig
-                0x080023f6       0x36 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x080022ea       0x36 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
  .text.TIM_ETR_SetConfig
-                0x0800242c       0x40 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
-                0x0800242c                TIM_ETR_SetConfig
+                0x08002320       0x40 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o
+                0x08002320                TIM_ETR_SetConfig
  .text.HAL_TIMEx_MasterConfigSynchronization
-                0x0800246c       0xdc ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
-                0x0800246c                HAL_TIMEx_MasterConfigSynchronization
+                0x08002360       0xdc ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
+                0x08002360                HAL_TIMEx_MasterConfigSynchronization
  .text.HAL_TIMEx_CommutCallback
-                0x08002548       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
-                0x08002548                HAL_TIMEx_CommutCallback
+                0x0800243c       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
+                0x0800243c                HAL_TIMEx_CommutCallback
  .text.HAL_TIMEx_BreakCallback
-                0x0800255c       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
-                0x0800255c                HAL_TIMEx_BreakCallback
+                0x08002450       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o
+                0x08002450                HAL_TIMEx_BreakCallback
  .text.HAL_UART_Init
-                0x08002570       0xa0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x08002570                HAL_UART_Init
+                0x08002464       0xa0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08002464                HAL_UART_Init
  .text.HAL_UART_Transmit
-                0x08002610      0x116 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x08002610                HAL_UART_Transmit
- *fill*         0x08002726        0x2 
- .text.HAL_UART_Transmit_DMA
-                0x08002728       0xe0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x08002728                HAL_UART_Transmit_DMA
+                0x08002504      0x116 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08002504                HAL_UART_Transmit
+ .text.HAL_UART_Transmit_IT
+                0x0800261a       0x6c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x0800261a                HAL_UART_Transmit_IT
  .text.HAL_UART_Abort
-                0x08002808      0x1d6 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x08002808                HAL_UART_Abort
- *fill*         0x080029de        0x2 
+                0x08002686      0x1d6 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08002686                HAL_UART_Abort
  .text.HAL_UART_Abort_IT
-                0x080029e0      0x228 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x080029e0                HAL_UART_Abort_IT
+                0x0800285c      0x228 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x0800285c                HAL_UART_Abort_IT
  .text.HAL_UART_IRQHandler
-                0x08002c08      0x524 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x08002c08                HAL_UART_IRQHandler
- .text.HAL_UART_TxHalfCpltCallback
-                0x0800312c       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x0800312c                HAL_UART_TxHalfCpltCallback
+                0x08002a84      0x524 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08002a84                HAL_UART_IRQHandler
  .text.HAL_UART_ErrorCallback
-                0x08003140       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x08003140                HAL_UART_ErrorCallback
+                0x08002fa8       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08002fa8                HAL_UART_ErrorCallback
  .text.HAL_UART_AbortCpltCallback
-                0x08003154       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x08003154                HAL_UART_AbortCpltCallback
+                0x08002fbc       0x14 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08002fbc                HAL_UART_AbortCpltCallback
  .text.HAL_UARTEx_RxEventCallback
-                0x08003168       0x18 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
-                0x08003168                HAL_UARTEx_RxEventCallback
- .text.UART_DMATransmitCplt
-                0x08003180       0x9a ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
- .text.UART_DMATxHalfCplt
-                0x0800321a       0x1c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
- .text.UART_DMAError
-                0x08003236       0x94 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08002fd0       0x18 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08002fd0                HAL_UARTEx_RxEventCallback
  .text.UART_WaitOnFlagUntilTimeout
-                0x080032ca       0xb2 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
- .text.UART_EndTxTransfer
-                0x0800337c       0x50 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08002fe8       0xb2 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_EndRxTransfer
-                0x080033cc       0xc6 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x0800309a       0xc6 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_DMAAbortOnError
-                0x08003492       0x28 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08003160       0x28 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_DMATxAbortCallback
-                0x080034ba       0x60 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08003188       0x60 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_DMARxAbortCallback
-                0x0800351a       0x60 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x080031e8       0x60 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_Transmit_IT
-                0x0800357a       0xa0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08003248       0xa0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_EndTransmit_IT
-                0x0800361a       0x30 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x080032e8       0x30 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_Receive_IT
-                0x0800364a      0x17c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
- *fill*         0x080037c6        0x2 
+                0x08003318      0x17c ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.UART_SetConfig
-                0x080037c8      0x4e8 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+                0x08003494      0x4e8 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
  .text.drv_gpioInit
-                0x08003cb0       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
-                0x08003cb0                drv_gpioInit
+                0x0800397c       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
+                0x0800397c                drv_gpioInit
  .text.drv_gpioInitPin
-                0x08003d08      0x130 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
-                0x08003d08                drv_gpioInitPin
+                0x080039d4      0x130 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
+                0x080039d4                drv_gpioInitPin
  .text.drv_gpioTgglePin
-                0x08003e38       0x64 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
-                0x08003e38                drv_gpioTgglePin
+                0x08003b04       0x64 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
+                0x08003b04                drv_gpioTgglePin
  .text.EXTI9_5_IRQHandler
-                0x08003e9c       0x84 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
-                0x08003e9c                EXTI9_5_IRQHandler
+                0x08003b68       0x84 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
+                0x08003b68                EXTI9_5_IRQHandler
  .text.EXTI15_10_IRQHandler
-                0x08003f20       0x90 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
-                0x08003f20                EXTI15_10_IRQHandler
+                0x08003bec       0x90 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
+                0x08003bec                EXTI15_10_IRQHandler
  .text.HAL_GPIO_EXTI_Callback
-                0x08003fb0       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
-                0x08003fb0                HAL_GPIO_EXTI_Callback
+                0x08003c7c       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_gpio.o)
+                0x08003c7c                HAL_GPIO_EXTI_Callback
  .text.drv_itInit
-                0x08004068       0x9c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_it.o)
-                0x08004068                drv_itInit
+                0x08003d34       0x9c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_it.o)
+                0x08003d34                drv_itInit
  .text.drv_systimerStart
-                0x08004104       0x34 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_systimer.o)
-                0x08004104                drv_systimerStart
+                0x08003dd0       0x34 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_systimer.o)
+                0x08003dd0                drv_systimerStart
  .text.drv_systimerGetValue
-                0x08004138       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_systimer.o)
-                0x08004138                drv_systimerGetValue
+                0x08003e04       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_systimer.o)
+                0x08003e04                drv_systimerGetValue
  .text.drv_tmrInit
-                0x08004180       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
-                0x08004180                drv_tmrInit
+                0x08003e4c       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
+                0x08003e4c                drv_tmrInit
  .text.drv_tmrInitInstance
-                0x080041d8      0x290 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
-                0x080041d8                drv_tmrInitInstance
+                0x08003ea4      0x290 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
+                0x08003ea4                drv_tmrInitInstance
  .text.drv_tmrStart
-                0x08004468       0x64 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
-                0x08004468                drv_tmrStart
+                0x08004134       0x64 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
+                0x08004134                drv_tmrStart
  .text.drv_tmrGetValue
-                0x080044cc       0x44 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
-                0x080044cc                drv_tmrGetValue
+                0x08004198       0x44 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
+                0x08004198                drv_tmrGetValue
  .text.HAL_TIM_PeriodElapsedCallback
-                0x08004510       0xb4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
-                0x08004510                HAL_TIM_PeriodElapsedCallback
+                0x080041dc       0xb4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
+                0x080041dc                HAL_TIM_PeriodElapsedCallback
  .text.TIM2_IRQHandler
-                0x080045c4       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
-                0x080045c4                TIM2_IRQHandler
+                0x08004290       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
+                0x08004290                TIM2_IRQHandler
  .text.TIM3_IRQHandler
-                0x08004630       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
-                0x08004630                TIM3_IRQHandler
+                0x080042fc       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
+                0x080042fc                TIM3_IRQHandler
  .text.TIM4_IRQHandler
-                0x0800469c       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
-                0x0800469c                TIM4_IRQHandler
+                0x08004368       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
+                0x08004368                TIM4_IRQHandler
  .text.TIM5_IRQHandler
-                0x08004708       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
-                0x08004708                TIM5_IRQHandler
+                0x080043d4       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
+                0x080043d4                TIM5_IRQHandler
  .text.drv_traceTransmitUnsafe
-                0x08004774       0x44 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_trace.o)
-                0x08004774                drv_traceTransmitUnsafe
+                0x08004440       0x44 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_trace.o)
+                0x08004440                drv_traceTransmitUnsafe
  .text.drv_traceTransmit
-                0x080047b8       0x4c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_trace.o)
-                0x080047b8                drv_traceTransmit
+                0x08004484       0x4c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_trace.o)
+                0x08004484                drv_traceTransmit
  .text.drv_uartInit
-                0x08004804       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x08004804                drv_uartInit
+                0x080044d0       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x080044d0                drv_uartInit
  .text.drv_uartInitInstance
-                0x0800485c      0x248 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x0800485c                drv_uartInitInstance
+                0x08004528      0x248 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x08004528                drv_uartInitInstance
  .text.drv_uartTransmitBlocking
-                0x08004aa4       0x98 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x08004aa4                drv_uartTransmitBlocking
- .text.drv_uartTransmitDMA
-                0x08004b3c       0xe0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x08004b3c                drv_uartTransmitDMA
+                0x08004770       0x98 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x08004770                drv_uartTransmitBlocking
+ .text.drv_uartTransmitIT
+                0x08004808       0xe0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x08004808                drv_uartTransmitIT
  .text.USART1_IRQHandler
-                0x08004c1c       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x08004c1c                USART1_IRQHandler
+                0x080048e8       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x080048e8                USART1_IRQHandler
  .text.USART2_IRQHandler
-                0x08004c88       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x08004c88                USART2_IRQHandler
+                0x08004954       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x08004954                USART2_IRQHandler
  .text.USART6_IRQHandler
-                0x08004cf4       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x08004cf4                USART6_IRQHandler
+                0x080049c0       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x080049c0                USART6_IRQHandler
  .text.HAL_UART_TxCpltCallback
-                0x08004d60       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x08004d60                HAL_UART_TxCpltCallback
+                0x08004a2c       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x08004a2c                HAL_UART_TxCpltCallback
  .text.HAL_UART_RxCpltCallback
-                0x08004db8       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x08004db8                HAL_UART_RxCpltCallback
+                0x08004a84       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x08004a84                HAL_UART_RxCpltCallback
  .text.HAL_UART_MspInit
-                0x08004e10      0x10c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
-                0x08004e10                HAL_UART_MspInit
+                0x08004adc      0x10c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+                0x08004adc                HAL_UART_MspInit
  .text.svl_dsmInit
-                0x08004f1c      0x10c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
-                0x08004f1c                svl_dsmInit
+                0x08004be8      0x10c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
+                0x08004be8                svl_dsmInit
  .text.svl_dsmPrintOSInfo
-                0x08005028       0x50 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
-                0x08005028                svl_dsmPrintOSInfo
+                0x08004cf4       0x50 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
+                0x08004cf4                svl_dsmPrintOSInfo
  .text.svl_dsmPrintLibInfo
-                0x08005078      0x118 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
-                0x08005078                svl_dsmPrintLibInfo
+                0x08004d44      0x118 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
+                0x08004d44                svl_dsmPrintLibInfo
  .text.svl_dsmPrintHwInfo
-                0x08005190      0x134 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
-                0x08005190                svl_dsmPrintHwInfo
+                0x08004e5c      0x134 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
+                0x08004e5c                svl_dsmPrintHwInfo
  .text.svl_dsmPrintAppInfo
-                0x080052c4      0x27c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
-                0x080052c4                svl_dsmPrintAppInfo
+                0x08004f90      0x27c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
+                0x08004f90                svl_dsmPrintAppInfo
  .text.svl_dsmTask
-                0x08005540       0xc8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
+                0x0800520c       0xc8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
  .text.svl_pdhGetLibVersion
-                0x08005608      0x110 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_pdh.o)
-                0x08005608                svl_pdhGetLibVersion
+                0x080052d4      0x110 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_pdh.o)
+                0x080052d4                svl_pdhGetLibVersion
  .text.svl_pdhGetSwInfo
-                0x08005718       0x70 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_pdh.o)
-                0x08005718                svl_pdhGetSwInfo
+                0x080053e4       0x70 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_pdh.o)
+                0x080053e4                svl_pdhGetSwInfo
  .text.svl_pdhGetHwInfo
-                0x08005788       0x70 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_pdh.o)
-                0x08005788                svl_pdhGetHwInfo
+                0x08005454       0x70 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_pdh.o)
+                0x08005454                svl_pdhGetHwInfo
  .text.gos_driverInit
-                0x080057f8       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_driver.o)
-                0x080057f8                gos_driverInit
+                0x080054c4       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_driver.o)
+                0x080054c4                gos_driverInit
  .text.gos_traceDriverTransmitString
-                0x08005828       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace_driver.o)
-                0x08005828                gos_traceDriverTransmitString
+                0x080054f4       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace_driver.o)
+                0x080054f4                gos_traceDriverTransmitString
  .text.gos_traceDriverTransmitString_Unsafe
-                0x08005858       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace_driver.o)
-                0x08005858                gos_traceDriverTransmitString_Unsafe
+                0x08005524       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace_driver.o)
+                0x08005524                gos_traceDriverTransmitString_Unsafe
  .text.gos_kernelInit
-                0x08005888      0x1d8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005888                gos_kernelInit
+                0x08005554      0x1d8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08005554                gos_kernelInit
  .text.gos_kernelStart
-                0x08005a60       0x84 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005a60                gos_kernelStart
+                0x0800572c       0x84 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x0800572c                gos_kernelStart
  .text.gos_kernelRegisterSysTickHook
-                0x08005ae4       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005ae4                gos_kernelRegisterSysTickHook
+                0x080057b0       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x080057b0                gos_kernelRegisterSysTickHook
  .text.SysTick_Handler
-                0x08005b1c       0x70 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005b1c                SysTick_Handler
+                0x080057e8       0x70 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x080057e8                SysTick_Handler
  .text.gos_kernelGetSysTicks
-                0x08005b8c       0x18 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005b8c                gos_kernelGetSysTicks
+                0x08005858       0x18 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08005858                gos_kernelGetSysTicks
  .text.gos_kernelGetCpuUsage
-                0x08005ba4       0x24 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005ba4                gos_kernelGetCpuUsage
+                0x08005870       0x24 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08005870                gos_kernelGetCpuUsage
  .text.gos_kernelReset
-                0x08005bc8       0x3c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005bc8                gos_kernelReset
+                0x08005894       0x3c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08005894                gos_kernelReset
  .text.gos_kernelDelayMs
-                0x08005c04       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005c04                gos_kernelDelayMs
+                0x080058d0       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x080058d0                gos_kernelDelayMs
  .text.gos_kernelCalculateTaskCpuUsages
-                0x08005c3c      0x2c8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005c3c                gos_kernelCalculateTaskCpuUsages
+                0x08005908      0x2c8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08005908                gos_kernelCalculateTaskCpuUsages
  .text.gos_kernelDump
-                0x08005f04      0x680 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08005f04                gos_kernelDump
+                0x08005bd0      0x680 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08005bd0                gos_kernelDump
  .text.gos_kernelIsCallerIsr
-                0x08006584       0x20 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08006584                gos_kernelIsCallerIsr
+                0x08006250       0x20 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006250                gos_kernelIsCallerIsr
  .text.SVC_Handler
-                0x080065a4       0x2c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x080065a4                SVC_Handler
+                0x08006270       0x2c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006270                SVC_Handler
  .text.gos_kernelSVC_HandlerMain
-                0x080065d0       0x40 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x080065d0                gos_kernelSVC_HandlerMain
+                0x0800629c       0x40 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x0800629c                gos_kernelSVC_HandlerMain
  .text.PendSV_Handler
-                0x08006610       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08006610                PendSV_Handler
+                0x080062dc       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x080062dc                PendSV_Handler
  .text.gos_kernelReschedule
-                0x08006658       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08006658                gos_kernelReschedule
+                0x08006324       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006324                gos_kernelReschedule
  .text.gos_kernelCheckTaskStack
-                0x08006688      0x120 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006354      0x120 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
  .text.gos_kernelGetCurrentPsp
-                0x080067a8       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006474       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
  .text.gos_kernelSaveCurrentPsp
-                0x080067d0       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x0800649c       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
  .text.gos_kernelSelectNextTask
-                0x08006800      0x2cc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x080064cc      0x2cc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
  .text.gos_kernelGetTaskStateString
-                0x08006acc       0xa8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006798       0xa8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
  .text.gos_kernelProcessorReset
-                0x08006b74       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006840       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
  .text.NMI_Handler
-                0x08006b9c        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08006b9c                NMI_Handler
+                0x08006868        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006868                NMI_Handler
  .text.HardFault_Handler
-                0x08006ba4        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08006ba4                HardFault_Handler
+                0x08006870        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006870                HardFault_Handler
  .text.MemManage_Handler
-                0x08006bac        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08006bac                MemManage_Handler
+                0x08006878        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006878                MemManage_Handler
  .text.BusFault_Handler
-                0x08006bb4        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08006bb4                BusFault_Handler
+                0x08006880        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006880                BusFault_Handler
  .text.UsageFault_Handler
-                0x08006bbc        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
-                0x08006bbc                UsageFault_Handler
+                0x08006888        0x8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+                0x08006888                UsageFault_Handler
  .text.gos_taskRegister
-                0x08006bc4      0x324 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08006bc4                gos_taskRegister
+                0x08006890      0x324 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08006890                gos_taskRegister
  .text.gos_taskSleep
-                0x08006ee8      0x124 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08006ee8                gos_taskSleep
+                0x08006bb4      0x124 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08006bb4                gos_taskSleep
  .text.gos_taskWakeup
-                0x0800700c      0x18c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x0800700c                gos_taskWakeup
+                0x08006cd8      0x18c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08006cd8                gos_taskWakeup
  .text.gos_taskSuspend
-                0x08007198      0x244 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08007198                gos_taskSuspend
+                0x08006e64      0x244 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08006e64                gos_taskSuspend
  .text.gos_taskResume
-                0x080073dc      0x15c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x080073dc                gos_taskResume
+                0x080070a8      0x15c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x080070a8                gos_taskResume
  .text.gos_taskBlock
-                0x08007538      0x224 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08007538                gos_taskBlock
+                0x08007204      0x224 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08007204                gos_taskBlock
  .text.gos_taskUnblock
-                0x0800775c      0x1d4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x0800775c                gos_taskUnblock
+                0x08007428      0x1d4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08007428                gos_taskUnblock
  .text.gos_taskDelete
-                0x08007930      0x248 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08007930                gos_taskDelete
+                0x080075fc      0x248 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x080075fc                gos_taskDelete
  .text.gos_taskSetPriority
-                0x08007b78      0x188 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08007b78                gos_taskSetPriority
+                0x08007844      0x188 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08007844                gos_taskSetPriority
  .text.gos_taskSetOriginalPriority
-                0x08007d00      0x188 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08007d00                gos_taskSetOriginalPriority
+                0x080079cc      0x188 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x080079cc                gos_taskSetOriginalPriority
  .text.gos_taskGetPriority
-                0x08007e88       0xe0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08007e88                gos_taskGetPriority
+                0x08007b54       0xe0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08007b54                gos_taskGetPriority
  .text.gos_taskAddPrivilege
-                0x08007f68       0xf0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08007f68                gos_taskAddPrivilege
+                0x08007c34       0xf0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08007c34                gos_taskAddPrivilege
  .text.gos_taskRemovePrivilege
-                0x08008058       0xfc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08008058                gos_taskRemovePrivilege
+                0x08007d24       0xfc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08007d24                gos_taskRemovePrivilege
  .text.gos_taskSetPrivileges
-                0x08008154       0xdc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08008154                gos_taskSetPrivileges
+                0x08007e20       0xdc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08007e20                gos_taskSetPrivileges
  .text.gos_taskGetPrivileges
-                0x08008230       0xe0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08008230                gos_taskGetPrivileges
+                0x08007efc       0xe0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08007efc                gos_taskGetPrivileges
  .text.gos_taskGetId
-                0x08008310       0x70 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08008310                gos_taskGetId
+                0x08007fdc       0x70 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08007fdc                gos_taskGetId
  .text.gos_taskGetCurrentId
-                0x08008380       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08008380                gos_taskGetCurrentId
+                0x0800804c       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x0800804c                gos_taskGetCurrentId
  .text.gos_taskGetData
-                0x08008438       0xdc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08008438                gos_taskGetData
+                0x08008104       0xdc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08008104                gos_taskGetData
  .text.gos_taskGetDataByIndex
-                0x08008514       0xe4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08008514                gos_taskGetDataByIndex
+                0x080081e0       0xe4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x080081e0                gos_taskGetDataByIndex
  .text.gos_taskCheckDescriptor
-                0x080085f8       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x080082c4       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
  .text.gos_idleTask
-                0x08008664       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
-                0x08008664                gos_idleTask
- .text.main     0x080086ac       0xa0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
-                0x080086ac                main
+                0x08008330       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x08008330                gos_idleTask
+ .text.main     0x08008378       0xa0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
+                0x08008378                main
  .text.gos_Dump
-                0x0800874c       0x74 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
-                0x0800874c                gos_Dump
+                0x08008418       0x74 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
+                0x08008418                gos_Dump
  .text.gos_Start
-                0x080087c0       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
+                0x0800848c       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
  .text.gos_systemTask
-                0x080087e8       0xf4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
+                0x080084b4       0xf4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
  .text.gos_printStartupLogo
-                0x080088dc       0x74 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
-                0x080088dc                gos_printStartupLogo
+                0x080085a8       0x74 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
+                0x080085a8                gos_printStartupLogo
  .text.gos_errorHandler
-                0x08008950      0x130 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
-                0x08008950                gos_errorHandler
+                0x0800861c      0x130 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
+                0x0800861c                gos_errorHandler
  .text.gos_errorTraceInit
-                0x08008a80       0x34 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
-                0x08008a80                gos_errorTraceInit
+                0x0800874c       0x34 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
+                0x0800874c                gos_errorTraceInit
  .text.gos_traceResultToString
-                0x08008ab4       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
+                0x08008780       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
  .text.gos_gcpInit
-                0x08008aec       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
-                0x08008aec                gos_gcpInit
+                0x080087b8       0x6c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
+                0x080087b8                gos_gcpInit
  .text.gos_gcpRegisterPhysicalDriver
-                0x08008b58       0x50 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
-                0x08008b58                gos_gcpRegisterPhysicalDriver
+                0x08008824       0x50 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
+                0x08008824                gos_gcpRegisterPhysicalDriver
  .text.gos_gcpTransmitMessage
-                0x08008ba8      0x264 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
-                0x08008ba8                gos_gcpTransmitMessage
+                0x08008874      0x264 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
+                0x08008874                gos_gcpTransmitMessage
  .text.gos_gcpReceiveMessage
-                0x08008e0c      0x298 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
-                0x08008e0c                gos_gcpReceiveMessage
+                0x08008ad8      0x298 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
+                0x08008ad8                gos_gcpReceiveMessage
  .text.gos_gcpValidateHeader
-                0x080090a4       0x5a C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
+                0x08008d70       0x5a C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
  .text.gos_gcpValidateData
-                0x080090fe       0x4e C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
+                0x08008dca       0x4e C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_gcp.o)
  .text.gos_messageInit
-                0x0800914c       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_message.o)
-                0x0800914c                gos_messageInit
+                0x08008e18       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_message.o)
+                0x08008e18                gos_messageInit
  .text.gos_messageDaemonTask
-                0x08009204      0x1e4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_message.o)
+                0x08008ed0      0x1e4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_message.o)
  .text.gos_mutexInit
-                0x080093e8       0x32 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_mutex.o)
-                0x080093e8                gos_mutexInit
- *fill*         0x0800941a        0x2 
+                0x080090b4       0x32 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_mutex.o)
+                0x080090b4                gos_mutexInit
+ *fill*         0x080090e6        0x2 
  .text.gos_mutexLock
-                0x0800941c      0x20c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_mutex.o)
-                0x0800941c                gos_mutexLock
+                0x080090e8      0x20c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_mutex.o)
+                0x080090e8                gos_mutexLock
  .text.gos_mutexUnlock
-                0x08009628       0xc8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_mutex.o)
-                0x08009628                gos_mutexUnlock
+                0x080092f4       0xc8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_mutex.o)
+                0x080092f4                gos_mutexUnlock
  .text.gos_queueInit
-                0x080096f0       0xb4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
-                0x080096f0                gos_queueInit
+                0x080093bc       0xb4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
+                0x080093bc                gos_queueInit
  .text.gos_queueCreate
-                0x080097a4       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
-                0x080097a4                gos_queueCreate
+                0x08009470       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
+                0x08009470                gos_queueCreate
  .text.gos_queuePut
-                0x0800985c      0x19c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
-                0x0800985c                gos_queuePut
+                0x08009528      0x19c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
+                0x08009528                gos_queuePut
  .text.gos_queueGet
-                0x080099f8      0x1c4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
-                0x080099f8                gos_queueGet
+                0x080096c4      0x1c4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
+                0x080096c4                gos_queueGet
  .text.gos_queueDump
-                0x08009bbc       0xc8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
-                0x08009bbc                gos_queueDump
+                0x08009888       0xc8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
+                0x08009888                gos_queueDump
  .text.gos_shellInit
-                0x08009c84       0x78 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
-                0x08009c84                gos_shellInit
+                0x08009950       0x78 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
+                0x08009950                gos_shellInit
  .text.gos_shellRegisterCommand
-                0x08009cfc       0xa0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
-                0x08009cfc                gos_shellRegisterCommand
+                0x080099c8       0xa0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
+                0x080099c8                gos_shellRegisterCommand
  .text.gos_shellSuspend
-                0x08009d9c       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
-                0x08009d9c                gos_shellSuspend
+                0x08009a68       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
+                0x08009a68                gos_shellSuspend
  .text.gos_shellResume
-                0x08009dc4       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
-                0x08009dc4                gos_shellResume
+                0x08009a90       0x28 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
+                0x08009a90                gos_shellResume
  .text.gos_shellDaemonTask
-                0x08009dec      0x210 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
+                0x08009ab8      0x210 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
  .text.gos_shellCommandHandler
-                0x08009ffc      0x4d8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
+                0x08009cc8      0x4d8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
  .text.gos_signalInit
-                0x0800a4d4       0x84 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
-                0x0800a4d4                gos_signalInit
+                0x0800a1a0       0x84 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
+                0x0800a1a0                gos_signalInit
  .text.gos_signalCreate
-                0x0800a558       0x7c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
-                0x0800a558                gos_signalCreate
+                0x0800a224       0x7c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
+                0x0800a224                gos_signalCreate
  .text.gos_signalInvoke
-                0x0800a5d4       0xe4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
-                0x0800a5d4                gos_signalInvoke
+                0x0800a2a0       0xe4 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
+                0x0800a2a0                gos_signalInvoke
  .text.gos_signalDaemonTask
-                0x0800a6b8       0xf8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
+                0x0800a384       0xf8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
  .text.gos_sysmonInit
-                0x0800a7b0       0xa0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
-                0x0800a7b0                gos_sysmonInit
+                0x0800a47c       0xa0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800a47c                gos_sysmonInit
  .text.gos_sysmonDaemonTask
-                0x0800a850       0xfc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800a51c       0xfc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonGetLutIndex
-                0x0800a94c       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800a618       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonSendResponse
-                0x0800a994       0x44 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800a660       0x44 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonHandlePingRequest
-                0x0800a9d8       0x34 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800a6a4       0x34 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonHandleCpuUsageGet
-                0x0800aa0c       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800a6d8       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonHandleTaskDataGet
-                0x0800aa54      0x1cc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800a720      0x1cc C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonHandleTaskVariableDataGet
-                0x0800ac20      0x150 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800a8ec      0x150 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonHandleTaskModification
-                0x0800ad70      0x1b0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800aa3c      0x1b0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonHandleSysRuntimeGet
-                0x0800af20       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800abec       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonHandleSystimeSet
-                0x0800af78       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800ac44       0x58 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonHandleResetRequest
-                0x0800afd0       0x24 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800ac9c       0x24 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_sysmonCheckMessage
-                0x0800aff4       0x50 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800acc0       0x50 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .text.gos_timeInit
-                0x0800b044       0x40 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
-                0x0800b044                gos_timeInit
+                0x0800ad10       0x40 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800ad10                gos_timeInit
  .text.gos_timeGet
-                0x0800b084       0x3c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
-                0x0800b084                gos_timeGet
+                0x0800ad50       0x3c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800ad50                gos_timeGet
  .text.gos_timeSet
-                0x0800b0c0       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
-                0x0800b0c0                gos_timeSet
+                0x0800ad8c       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800ad8c                gos_timeSet
  .text.gos_runTimeGet
-                0x0800b0f8       0x3c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
-                0x0800b0f8                gos_runTimeGet
+                0x0800adc4       0x3c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800adc4                gos_runTimeGet
  .text.gos_timeAddMilliseconds
-                0x0800b134      0x200 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
-                0x0800b134                gos_timeAddMilliseconds
+                0x0800ae00      0x200 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800ae00                gos_timeAddMilliseconds
  .text.gos_runTimeAddMicroseconds
-                0x0800b334      0x1c0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
-                0x0800b334                gos_runTimeAddMicroseconds
+                0x0800b000      0x1c0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800b000                gos_runTimeAddMicroseconds
  .text.gos_runTimeAddMilliseconds
-                0x0800b4f4      0x150 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
-                0x0800b4f4                gos_runTimeAddMilliseconds
+                0x0800b1c0      0x150 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800b1c0                gos_runTimeAddMilliseconds
  .text.gos_timeIncreaseSystemTime
-                0x0800b644       0x44 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
-                0x0800b644                gos_timeIncreaseSystemTime
+                0x0800b310       0x44 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800b310                gos_timeIncreaseSystemTime
  .text.gos_timeDaemonTask
-                0x0800b688       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800b354       0xb8 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
  .text.gos_traceInit
-                0x0800b740       0x4c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
-                0x0800b740                gos_traceInit
+                0x0800b40c       0x4c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
+                0x0800b40c                gos_traceInit
  .text.gos_traceTrace
-                0x0800b78c      0x238 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
-                0x0800b78c                gos_traceTrace
+                0x0800b458      0x238 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
+                0x0800b458                gos_traceTrace
  .text.gos_traceTraceFormatted
-                0x0800b9c4      0x258 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
-                0x0800b9c4                gos_traceTraceFormatted
+                0x0800b690      0x258 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
+                0x0800b690                gos_traceTraceFormatted
  .text.gos_traceTraceFormattedUnsafe
-                0x0800bc1c       0x64 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
-                0x0800bc1c                gos_traceTraceFormattedUnsafe
+                0x0800b8e8       0x64 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
+                0x0800b8e8                gos_traceTraceFormattedUnsafe
  .text.gos_traceDaemonTask
-                0x0800bc80       0x54 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
+                0x0800b94c       0x54 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
  .text.gos_triggerInit
-                0x0800bcd4       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trigger.o)
-                0x0800bcd4                gos_triggerInit
+                0x0800b9a0       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trigger.o)
+                0x0800b9a0                gos_triggerInit
  .text.gos_triggerReset
-                0x0800bd0c       0xb0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trigger.o)
-                0x0800bd0c                gos_triggerReset
+                0x0800b9d8       0xb0 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trigger.o)
+                0x0800b9d8                gos_triggerReset
  .text.gos_triggerWait
-                0x0800bdbc      0x160 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trigger.o)
-                0x0800bdbc                gos_triggerWait
+                0x0800ba88      0x160 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trigger.o)
+                0x0800ba88                gos_triggerWait
  .text.gos_triggerIncrement
-                0x0800bf1c      0x114 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trigger.o)
-                0x0800bf1c                gos_triggerIncrement
+                0x0800bbe8      0x114 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trigger.o)
+                0x0800bbe8                gos_triggerIncrement
  .text.gos_crcDriverGetCrc
-                0x0800c030       0x7c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_crc_driver.o)
-                0x0800c030                gos_crcDriverGetCrc
+                0x0800bcfc       0x7c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_crc_driver.o)
+                0x0800bcfc                gos_crcDriverGetCrc
  .text.gos_shellDriverReceiveChar
-                0x0800c0ac       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell_driver.o)
-                0x0800c0ac                gos_shellDriverReceiveChar
+                0x0800bd78       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell_driver.o)
+                0x0800bd78                gos_shellDriverReceiveChar
  .text.gos_shellDriverTransmitString
-                0x0800c0dc       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell_driver.o)
-                0x0800c0dc                gos_shellDriverTransmitString
+                0x0800bda8       0x48 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell_driver.o)
+                0x0800bda8                gos_shellDriverTransmitString
  .text.gos_sysmonDriverReceive
-                0x0800c124       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon_driver.o)
-                0x0800c124                gos_sysmonDriverReceive
+                0x0800bdf0       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon_driver.o)
+                0x0800bdf0                gos_sysmonDriverReceive
  .text.gos_sysmonDriverTransmit
-                0x0800c15c       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon_driver.o)
-                0x0800c15c                gos_sysmonDriverTransmit
+                0x0800be28       0x38 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon_driver.o)
+                0x0800be28                gos_sysmonDriverTransmit
  .text.gos_timerDriverSysTimerGet
-                0x0800c194       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_timer_driver.o)
-                0x0800c194                gos_timerDriverSysTimerGet
+                0x0800be60       0x30 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_timer_driver.o)
+                0x0800be60                gos_timerDriverSysTimerGet
  .text._strtol_l.constprop.0
-                0x0800c1c4       0xf4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strtol.o)
- .text.strtol   0x0800c2b8       0x14 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strtol.o)
-                0x0800c2b8                strtol
- .text.sprintf  0x0800c2cc       0x40 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-sprintf.o)
-                0x0800c2cc                siprintf
-                0x0800c2cc                sprintf
+                0x0800be90       0xf4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strtol.o)
+ .text.strtol   0x0800bf84       0x14 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strtol.o)
+                0x0800bf84                strtol
+ .text.sprintf  0x0800bf98       0x40 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-sprintf.o)
+                0x0800bf98                siprintf
+                0x0800bf98                sprintf
  .text._vsprintf_r
-                0x0800c30c       0x2c C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-vsprintf.o)
-                0x0800c30c                _vsprintf_r
-                0x0800c30c                _vsiprintf_r
+                0x0800bfd8       0x2c C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-vsprintf.o)
+                0x0800bfd8                _vsprintf_r
+                0x0800bfd8                _vsiprintf_r
  .text.vsprintf
-                0x0800c338       0x14 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-vsprintf.o)
-                0x0800c338                vsiprintf
-                0x0800c338                vsprintf
- .text.memset   0x0800c34c       0x10 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-memset.o)
-                0x0800c34c                memset
- .text.__errno  0x0800c35c        0xc C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-errno.o)
-                0x0800c35c                __errno
+                0x0800c004       0x14 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-vsprintf.o)
+                0x0800c004                vsiprintf
+                0x0800c004                vsprintf
+ .text.memset   0x0800c018       0x10 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-memset.o)
+                0x0800c018                memset
+ .text.__errno  0x0800c028        0xc C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-errno.o)
+                0x0800c028                __errno
  .text.__libc_init_array
-                0x0800c368       0x48 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-init.o)
-                0x0800c368                __libc_init_array
+                0x0800c034       0x48 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-init.o)
+                0x0800c034                __libc_init_array
  .text.__retarget_lock_acquire_recursive
-                0x0800c3b0        0x2 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-lock.o)
-                0x0800c3b0                __retarget_lock_acquire_recursive
+                0x0800c07c        0x2 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-lock.o)
+                0x0800c07c                __retarget_lock_acquire_recursive
  .text.__retarget_lock_release_recursive
-                0x0800c3b2        0x2 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-lock.o)
-                0x0800c3b2                __retarget_lock_release_recursive
- .text.strcpy   0x0800c3b4       0x10 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strcpy.o)
-                0x0800c3b4                strcpy
- .text.memcpy   0x0800c3c4       0x1c C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-memcpy-stub.o)
-                0x0800c3c4                memcpy
- .text._free_r  0x0800c3e0       0x94 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-freer.o)
-                0x0800c3e0                _free_r
+                0x0800c07e        0x2 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-lock.o)
+                0x0800c07e                __retarget_lock_release_recursive
+ .text.strcpy   0x0800c080       0x10 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strcpy.o)
+                0x0800c080                strcpy
+ .text.memcpy   0x0800c090       0x1c C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-memcpy-stub.o)
+                0x0800c090                memcpy
+ .text._free_r  0x0800c0ac       0x94 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-freer.o)
+                0x0800c0ac                _free_r
  .text.sbrk_aligned
-                0x0800c474       0x44 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mallocr.o)
+                0x0800c140       0x44 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mallocr.o)
  .text._malloc_r
-                0x0800c4b8      0x100 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mallocr.o)
-                0x0800c4b8                _malloc_r
+                0x0800c184      0x100 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mallocr.o)
+                0x0800c184                _malloc_r
  .text.__malloc_lock
-                0x0800c5b8        0xc C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mlock.o)
-                0x0800c5b8                __malloc_lock
+                0x0800c284        0xc C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mlock.o)
+                0x0800c284                __malloc_lock
  .text.__malloc_unlock
-                0x0800c5c4        0xc C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mlock.o)
-                0x0800c5c4                __malloc_unlock
+                0x0800c290        0xc C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-mlock.o)
+                0x0800c290                __malloc_unlock
  .text.__ssputs_r
-                0x0800c5d0       0xb6 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-svfprintf.o)
-                0x0800c5d0                __ssputs_r
- *fill*         0x0800c686        0x2 
+                0x0800c29c       0xb6 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-svfprintf.o)
+                0x0800c29c                __ssputs_r
+ *fill*         0x0800c352        0x2 
  .text._svfprintf_r
-                0x0800c688      0x1f8 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-svfprintf.o)
-                0x0800c688                _svfiprintf_r
-                0x0800c688                _svfprintf_r
+                0x0800c354      0x1f8 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-svfprintf.o)
+                0x0800c354                _svfiprintf_r
+                0x0800c354                _svfprintf_r
  .text._printf_common
-                0x0800c880       0xda C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-vfprintf_i.o)
-                0x0800c880                _printf_common
- *fill*         0x0800c95a        0x2 
+                0x0800c54c       0xda C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-vfprintf_i.o)
+                0x0800c54c                _printf_common
+ *fill*         0x0800c626        0x2 
  .text._printf_i
-                0x0800c95c      0x240 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-vfprintf_i.o)
-                0x0800c95c                _printf_i
- .text.memmove  0x0800cb9c       0x34 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-memmove.o)
-                0x0800cb9c                memmove
- .text._sbrk_r  0x0800cbd0       0x20 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-sbrkr.o)
-                0x0800cbd0                _sbrk_r
+                0x0800c628      0x240 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-vfprintf_i.o)
+                0x0800c628                _printf_i
+ .text.memmove  0x0800c868       0x34 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-memmove.o)
+                0x0800c868                memmove
+ .text._sbrk_r  0x0800c89c       0x20 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-sbrkr.o)
+                0x0800c89c                _sbrk_r
  .text._realloc_r
-                0x0800cbf0       0x5c C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-reallocr.o)
-                0x0800cbf0                _realloc_r
+                0x0800c8bc       0x5c C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-reallocr.o)
+                0x0800c8bc                _realloc_r
  .text._malloc_usable_size_r
-                0x0800cc4c       0x10 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-msizer.o)
-                0x0800cc4c                _malloc_usable_size_r
+                0x0800c918       0x10 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-msizer.o)
+                0x0800c918                _malloc_usable_size_r
  *(.glue_7)
- .glue_7        0x0800cc5c        0x0 linker stubs
+ .glue_7        0x0800c928        0x0 linker stubs
  *(.glue_7t)
- .glue_7t       0x0800cc5c        0x0 linker stubs
+ .glue_7t       0x0800c928        0x0 linker stubs
  *(.eh_frame)
- .eh_frame      0x0800cc5c        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+ .eh_frame      0x0800c928        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
  *(.init)
- .init          0x0800cc5c        0x4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crti.o
-                0x0800cc5c                _init
- .init          0x0800cc60        0x8 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtn.o
+ .init          0x0800c928        0x4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crti.o
+                0x0800c928                _init
+ .init          0x0800c92c        0x8 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtn.o
  *(.fini)
- .fini          0x0800cc68        0x4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crti.o
-                0x0800cc68                _fini
- .fini          0x0800cc6c        0x8 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtn.o
-                0x0800cc74                        . = ALIGN (0x4)
-                0x0800cc74                        _etext = .
+ .fini          0x0800c934        0x4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crti.o
+                0x0800c934                _fini
+ .fini          0x0800c938        0x8 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtn.o
+                0x0800c940                        . = ALIGN (0x4)
+                0x0800c940                        _etext = .
 
-.vfp11_veneer   0x0800cc74        0x0
- .vfp11_veneer  0x0800cc74        0x0 linker stubs
+.vfp11_veneer   0x0800c940        0x0
+ .vfp11_veneer  0x0800c940        0x0 linker stubs
 
-.v4_bx          0x0800cc74        0x0
- .v4_bx         0x0800cc74        0x0 linker stubs
+.v4_bx          0x0800c940        0x0
+ .v4_bx         0x0800c940        0x0 linker stubs
 
-.iplt           0x0800cc74        0x0
- .iplt          0x0800cc74        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+.iplt           0x0800c940        0x0
+ .iplt          0x0800c940        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
 
-.rodata         0x0800cc74     0x1794
-                0x0800cc74                        . = ALIGN (0x4)
+.rodata         0x0800c940     0x1794
+                0x0800c940                        . = ALIGN (0x4)
  *(.rodata)
- .rodata        0x0800cc74       0x21 ./Core/Src/app.o
- *fill*         0x0800cc95        0x3 
- .rodata        0x0800cc98       0x2f ./Driver/cfg/dsm_cfg.o
- *fill*         0x0800ccc7        0x1 
- .rodata        0x0800ccc8      0x1c2 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
- *fill*         0x0800ce8a        0x2 
- .rodata        0x0800ce8c       0x4b C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_pdh.o)
- *fill*         0x0800ced7        0x1 
- .rodata        0x0800ced8      0x435 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
- *fill*         0x0800d30d        0x3 
- .rodata        0x0800d310      0x133 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
- *fill*         0x0800d443        0x1 
- .rodata        0x0800d444       0xea C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
- *fill*         0x0800d52e        0x2 
- .rodata        0x0800d530      0x50d C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
- *fill*         0x0800da3d        0x3 
- .rodata        0x0800da40       0xd5 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
- *fill*         0x0800db15        0x3 
- .rodata        0x0800db18      0x3ed C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
- *fill*         0x0800df05        0x3 
- .rodata        0x0800df08       0x29 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
- *fill*         0x0800df31        0x3 
- .rodata        0x0800df34       0x2f C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
+ .rodata        0x0800c940       0x21 ./Core/Src/app.o
+ *fill*         0x0800c961        0x3 
+ .rodata        0x0800c964       0x2f ./Driver/cfg/dsm_cfg.o
+ *fill*         0x0800c993        0x1 
+ .rodata        0x0800c994      0x1c2 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
+ *fill*         0x0800cb56        0x2 
+ .rodata        0x0800cb58       0x4b C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_pdh.o)
+ *fill*         0x0800cba3        0x1 
+ .rodata        0x0800cba4      0x435 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_kernel.o)
+ *fill*         0x0800cfd9        0x3 
+ .rodata        0x0800cfdc      0x133 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+ *fill*         0x0800d10f        0x1 
+ .rodata        0x0800d110       0xea C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
+ *fill*         0x0800d1fa        0x2 
+ .rodata        0x0800d1fc      0x50d C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_error.o)
+ *fill*         0x0800d709        0x3 
+ .rodata        0x0800d70c       0xd5 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_queue.o)
+ *fill*         0x0800d7e1        0x3 
+ .rodata        0x0800d7e4      0x3ed C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_shell.o)
+ *fill*         0x0800dbd1        0x3 
+ .rodata        0x0800dbd4       0x29 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
+ *fill*         0x0800dbfd        0x3 
+ .rodata        0x0800dc00       0x2f C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_trace.o)
  *(.rodata*)
- *fill*         0x0800df63        0x1 
+ *fill*         0x0800dc2f        0x1 
  .rodata.AHBPrescTable
-                0x0800df64       0x10 ./Core/Src/system_stm32f4xx.o
-                0x0800df64                AHBPrescTable
+                0x0800dc30       0x10 ./Core/Src/system_stm32f4xx.o
+                0x0800dc30                AHBPrescTable
  .rodata.APBPrescTable
-                0x0800df74        0x8 ./Core/Src/system_stm32f4xx.o
-                0x0800df74                APBPrescTable
+                0x0800dc40        0x8 ./Core/Src/system_stm32f4xx.o
+                0x0800dc40                APBPrescTable
  .rodata.initPhaseConfig
-                0x0800df7c      0x104 ./Driver/cfg/dsm_cfg.o
-                0x0800df7c                initPhaseConfig
+                0x0800dc48      0x104 ./Driver/cfg/dsm_cfg.o
+                0x0800dc48                initPhaseConfig
  .rodata.reactionConfig
-                0x0800e080        0x0 ./Driver/cfg/dsm_cfg.o
-                0x0800e080                reactionConfig
+                0x0800dd4c        0x0 ./Driver/cfg/dsm_cfg.o
+                0x0800dd4c                reactionConfig
  .rodata.gpioConfig
-                0x0800e080       0x54 ./Driver/cfg/gpio_cfg.o
-                0x0800e080                gpioConfig
+                0x0800dd4c       0x54 ./Driver/cfg/gpio_cfg.o
+                0x0800dd4c                gpioConfig
  .rodata.gpioItConfig
-                0x0800e0d4        0x0 ./Driver/cfg/gpio_cfg.o
-                0x0800e0d4                gpioItConfig
+                0x0800dda0        0x0 ./Driver/cfg/gpio_cfg.o
+                0x0800dda0                gpioItConfig
  .rodata.itConfig
-                0x0800e0d4        0xc ./Driver/cfg/it_cfg.o
-                0x0800e0d4                itConfig
+                0x0800dda0        0xc ./Driver/cfg/it_cfg.o
+                0x0800dda0                itConfig
  .rodata.tmrServiceConfig
-                0x0800e0e0        0x1 ./Driver/cfg/tmr_cfg.o
-                0x0800e0e0                tmrServiceConfig
- *fill*         0x0800e0e1        0x3 
+                0x0800ddac        0x1 ./Driver/cfg/tmr_cfg.o
+                0x0800ddac                tmrServiceConfig
+ *fill*         0x0800ddad        0x3 
  .rodata.uartConfig
-                0x0800e0e4       0x28 ./Driver/cfg/uart_cfg.o
-                0x0800e0e4                uartConfig
+                0x0800ddb0       0x28 ./Driver/cfg/uart_cfg.o
+                0x0800ddb0                uartConfig
  .rodata.uartServiceConfig
-                0x0800e10c        0x3 ./Driver/cfg/uart_cfg.o
-                0x0800e10c                uartServiceConfig
- *fill*         0x0800e10f        0x1 
+                0x0800ddd8        0x3 ./Driver/cfg/uart_cfg.o
+                0x0800ddd8                uartServiceConfig
+ *fill*         0x0800dddb        0x1 
  .rodata.__func__.7
-                0x0800e110        0xf C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
- *fill*         0x0800e11f        0x1 
+                0x0800dddc        0xf C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+ *fill*         0x0800ddeb        0x1 
  .rodata.__func__.6
-                0x0800e120       0x10 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x0800ddec       0x10 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
  .rodata.__func__.5
-                0x0800e130        0xf C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
- *fill*         0x0800e13f        0x1 
+                0x0800ddfc        0xf C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+ *fill*         0x0800de0b        0x1 
  .rodata.__func__.4
-                0x0800e140        0xe C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
- *fill*         0x0800e14e        0x2 
+                0x0800de0c        0xe C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+ *fill*         0x0800de1a        0x2 
  .rodata.__func__.3
-                0x0800e150       0x10 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x0800de1c       0x10 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
  .rodata.__func__.2
-                0x0800e160        0xf C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
- *fill*         0x0800e16f        0x1 
+                0x0800de2c        0xf C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+ *fill*         0x0800de3b        0x1 
  .rodata.__func__.1
-                0x0800e170       0x14 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x0800de3c       0x14 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
  .rodata.__func__.0
-                0x0800e184       0x1c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
+                0x0800de50       0x1c C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_task.o)
  .rodata.__func__.2
-                0x0800e1a0        0x5 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
- *fill*         0x0800e1a5        0x3 
+                0x0800de6c        0x5 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos.o)
+ *fill*         0x0800de71        0x3 
  .rodata.__func__.0
-                0x0800e1a8       0x11 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
- *fill*         0x0800e1b9        0x3 
+                0x0800de74       0x11 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_signal.o)
+ *fill*         0x0800de85        0x3 
  .rodata.sysmonLut
-                0x0800e1bc      0x100 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
+                0x0800de88      0x100 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_sysmon.o)
  .rodata.dayLookupTable
-                0x0800e2bc       0x18 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
+                0x0800df88       0x18 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022\Debug\libGOS2022.a(gos_time.o)
  .rodata._ctype_
-                0x0800e2d4      0x101 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-ctype_.o)
-                0x0800e2d4                _ctype_
+                0x0800dfa0      0x101 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-ctype_.o)
+                0x0800dfa0                _ctype_
  .rodata._svfprintf_r.str1.1
-                0x0800e3d5       0x11 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-svfprintf.o)
+                0x0800e0a1       0x11 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-svfprintf.o)
  .rodata._printf_i.str1.1
-                0x0800e3e6       0x22 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-vfprintf_i.o)
-                0x0800e408                        . = ALIGN (0x4)
+                0x0800e0b2       0x22 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-nano-vfprintf_i.o)
+                0x0800e0d4                        . = ALIGN (0x4)
 
-.ARM.extab      0x0800e408        0x0
-                0x0800e408                        . = ALIGN (0x4)
+.ARM.extab      0x0800e0d4        0x0
+                0x0800e0d4                        . = ALIGN (0x4)
  *(.ARM.extab* .gnu.linkonce.armextab.*)
-                0x0800e408                        . = ALIGN (0x4)
+                0x0800e0d4                        . = ALIGN (0x4)
 
-.ARM            0x0800e408        0x8
-                0x0800e408                        . = ALIGN (0x4)
-                0x0800e408                        __exidx_start = .
+.ARM            0x0800e0d4        0x8
+                0x0800e0d4                        . = ALIGN (0x4)
+                0x0800e0d4                        __exidx_start = .
  *(.ARM.exidx*)
- .ARM.exidx     0x0800e408        0x8 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strcmp.o)
- .ARM.exidx     0x0800e410        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strlen.o)
+ .ARM.exidx     0x0800e0d4        0x8 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strcmp.o)
+ .ARM.exidx     0x0800e0dc        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-strlen.o)
                                   0x8 (size before relaxing)
- .ARM.exidx     0x0800e410        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-memchr.o)
+ .ARM.exidx     0x0800e0dc        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard\libc_nano.a(libc_a-memchr.o)
                                   0x8 (size before relaxing)
- .ARM.exidx     0x0800e410        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_udivmoddi4.o)
+ .ARM.exidx     0x0800e0dc        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard\libgcc.a(_udivmoddi4.o)
                                   0x8 (size before relaxing)
-                0x0800e410                        __exidx_end = .
-                0x0800e410                        . = ALIGN (0x4)
+                0x0800e0dc                        __exidx_end = .
+                0x0800e0dc                        . = ALIGN (0x4)
 
-.preinit_array  0x0800e410        0x0
-                0x0800e410                        . = ALIGN (0x4)
-                0x0800e410                        PROVIDE (__preinit_array_start = .)
+.preinit_array  0x0800e0dc        0x0
+                0x0800e0dc                        . = ALIGN (0x4)
+                0x0800e0dc                        PROVIDE (__preinit_array_start = .)
  *(.preinit_array*)
-                0x0800e410                        PROVIDE (__preinit_array_end = .)
-                0x0800e410                        . = ALIGN (0x4)
+                0x0800e0dc                        PROVIDE (__preinit_array_end = .)
+                0x0800e0dc                        . = ALIGN (0x4)
 
-.init_array     0x0800e410        0x4
-                0x0800e410                        . = ALIGN (0x4)
-                0x0800e410                        PROVIDE (__init_array_start = .)
+.init_array     0x0800e0dc        0x4
+                0x0800e0dc                        . = ALIGN (0x4)
+                0x0800e0dc                        PROVIDE (__init_array_start = .)
  *(SORT_BY_NAME(.init_array.*))
  *(.init_array*)
- .init_array    0x0800e410        0x4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
-                0x0800e414                        PROVIDE (__init_array_end = .)
-                0x0800e414                        . = ALIGN (0x4)
+ .init_array    0x0800e0dc        0x4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+                0x0800e0e0                        PROVIDE (__init_array_end = .)
+                0x0800e0e0                        . = ALIGN (0x4)
 
-.fini_array     0x0800e414        0x4
-                0x0800e414                        . = ALIGN (0x4)
+.fini_array     0x0800e0e0        0x4
+                0x0800e0e0                        . = ALIGN (0x4)
                 [!provide]                        PROVIDE (__fini_array_start = .)
  *(SORT_BY_NAME(.fini_array.*))
  *(.fini_array*)
- .fini_array    0x0800e414        0x4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+ .fini_array    0x0800e0e0        0x4 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
                 [!provide]                        PROVIDE (__fini_array_end = .)
-                0x0800e418                        . = ALIGN (0x4)
-                0x0800e418                        _sidata = LOADADDR (.data)
+                0x0800e0e4                        . = ALIGN (0x4)
+                0x0800e0e4                        _sidata = LOADADDR (.data)
 
-.rel.dyn        0x0800e418        0x0
- .rel.iplt      0x0800e418        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
+.rel.dyn        0x0800e0e4        0x0
+ .rel.iplt      0x0800e0e4        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
 
-.data           0x20000000     0x1a54 load address 0x0800e418
+.data           0x20000000     0x1a54 load address 0x0800e0e4
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        _sdata = .
  *(.data)
@@ -8076,11 +8071,11 @@ LOAD C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                 0x20001a54                        . = ALIGN (0x4)
                 0x20001a54                        _edata = .
 
-.igot.plt       0x20001a54        0x0 load address 0x0800fe6c
+.igot.plt       0x20001a54        0x0 load address 0x0800fb38
  .igot.plt      0x20001a54        0x0 C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.1.0.202410251130/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/thumb/v7e-m+fp/hard/crtbegin.o
                 0x20001a54                        . = ALIGN (0x4)
 
-.bss            0x20001a54     0xa0c8 load address 0x0800fe6c
+.bss            0x20001a54     0xa0c8 load address 0x0800fb38
                 0x20001a54                        _sbss = .
                 0x20001a54                        __bss_start__ = _sbss
  *(.bss)
@@ -8289,7 +8284,7 @@ LOAD C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                 0x2000bb1c                        __bss_end__ = _ebss
 
 ._user_heap_stack
-                0x2000bb1c      0x604 load address 0x0800fe6c
+                0x2000bb1c      0x604 load address 0x0800fb38
                 0x2000bb20                        . = ALIGN (0x8)
  *fill*         0x2000bb1c        0x4 
                 [!provide]                        PROVIDE (end = .)
@@ -9051,9 +9046,9 @@ LOAD C:/ST/STM32CubeIDE_1.17.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                                0x52f9 (size before relaxing)
  .debug_str     0x000b6211      0x23f C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_tmr.o)
                               0xaba0a (size before relaxing)
- .debug_str     0x000b6450       0x67 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_trace.o)
-                              0xae2c2 (size before relaxing)
- .debug_str     0x000b64b7      0x24e C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
+ .debug_str     0x000b6450       0x66 C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_trace.o)
+                              0xae2c1 (size before relaxing)
+ .debug_str     0x000b64b6      0x24f C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(drv_uart.o)
                               0xaf410 (size before relaxing)
  .debug_str     0x000b6705      0x2eb C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\PortTest\GOS2022_lib\Build_stm32f411xe\libGOS2022_lib.a(svl_dsm.o)
                                0x983d (size before relaxing)

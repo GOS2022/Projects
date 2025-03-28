@@ -163,7 +163,6 @@ gos_result_t drv_adcInitInstance (u8_t adcInstanceIndex)
     gos_result_t            adcInitResult = GOS_ERROR;
     drv_adcPeriphInstance_t instance      = 0u;
 
-
     /*
      * Function code.
      */

@@ -18,8 +18,10 @@ gos_result_t app_pdhBdSpecInit (void_t);
 
 gos_result_t app_sdhBdSpecInit (void_t);
 
-gos_result_t app_ledInit (void_t);
+gos_result_t app_bldTaskInit (void_t);
 
 gos_result_t app_bld_init (void_t);
+
+gos_result_t bsp_rtcHandlerInit (void_t);
 
 #endif /* INC_APP_H_ */

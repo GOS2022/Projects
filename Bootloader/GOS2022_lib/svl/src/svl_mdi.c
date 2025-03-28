@@ -51,6 +51,15 @@
 #include <svl_mdi.h>
 
 /*
+ * Type definitions
+ */
+typedef enum
+{
+    SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_REQ = 0x3001,
+    SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_RESP = 0x3A01
+}svl_mdiSysmonMsgId_t;
+
+/*
  * Function prototypes
  */
 GOS_STATIC void_t svl_mdiReqCallback (void_t);
@@ -61,7 +70,7 @@ GOS_STATIC void_t svl_mdiReqCallback (void_t);
 gos_sysmonUserMessageDescriptor_t mdiRequestMsg =
 {
 	.callback        = svl_mdiReqCallback,
-	.messageId       = 0x3101,
+	.messageId       = SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_REQ,
 	.payloadSize     = 0u,
 	.protocolVersion = 1,
 	.payload         = NULL
@@ -100,7 +109,7 @@ GOS_STATIC void_t svl_mdiReqCallback (void_t)
 	{
 		(void_t) gos_gcpTransmitMessage(
 	    		CFG_SYSMON_GCP_CHANNEL_NUM,
-				0xC101,
+				SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_RESP,
 				(void_t*)mdiVariables,
 				mdiVariablesSize,
 				0xFFFF);

@@ -28,7 +28,7 @@ gos_result_t driver_init (void_t)
 	driverInitResult &= drv_tmrInit();
 	driverInitResult &= drv_systimerStart();
 	driverInitResult &= drv_gpioInit();
-	//driverInitResult &= drv_i2cInit();
+	driverInitResult &= drv_i2cInit();
 	driverInitResult &= drv_spiInit();
 	driverInitResult &= drv_dmaInit();
 	driverInitResult &= drv_uartInit();

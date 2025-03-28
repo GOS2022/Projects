@@ -179,9 +179,9 @@ GOS_INLINE gos_result_t gos_traceTrace (bool_t addTimeStamp, char_t* traceMessag
      */
     gos_result_t             traceResult    = GOS_ERROR;
     gos_tid_t                callerTaskId   = GOS_INVALID_TASK_ID;
+    gos_taskPrivilegeLevel_t privileges     = 0u;
     gos_taskDescriptor_t     callerTaskDesc = {0};
     gos_time_t               sysTime        = {0};
-    gos_taskPrivilegeLevel_t privileges     = 0u;
 
     /*
      * Function code.

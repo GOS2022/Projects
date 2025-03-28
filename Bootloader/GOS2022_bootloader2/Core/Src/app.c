@@ -10,6 +10,7 @@
 #include "driver.h"
 #include "drv.h"
 #include "trace_driver.h"
+#include "iodef.h"
 
 #include <gos_lib.h>
 
@@ -85,6 +86,9 @@ gos_result_t gos_userApplicationInit (void_t)
 
 	// Initialize device state manager for startup.
 	appInitResult &= svl_dsmInit();
+
+	// Enable WiFi module.
+	(void_t) drv_gpioWritePin(IO_WEMOS_RST, GPIO_STATE_HIGH);
 
 	if (appInitResult != GOS_SUCCESS)
 	{

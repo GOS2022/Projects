@@ -13,6 +13,7 @@
 typedef enum
 {
 	IO_USER_LED     = 0u,
+	IO_USER_BUTTON,
 
 	IO_UART_1_RX,
 	IO_UART_1_TX,
@@ -28,6 +29,11 @@ typedef enum
 	IO_SPI2_CS0,
 	IO_SPI2_CS1,
 	IO_SPI2_CS2,
+
+	IO_I2C1_SCL,
+	IO_I2C1_SDA,
+
+	IO_WEMOS_RST,
 
 	IO_NUMBER
 }io_pin_t;
