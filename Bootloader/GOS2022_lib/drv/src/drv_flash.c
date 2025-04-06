@@ -52,7 +52,13 @@
 #include <stm32f4xx_hal_flash.h>
 #include <stm32f4xx_hal_flash_ex.h>
 
-GOS_STATIC FLASH_EraseInitTypeDef eraseInitStruct  = {0}; // TODO
+/*
+ * Static variables
+ */
+/**
+ * FLASH erase structure.
+ */
+GOS_STATIC FLASH_EraseInitTypeDef eraseInitStruct  = {0};
 
 /*
  * Function prototypes.

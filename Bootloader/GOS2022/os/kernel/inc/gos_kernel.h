@@ -324,7 +324,7 @@
 #define GOS_CONCAT_RESULT(finalResult, currentResult)    {                                     \
                                                              if (finalResult == GOS_SUCCESS)   \
                                                              {                                 \
-                                                                  finalResult = currentResult; \
+                                                                 finalResult = currentResult;  \
                                                              }                                 \
                                                              else                              \
                                                              {                                 \

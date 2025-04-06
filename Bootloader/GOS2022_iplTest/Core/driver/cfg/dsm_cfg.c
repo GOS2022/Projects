@@ -36,6 +36,7 @@ GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 			{ "LCD initialization",                 app_lcdInit                 },
 			{ "Debouncer initialization",           app_debouncerInit           },
 			{ "RTC handler initialization",         bsp_rtcHandlerInit          },
+			{ "TFT initialization",                 app_tftInit                 },
 		}
 	}
 };

@@ -95,7 +95,7 @@ GOS_STATIC void_t bsp_rtcHandlerTask (void_t)
 		(void_t) gos_timeSet(&time);
 
 		// This is done every 10 seconds.
-		(void_t) gos_taskSleep(1000);
+		(void_t) gos_taskSleep(10000);
 	}
 }
 

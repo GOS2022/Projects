@@ -11,7 +11,6 @@
 "./os/services/src/gos_gcp.o"
 "./os/services/src/gos_message.o"
 "./os/services/src/gos_mutex.o"
-"./os/services/src/gos_process.o"
 "./os/services/src/gos_queue.o"
 "./os/services/src/gos_shell.o"
 "./os/services/src/gos_signal.o"

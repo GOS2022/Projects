@@ -50,4 +50,6 @@ gos_result_t app_debouncerActivate (void_t);
 
 gos_result_t bsp_rtcHandlerInit (void_t);
 
+gos_result_t app_tftInit (void_t);
+
 #endif /* INC_APP_H_ */

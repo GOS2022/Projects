@@ -36,10 +36,6 @@
 /*
  * Macros
  */
-/**
- * Overconfiguration macro.
- */
-#define GOS_CFG_OVERCONFIG
 /*
  * Supported target CPU list.
  */

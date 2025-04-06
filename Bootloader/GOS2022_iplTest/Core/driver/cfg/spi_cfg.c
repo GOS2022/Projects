@@ -28,6 +28,21 @@ GOS_CONST drv_spiDescriptor_t spiConfig [] =
 		.tiMode            = SPI_TIMODE_DISABLE,
 		.crcCalculation    = SPI_CRCCALCULATION_DISABLE,
 		.crcPolynomial     = 10
+	},
+	{
+		.periphInstance    = DRV_SPI_INSTANCE_3,
+		.mode              = SPI_MODE_MASTER,
+		.direction         = SPI_DIRECTION_2LINES,
+		.dataSize          = SPI_DATASIZE_8BIT,
+		.clkPolarity       = SPI_POLARITY_LOW,
+		.clkPhase          = SPI_PHASE_1EDGE,
+		.nss               = SPI_NSS_SOFT,
+		.baudRatePrescaler = SPI_BAUDRATEPRESCALER_4,
+		.firstBit          = SPI_FIRSTBIT_MSB,
+		.tiMode            = SPI_TIMODE_DISABLE,
+		.crcCalculation    = SPI_CRCCALCULATION_DISABLE,
+		.crcPolynomial     = 10,
+		.dmaConfigTx       = &dmaConfig[DMA_CFG_SPI3]
 	}
 };
 

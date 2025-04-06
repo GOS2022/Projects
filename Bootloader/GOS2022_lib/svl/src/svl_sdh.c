@@ -356,11 +356,11 @@ GOS_STATIC svl_iplUserMsgDesc_t iplEraseReqMsg =
  */
 GOS_STATIC gos_taskDescriptor_t svlSdhTaskDesc =
 {
-    .taskFunction         = svl_sdhDaemon,
-    .taskName             = "svl_sdh_daemon",
-    .taskStackSize         = SVL_SDH_DAEMON_STACK_SIZE,
-    .taskPriority         = SVL_SDH_DAEMON_PRIORITY,
-    .taskPrivilegeLevel    = GOS_TASK_PRIVILEGE_KERNEL
+    .taskFunction       = svl_sdhDaemon,
+    .taskName           = "svl_sdh_daemon",
+    .taskStackSize      = SVL_SDH_DAEMON_STACK_SIZE,
+    .taskPriority       = SVL_SDH_DAEMON_PRIORITY,
+    .taskPrivilegeLevel = GOS_TASK_PRIVILEGE_KERNEL
 };
 
 /*
@@ -371,37 +371,30 @@ gos_result_t svl_sdhInit (void_t)
     /*
      * Local variables.
      */
-    gos_result_t initResult = GOS_ERROR;
+    gos_result_t initResult = GOS_SUCCESS;
 
     /*
      * Function code.
      */
-    initResult = gos_sysmonRegisterUserMessage(&sysmonBinaryNumReqMsg);
-    initResult &= gos_sysmonRegisterUserMessage(&sysmonBinaryInfoReqMsg);
-    initResult &= gos_sysmonRegisterUserMessage(&sysmonDownloadReqMsg);
-    initResult &= gos_sysmonRegisterUserMessage(&sysmonBinaryChunkReqMsg);
-    initResult &= gos_sysmonRegisterUserMessage(&sysmonSoftwareInstallReqMsg);
-    initResult &= gos_sysmonRegisterUserMessage(&sysmonBinaryEraseReqMsg);
+    // Register sysmon callbacks.
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonBinaryNumReqMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonBinaryInfoReqMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonDownloadReqMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonBinaryChunkReqMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonSoftwareInstallReqMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonBinaryEraseReqMsg));
 
-    initResult &= svl_iplRegisterUserMsg(&iplBinaryNumReqMsg);
-    initResult &= svl_iplRegisterUserMsg(&iplBinaryInfoReqMsg);
-    initResult &= svl_iplRegisterUserMsg(&iplDownloadReqMsg);
-    initResult &= svl_iplRegisterUserMsg(&iplBinaryChunkReqMsg);
-    initResult &= svl_iplRegisterUserMsg(&iplSoftwareInstallReqMsg);
-    initResult &= svl_iplRegisterUserMsg(&iplEraseReqMsg);
+    // Register IPL callbacks.
+    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplBinaryNumReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplBinaryInfoReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplDownloadReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplBinaryChunkReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplSoftwareInstallReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplEraseReqMsg));
 
-    initResult &= gos_taskRegister(&svlSdhTaskDesc, NULL);
-    initResult &= gos_triggerInit(&sdhControlTrigger);
-    initResult &= gos_triggerInit(&sdhControlFeedbackTrigger);
-
-    if (initResult != GOS_SUCCESS)
-    {
-        initResult = GOS_ERROR;
-    }
-    else
-    {
-        // OK.
-    }
+    GOS_CONCAT_RESULT(initResult, gos_taskRegister(&svlSdhTaskDesc, NULL));
+    GOS_CONCAT_RESULT(initResult, gos_triggerInit(&sdhControlTrigger));
+    GOS_CONCAT_RESULT(initResult, gos_triggerInit(&sdhControlFeedbackTrigger));
 
     return initResult;
 }

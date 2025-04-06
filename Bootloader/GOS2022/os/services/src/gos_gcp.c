@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_gcp.c
 //! @author     Ahmed Gazar
-//! @date       2024-07-18
-//! @version    3.0
+//! @date       2025-04-06
+//! @version    3.1
 //!
 //! @brief      GOS General Communication Protocol handler service source.
 //! @details    For a more detailed description of this service, please refer to @ref gos_gcp.h
@@ -34,6 +34,7 @@
 //                                               channel
 // 2.4        2023-09-14    Ahmed Gazar     +    Mutex initialization result processing added
 // 3.0        2024-07-18    Ahmed Gazar     Service rework
+// 3.1        2025-04-06    Ahmed Gazar     *    GOS_CONCAT_RESULT used for init
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -180,17 +181,8 @@ gos_result_t gos_gcpInit (void_t)
      */
     for (mutexIdx = 0u; mutexIdx < CFG_GCP_CHANNELS_MAX_NUMBER; mutexIdx++)
     {
-        gcpInitResult &= gos_mutexInit(&gcpRxMutexes[mutexIdx]);
-        gcpInitResult &= gos_mutexInit(&gcpTxMutexes[mutexIdx]);
-    }
-
-    if (gcpInitResult != GOS_SUCCESS)
-    {
-        gcpInitResult = GOS_ERROR;
-    }
-    else
-    {
-        // Nothing to do.
+        GOS_CONCAT_RESULT(gcpInitResult, gos_mutexInit(&gcpRxMutexes[mutexIdx]));
+        GOS_CONCAT_RESULT(gcpInitResult, gos_mutexInit(&gcpTxMutexes[mutexIdx]));
     }
 
     return gcpInitResult;

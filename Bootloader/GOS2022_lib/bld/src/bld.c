@@ -143,6 +143,9 @@ GOS_STATIC svl_pdhSwVerInfo_t  libVerInfo       = {0};
  */
 GOS_STATIC void_t bld_task (void_t);
 
+/**
+ * Bootloader task descriptor.
+ */
 GOS_STATIC gos_taskDescriptor_t bldTaskDesc =
 {
     .taskFunction       = bld_task,
@@ -160,7 +163,7 @@ gos_result_t bld_init (void_t)
     /*
      * Local variables.
      */
-    gos_result_t initResult = GOS_SUCCESS;
+    gos_result_t initResult = GOS_ERROR;
 
     /*
      * Function code.

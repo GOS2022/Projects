@@ -54,14 +54,9 @@
  * Use one of the following includes to specify the
  * required configuration.
  */
-#if defined(GOS2022_MINIMAL_EXAMPLE)
-#include <gos_minimal_example_app_config.h>
-#elif defined(GOS2022_SYSMON_EXAMPLE)
-#include <gos_sysmon_app_config.h>
-#elif defined(GOS2022_BOOTLOADER)
+#if defined(GOS2022_BOOTLOADER)
 #include <gos_bootloader_config.h>
 #else
-
 /*
  * Macros
  */

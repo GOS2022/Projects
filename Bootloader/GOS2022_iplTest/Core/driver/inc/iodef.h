@@ -35,6 +35,15 @@ typedef enum
 
 	IO_WEMOS_RST,
 
+	IO_DISPL_MOSI,
+	IO_DISPL_SCK,
+	IO_DISPL_RST,
+	IO_DISPL_CS,
+	IO_DISPL_DC,
+
+	IO_TOUCH_MISO,
+	IO_TOUCH_CS,
+
 	IO_NUMBER
 }io_pin_t;
 

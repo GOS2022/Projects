@@ -451,7 +451,7 @@ gos_result_t svl_iplConfigure (svl_iplTransmitFunction transmitFunc, svl_iplRece
 	/*
 	 * Local variables.
 	 */
-	gos_result_t configureResult = GOS_SUCCESS;
+	gos_result_t configureResult = GOS_ERROR;
 
 	/*
 	 * Function code.
@@ -463,6 +463,7 @@ gos_result_t svl_iplConfigure (svl_iplTransmitFunction transmitFunc, svl_iplRece
 	if (svl_iplTransmit != NULL && svl_iplReceive != NULL)
 	{
 		iplState = SVL_IPL_STATE_DISCOVER_START;
+		configureResult = GOS_SUCCESS;
 	}
 	else
 	{
@@ -514,7 +515,7 @@ GOS_STATIC void_t svl_iplDaemon (void_t)
 	/*
 	 * Local variables.
 	 */
-	u8_t lutIndex = 0u;
+	u8_t               lutIndex = 0u;
 	svl_iplMsgHeader_t msgHeader;
 
 	/*

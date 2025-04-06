@@ -72,7 +72,21 @@ drv_dmaDescriptor_t dmaConfig [] =
 	    .mode                = DMA_CIRCULAR,
 	    .priority            = DMA_PRIORITY_HIGH,
 	    .fifoMode            = DMA_FIFOMODE_DISABLE,
-	}
+	},
+	// DMA1 stream 7 -> SPI3 TX
+	[DMA_CFG_SPI3] =
+	{
+		.dmaStream           = DRV_DMA_1_STREAM_7,
+		.channel             = DMA_CHANNEL_0,
+		.direction           = DMA_MEMORY_TO_PERIPH,
+		.periphInc           = DMA_PINC_DISABLE,
+		.memInc              = DMA_MINC_ENABLE,
+		.periphDataAlignment = DMA_PDATAALIGN_BYTE,
+		.memDataAlignment    = DMA_MDATAALIGN_BYTE,
+		.mode                = DMA_NORMAL,
+		.priority            = DMA_PRIORITY_LOW,
+		.fifoMode            = DMA_FIFOMODE_DISABLE,
+	},
 };
 
 /**
@@ -92,7 +106,7 @@ drv_dmaDescriptor_t* pDMADescriptorLut [DRV_DMA_X_STREAM_NUM] =
 	[DRV_DMA_1_STREAM_4] = NULL,
 	[DRV_DMA_1_STREAM_5] = NULL,
 	[DRV_DMA_1_STREAM_6] = NULL,
-	[DRV_DMA_1_STREAM_7] = NULL,
+	[DRV_DMA_1_STREAM_7] = &dmaConfig[DMA_CFG_SPI3],
 
 	[DRV_DMA_2_STREAM_0] = NULL,
 	[DRV_DMA_2_STREAM_1] = NULL,

@@ -73,6 +73,16 @@ GOS_CONST drv_itDescriptor_t itConfig [] =
 		.preemtPriority = 0,
 		.subPriority    = 0
 	},
+	{
+		.irqType        = SPI3_IRQn,
+		.preemtPriority = 0,
+		.subPriority    = 0
+	},
+	{
+		.irqType        = DMA1_Stream7_IRQn,
+		.preemtPriority = 0,
+		.subPriority    = 0
+	},
 };
 
 /**

@@ -87,27 +87,47 @@ GOS_STATIC bool_t                 pdhInited        = GOS_FALSE;
  */
 GOS_STATIC u8_t                   pdhBuffer [PDH_BUFFER_SIZE];
 
+/**
+ * PDH software info message.
+ */
+GOS_STATIC svl_pdhSwInfo_t        swInfoMsg        = {0};
+
+/**
+ * PDH hardware info message.
+ */
+GOS_STATIC svl_pdhHwInfo_t        hwInfoMsg        = {0};
+
+/**
+ * PDH WiFi configuration message.
+ */
+GOS_STATIC svl_pdhWifiCfg_t       wifiCfgMsg       = {0};
+
+/**
+ * PDH bootloader configuration message.
+ */
+GOS_STATIC svl_pdhBldCfg_t        bldCfgMsg        = {0};
+
 /*
  * Type definitions
  */
 typedef enum
 {
-    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_GET_REQ = 0x2001,
+    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_GET_REQ  = 0x2001,
     SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_GET_RESP = 0x2A01,
-    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_GET_REQ = 0x2002,
+    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_GET_REQ  = 0x2002,
     SVL_PDH_SYSMON_MSG_HARDWARE_INFO_GET_RESP = 0x2A02,
-    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_REQ = 0x2003,
-    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_RESP = 0x2A03,
-    SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_REQ = 0x2004,
-    SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_RESP = 0x2A04,
-    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_SET_REQ = 0x2005,
+    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_REQ    = 0x2003,
+    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_RESP   = 0x2A03,
+    SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_REQ     = 0x2004,
+    SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_RESP    = 0x2A04,
+    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_SET_REQ  = 0x2005,
     SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_SET_RESP = 0x2A05,
-    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_SET_REQ = 0x2006,
+    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_SET_REQ  = 0x2006,
     SVL_PDH_SYSMON_MSG_HARDWARE_INFO_SET_RESP = 0x2A06,
-    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_REQ = 0x2007,
-    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_RESP = 0x2A07,
-    SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_REQ = 0x2008,
-    SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_RESP = 0x2A08
+    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_REQ    = 0x2007,
+    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_RESP   = 0x2A07,
+    SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_REQ     = 0x2008,
+    SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_RESP    = 0x2A08
 }svl_pdhSysmonMsgId_t;
 
 /*
@@ -226,32 +246,23 @@ gos_result_t svl_pdhInit (void_t)
 	/*
 	 * Local variables.
 	 */
-	gos_result_t initResult = GOS_ERROR;
+	gos_result_t initResult = GOS_SUCCESS;
 
 	/*
 	 * Function code.
 	 */
-	initResult = gos_sysmonRegisterUserMessage(&softwareInfoReqMsg);
-	initResult &= gos_sysmonRegisterUserMessage(&hardwareInfoReqMsg);
-	initResult &= gos_sysmonRegisterUserMessage(&wifiCfgReqMsg);
-	initResult &= gos_sysmonRegisterUserMessage(&bldCfgReqMsg);
-	initResult &= gos_sysmonRegisterUserMessage(&softwareInfoSetMsg);
-	initResult &= gos_sysmonRegisterUserMessage(&hardwareInfoSetMsg);
-	initResult &= gos_sysmonRegisterUserMessage(&wifiCfgSetMsg);
-	initResult &= gos_sysmonRegisterUserMessage(&bldCfgSetMsg);
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&softwareInfoReqMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&hardwareInfoReqMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&wifiCfgReqMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&bldCfgReqMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&softwareInfoSetMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&hardwareInfoSetMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&wifiCfgSetMsg));
+    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&bldCfgSetMsg));
 
-	initResult &= gos_mutexInit(&pdhMutex);
+    GOS_CONCAT_RESULT(initResult, gos_mutexInit(&pdhMutex));
 
 	pdhInited = GOS_TRUE;
-
-	if (initResult != GOS_SUCCESS)
-	{
-		initResult = GOS_ERROR;
-	}
-	else
-	{
-		// OK.
-	}
 
 	return initResult;
 }
@@ -541,8 +552,6 @@ gos_result_t svl_pdhSetWifiCfg (svl_pdhWifiCfg_t* pWifiCfg)
 	return setResult;
 }
 
-GOS_STATIC svl_pdhSwInfo_t swInfoMsg = {0}; // TODO
-
 /**
  * @brief   Handles the software info request message.
  * @details Sends out the software info via the sysmon GCP channel.
@@ -551,11 +560,6 @@ GOS_STATIC svl_pdhSwInfo_t swInfoMsg = {0}; // TODO
  */
 GOS_STATIC void_t svl_pdhSoftwareInfoReqMsgReceived (void_t)
 {
-	/*
-	 * Local variables.
-	 */
-
-
 	/*
 	 * Function code.
 	 */
@@ -569,7 +573,6 @@ GOS_STATIC void_t svl_pdhSoftwareInfoReqMsgReceived (void_t)
 			0xFFFF);
 }
 
-GOS_STATIC svl_pdhHwInfo_t hwInfoMsg = {0}; // TODO
 /**
  * @brief   Handles the hardware info request message.
  * @details Sends out the hardware info via the sysmon GCP channel.
@@ -578,11 +581,6 @@ GOS_STATIC svl_pdhHwInfo_t hwInfoMsg = {0}; // TODO
  */
 GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (void_t)
 {
-	/*
-	 * Local variables.
-	 */
-
-
 	/*
 	 * Function code.
 	 */
@@ -596,15 +594,9 @@ GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (void_t)
 			0xFFFF);
 }
 
-GOS_STATIC svl_pdhWifiCfg_t wifiCfgMsg = {0}; // TODO
-
+// TODO
 GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived (void_t)
 {
-	/*
-	 * Local variables.
-	 */
-
-
 	/*
 	 * Function code.
 	 */
@@ -618,14 +610,9 @@ GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived (void_t)
 			0xFFFF);
 }
 
-GOS_STATIC svl_pdhBldCfg_t bldCfgMsg = {0}; // TODO
+// TODO
 GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived (void_t)
 {
-	/*
-	 * Local variables.
-	 */
-
-
 	/*
 	 * Function code.
 	 */
@@ -639,13 +626,9 @@ GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived (void_t)
 			0xFFFF);
 }
 
+// TODO
 GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (void_t)
 {
-	/*
-	 * Local variables.
-	 */
-	//svl_pdhSwInfo_t swInfoMsg = {0};
-
 	/*
 	 * Function code.
 	 */
@@ -662,13 +645,9 @@ GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (void_t)
 			0xFFFF);
 }
 
+// TODO
 GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (void_t)
 {
-	/*
-	 * Local variables.
-	 */
-	//svl_pdhHwInfo_t hwInfoMsg = {0};
-
 	/*
 	 * Function code.
 	 */
@@ -685,13 +664,9 @@ GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (void_t)
 			0xFFFF);
 }
 
+// TODO
 GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived (void_t)
 {
-	/*
-	 * Local variables.
-	 */
-	//svl_pdhWifiCfg_t wifiCfgMsg = {0};
-
 	/*
 	 * Function code.
 	 */
@@ -708,13 +683,9 @@ GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived (void_t)
 			0xFFFF);
 }
 
+// TODO
 GOS_STATIC void_t svl_pdhBldCfgSetMsgReceived (void_t)
 {
-	/*
-	 * Local variables.
-	 */
-	//svl_pdhBldCfg_t bldCfgMsg = {0};
-
 	/*
 	 * Function code.
 	 */

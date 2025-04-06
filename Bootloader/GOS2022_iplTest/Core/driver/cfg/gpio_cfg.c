@@ -162,7 +162,66 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.mode = GPIO_MODE_OUTPUT_PP,
 			.pull = GPIO_NOPULL,
 			.defaultState = GPIO_STATE_LOW
-		}
+		},
+		[IO_DISPL_MOSI] =
+		{
+			.port = GPIOB,
+			.pin = GPIO_PIN_5,
+			.mode = GPIO_MODE_AF_PP,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
+			.alternate = GPIO_AF6_SPI3
+		},
+		[IO_DISPL_SCK] =
+		{
+			.port = GPIOC,
+			.pin = GPIO_PIN_10,
+			.mode = GPIO_MODE_AF_PP,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
+			.alternate = GPIO_AF6_SPI3
+		},
+		[IO_DISPL_RST] =
+		{
+			.port = GPIOB,
+			.pin = GPIO_PIN_4,
+			.mode = GPIO_MODE_OUTPUT_PP,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_LOW
+		},
+		[IO_DISPL_CS] =
+		{
+			.port = GPIOB,
+			.pin = GPIO_PIN_13,
+			.mode = GPIO_MODE_OUTPUT_PP,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_HIGH
+		},
+		[IO_DISPL_DC] =
+		{
+			.port = GPIOB,
+			.pin = GPIO_PIN_15,
+			.mode = GPIO_MODE_OUTPUT_PP,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_HIGH
+		},
+		[IO_TOUCH_CS] =
+		{
+			.port = GPIOB,
+			.pin = GPIO_PIN_8,
+			.mode = GPIO_MODE_OUTPUT_PP,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_HIGH
+		},
+		[IO_TOUCH_MISO] =
+		{
+			.port = GPIOC,
+			.pin = GPIO_PIN_11,
+			.mode = GPIO_MODE_AF_PP,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
+			.alternate = GPIO_AF6_SPI3
+		},
 };
 
 /**

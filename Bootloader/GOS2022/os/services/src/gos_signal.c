@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_signal.c
 //! @author     Ahmed Gazar
-//! @date       2025-03-28
-//! @version    1.9
+//! @date       2025-04-06
+//! @version    1.10
 //!
 //! @brief      GOS signal service source.
 //! @details    For a more detailed description of this service, please refer to @ref gos_signal.h
@@ -38,6 +38,7 @@
 // 1.8        2023-10-04    Ahmed Gazar     *    Signal daemon polling replaced by async unblocking
 //                                          -    GOS_SIGNAL_DAEMON_POLL_TIME_MS removed
 // 1.9        2025-03-28    Ahmed Gazar     +    GOS_SIGNAL_DAEMON_POLL_TIME_MS added back
+// 1.10       2025-04-06    Ahmed Gazar     *    Initializer result logic inverted
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -147,7 +148,7 @@ gos_result_t gos_signalInit (void_t)
     /*
      * Local variables.
      */
-    gos_result_t      signalInitResult = GOS_SUCCESS;
+    gos_result_t      signalInitResult = GOS_ERROR;
     gos_signalIndex_t signalIndex      = 0u;
 
     /*
@@ -160,13 +161,13 @@ gos_result_t gos_signalInit (void_t)
     }
 
     // Register signal daemon and create kernel task delete signal.
-    if (gos_taskRegister(&signalDaemonTaskDescriptor, NULL) != GOS_SUCCESS ||
-        gos_signalCreate(&kernelTaskDeleteSignal)           != GOS_SUCCESS ||
-        gos_signalCreate(&kernelDumpReadySignal)            != GOS_SUCCESS ||
-        gos_triggerInit(&signalInvokeTrigger)               != GOS_SUCCESS
+    if (gos_taskRegister(&signalDaemonTaskDescriptor, NULL) == GOS_SUCCESS &&
+        gos_signalCreate(&kernelTaskDeleteSignal)           == GOS_SUCCESS &&
+        gos_signalCreate(&kernelDumpReadySignal)            == GOS_SUCCESS &&
+        gos_triggerInit(&signalInvokeTrigger)               == GOS_SUCCESS
     )
     {
-        signalInitResult = GOS_ERROR;
+        signalInitResult = GOS_SUCCESS;
     }
     else
     {
