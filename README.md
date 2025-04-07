@@ -27,25 +27,5 @@ This project demonstrates the possibility of new binary downloading in backgroun
 intsall is required, a related flag is set in the bootloader configuration data, and upon reset, bootloader will copy the requested
 binary into the internal FLASH of the device.
 
-# IPL Test Project
-This project was made to test the newly developed IPL (Inter-Processor Link) service. The project is based on MB01A1 (Main Board), but can be used
-by hard-wiring a WeMos D1 mini to UART4 on STM32F446RE. The IPL implementation for WeMos D1 mini is a separate project.
-
-IPL makes it possible to use the wireless monitoring option in GOS Tool. The WeMos D1 mini serves as a gateway between the GUI and the STM32.
-IPL configures the WeMos with the network parameters, sends a connect request, and then changes from master to slave to receive requests from the WeMos.
-
-The project is created for an STM32F446RE board with the following properties:
--	UART1 is used as the trace output (an additional UART-USB converter is needed unless you are using the Main Board)
--	UART5 is used as the system monitoring input/output (an additional UART-USB converter is needed unless you are using the Main Board)
--	Both UARTs are configured to operate at 115200 baud
--	Besides the system tasks, the following user tasks are defined:
-	-	LED blink task (to toggle the user LED on the board every 1 second)
-	
-Monitoring was tested by simultaneously running system monitoring over USB and WiFi.
-
-The project was also used to test the SDH (Software Download Handler) service. SDH works over system monitoring (custom sysmon messages) and
-is planned to work over IPL as well (implementation is ongoing). This application produces a bootloader-compatible binary (which can be downloaded
-with GOS tool).
-
-Last updated: 2025-01-02
+Last updated: 2025-04-07
 (c) 2024, Ahmed Gazar

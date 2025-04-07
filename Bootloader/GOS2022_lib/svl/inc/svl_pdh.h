@@ -65,7 +65,7 @@
 /**
  * Library minor version.
  */
-#define PDH_LIBVER_VERSION_MINOR      ( 21                )
+#define PDH_LIBVER_VERSION_MINOR      ( 20                )
 
 /**
  * Library build number.
@@ -80,12 +80,12 @@
 /**
  * Library version date / month.
  */
-#define PDH_LIBVER_VERSION_DATE_MONTH ( GOS_TIME_MARCH    )
+#define PDH_LIBVER_VERSION_DATE_MONTH ( GOS_TIME_APRIL    )
 
 /**
  * Library version date / day.
  */
-#define PDH_LIBVER_VERSION_DATE_DAY   ( 27                )
+#define PDH_LIBVER_VERSION_DATE_DAY   ( 7                 )
 /**
  * Library name.
  */
@@ -115,7 +115,9 @@
 /*
  * Address definitions for individually accessing structures.
  */
-// Start relative offset.
+/**
+ * Start relative offset.
+ */
 #define PDH_REL_START_ADDR    ( 0u )
 
 // svl_pdhSwInfo_t - swInfo
@@ -138,7 +140,9 @@
 // svl_pdhWifiCfg_t - wifiCfg
 #define PDH_ADDR_WIFI_CFG     ( PDH_ADDR_BLD_CFG      + sizeof(svl_pdhWifiCfg_t)    )
 
-// User-defined.
+/**
+ * User-defined.
+ */
 #define PDH_ADDR_USER_START   ( PDH_ADDR_WIFI_CFG     + sizeof(svl_pdhWifiCfg_t)    )
 
 /*
@@ -228,10 +232,7 @@ typedef struct __attribute__((packed))
 	u8_t                reserved;                   //!< Reserved for future use.
 	u16_t               binaryIndex;                //!< Index of binary to be installed.
 	bool_t              updateMode;                 //!< Update mode flag.
-	//bool_t              wirelessUpdate;             //!< Wireless update flag.
-	//bool_t              waitForConnectionOnStartup; //!< Wait for connection on startup flag.
 	u8_t                startupCounter;             //!< Startup counter to select mode.
-	//u32_t               connectionTimeout;          //!< Connection timeout [ms].
 	u32_t               requestTimeout;             //!< Request timeout [ms].
 	u32_t               installTimeout;             //!< Install timeout [ms].
 }svl_pdhBldCfg_t;

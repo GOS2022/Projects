@@ -18,7 +18,7 @@
 //! @version    1.0
 //!
 //! @brief      GOS2022 Library / Project Data Handler source.
-//! @details    For a more detailed description of this driver, please refer to @ref svl_pdh.h
+//! @details    For a more detailed description of this service, please refer to @ref svl_pdh.h
 //*************************************************************************************************
 // History
 // ------------------------------------------------------------------------------------------------

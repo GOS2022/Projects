@@ -18,7 +18,7 @@
 //! @version    1.0
 //!
 //! @brief      GOS2022 Library / Device Handler Service source.
-//! @details    For a more detailed description of this driver, please refer to @ref svl_dhs.h
+//! @details    For a more detailed description of this service, please refer to @ref svl_dhs.h
 //*************************************************************************************************
 // History
 // ------------------------------------------------------------------------------------------------

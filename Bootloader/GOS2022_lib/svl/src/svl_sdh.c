@@ -18,7 +18,7 @@
 //! @version    1.1
 //!
 //! @brief      GOS2022 Library / Software Download Handler
-//! @details    For a more detailed description of this driver, please refer to @ref svl_sdh.h
+//! @details    For a more detailed description of this service, please refer to @ref svl_sdh.h
 //*************************************************************************************************
 // History
 // ------------------------------------------------------------------------------------------------

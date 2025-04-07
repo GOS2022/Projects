@@ -18,7 +18,7 @@
 //! @version    1.1
 //!
 //! @brief      GOS2022 Library / Device State Manager source.
-//! @details    For a more detailed description of this driver, please refer to @ref svl_dsm.h
+//! @details    For a more detailed description of this service, please refer to @ref svl_dsm.h
 //*************************************************************************************************
 // History
 // ------------------------------------------------------------------------------------------------
