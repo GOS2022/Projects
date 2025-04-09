@@ -13,7 +13,7 @@ GOS_CONST drv_i2cDescriptor_t i2cConfig [] =
 {
 	{
 		.periphInstance  = DRV_I2C_INSTANCE_1,
-		.clockSpeed      = 100000,
+		.clockSpeed      = 400000,
 		.dutyCycle       = I2C_DUTYCYCLE_2,
 		.ownAddress1     = 0,
 		.addressingMode  = I2C_ADDRESSINGMODE_7BIT,

@@ -8,7 +8,7 @@
 #include "app.h"
 #include "iodef.h"
 
-drv_25lc640Descriptor_t mem01a1_eeprom2 =
+GOS_STATIC drv_25lc640Descriptor_t eepromDesc =
 {
 	.spiInstance     = DRV_SPI_INSTANCE_2,
 	.csPin           = IO_SPI2_CS1,
@@ -30,16 +30,18 @@ GOS_STATIC svl_pdhSwVerInfo_t appSwVerInfo =
 	.name        = "GOS_new_test_app",
 	.description = "GOS new test application.",
 	.major       = 4,
-	.minor       = 1,
+	.minor       = 2,
 	.build       = 0,
 };
 
 GOS_STATIC svl_pdhSwInfo_t testSwInfo;
 
-GOS_STATIC void_t       app_pdhTestTask    (void_t);
+GOS_STATIC void_t       app_pdhTestTask                (void_t);
 GOS_STATIC void_t       app_pdhBdSpecCheckSoftwareInfo (void_t);
-GOS_STATIC gos_result_t app_pdhBdSpecRead  (u32_t address, u8_t* pData, u16_t size);
-GOS_STATIC gos_result_t app_pdhBdSpecWrite (u32_t address, u8_t* pData, u16_t size);
+GOS_STATIC gos_result_t app_pdhBdSpecRead              (u32_t address, u8_t* pData, u16_t size);
+GOS_STATIC gos_result_t app_pdhBdSpecWrite             (u32_t address, u8_t* pData, u16_t size);
+GOS_STATIC gos_result_t app_pdhReadWrapper             (u8_t params, va_list args);
+GOS_STATIC gos_result_t app_pdhWriteWrapper            (u8_t params, va_list args);
 
 GOS_STATIC svl_pdhCfg_t pdhCfg =
 {
@@ -56,24 +58,57 @@ GOS_STATIC gos_taskDescriptor_t pdhTestTask =
 	.taskPrivilegeLevel	= GOS_TASK_PRIVILEGED_USER
 };
 
+/**
+ * Standard device descriptor for PDH EEPROM.
+ */
+GOS_STATIC svl_dhsDevice_t eepromDevice =
+{
+	.name              = "eeprom2",
+	.description       = "External 25LC640 over SPI for project data.",
+	.pInitializer      = drv_25lc640Init,
+	.pDeviceDescriptor = (void_t*)&eepromDesc,
+	.readFunctions[0]  = app_pdhReadWrapper,
+	.writeFunctions[0] = app_pdhWriteWrapper,
+	.enabled           = GOS_TRUE,
+	.errorTolerance    = 16
+};
+
+/*
+ * Function: app_pdhBdSpecInit
+ */
 gos_result_t app_pdhBdSpecInit (void_t)
 {
+	/*
+	 * Local variables.
+	 */
 	gos_result_t pdhBdSpecInitRes = GOS_SUCCESS;
 
-	pdhBdSpecInitRes &= drv_25lc640Init((void_t*)&mem01a1_eeprom2);
-	pdhBdSpecInitRes &= svl_pdhConfigure(&pdhCfg);
-	pdhBdSpecInitRes &= gos_taskRegister(&pdhTestTask, NULL);
-
-	if (pdhBdSpecInitRes != GOS_SUCCESS)
-		pdhBdSpecInitRes = GOS_ERROR;
+	/*
+	 * Function code.
+	 */
+	GOS_CONCAT_RESULT(pdhBdSpecInitRes, svl_dhsRegisterDevice(&eepromDevice));
+	GOS_CONCAT_RESULT(pdhBdSpecInitRes, svl_dhsForceInitialize(eepromDevice.deviceId));
+	GOS_CONCAT_RESULT(pdhBdSpecInitRes, svl_pdhConfigure(&pdhCfg));
+	GOS_CONCAT_RESULT(pdhBdSpecInitRes, gos_taskRegister(&pdhTestTask, NULL));
 
 	return pdhBdSpecInitRes;
 }
 
+/**
+ * TODO
+ * @return -
+ */
 GOS_STATIC void_t app_pdhTestTask (void_t)
 {
+	/*
+	 * Local variables.
+	 */
 	u32_t sysTicks = gos_kernelGetSysTicks();
 
+	/*
+	 * Function code.
+	 */
+	// Check software info.
 	app_pdhBdSpecCheckSoftwareInfo();
 
 	for (;;)
@@ -89,6 +124,10 @@ GOS_STATIC void_t app_pdhTestTask (void_t)
 	}
 }
 
+/**
+ * TODO
+ * @return -
+ */
 GOS_STATIC void_t app_pdhBdSpecCheckSoftwareInfo (void_t)
 {
 	u32_t  swInfoCrc     = 0u;
@@ -144,12 +183,86 @@ GOS_STATIC void_t app_pdhBdSpecCheckSoftwareInfo (void_t)
 	}
 }
 
+/**
+ * TODO
+ * @param address
+ * @param pData
+ * @param size
+ * @return
+ */
 GOS_STATIC gos_result_t app_pdhBdSpecRead  (u32_t address, u8_t* pData, u16_t size)
 {
-	return drv_25lc640Read((void_t*)&mem01a1_eeprom2, address, pData, size);
+	/*
+	 * Function code.
+	 */
+	return svl_dhsReadDevice(eepromDevice.deviceId, 0, 4, eepromDevice.pDeviceDescriptor, address, pData, size);
 }
 
+/**
+ * TODO
+ * @param address
+ * @param pData
+ * @param size
+ * @return
+ */
 GOS_STATIC gos_result_t app_pdhBdSpecWrite (u32_t address, u8_t* pData, u16_t size)
 {
-	return drv_25lc640Write((void_t*)&mem01a1_eeprom2, address, pData, size);
+	/*
+	 * Function code.
+	 */
+	return svl_dhsWriteDevice(eepromDevice.deviceId, 0, 4, eepromDevice.pDeviceDescriptor, address, pData, size);
+}
+
+/**
+ * TODO
+ * @param params
+ * @param args
+ * @return
+ */
+GOS_STATIC gos_result_t app_pdhReadWrapper   (u8_t params, va_list args)
+{
+	/*
+	 * Local variables.
+	 */
+	void_t* device;
+	u32_t address;
+	u8_t* pData;
+	u16_t size;
+
+	/*
+	 * Function code.
+	 */
+	device = (void_t*)va_arg(args, int);
+	address = (u32_t)va_arg(args, int);
+	pData = (u8_t*)va_arg(args, int);
+	size = (u16_t)va_arg(args, int);
+
+	return drv_25lc640Read(device, address, pData, size);
+}
+
+/**
+ * TODO
+ * @param params
+ * @param args
+ * @return
+ */
+GOS_STATIC gos_result_t app_pdhWriteWrapper  (u8_t params, va_list args)
+{
+	/*
+	 * Local variables.
+	 */
+	void_t* device;
+	u32_t address;
+	u8_t* pData;
+	u16_t size;
+
+	/*
+	 * Function code.
+	 */
+	device = (void_t*)va_arg(args, int);
+	address = (u32_t)va_arg(args, int);
+	pData = (u8_t*)va_arg(args, int);
+	size = (u16_t)va_arg(args, int);
+
+	return drv_25lc640Write(device, address, pData, size);
 }

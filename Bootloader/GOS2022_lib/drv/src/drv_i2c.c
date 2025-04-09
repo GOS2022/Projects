@@ -201,7 +201,7 @@ gos_result_t drv_i2cInitInstance (GOS_CONST drv_i2cDescriptor_t* pInstance)
 /*
  * Function: drv_i2cMemWrite
  */
-gos_result_t drv_i2cMemWrite (
+GOS_INLINE gos_result_t drv_i2cMemWrite (
         drv_i2cPeriphInstance_t instance, u16_t address, u16_t memAddress, u16_t memAddressSize,
         u8_t*                   data,     u16_t size,    u32_t mutexTmo,   u32_t triggerTmo
         )
@@ -241,7 +241,7 @@ gos_result_t drv_i2cMemWrite (
 /*
  * Function: drv_i2cMemRead
  */
-gos_result_t drv_i2cMemRead (
+GOS_INLINE gos_result_t drv_i2cMemRead (
         drv_i2cPeriphInstance_t instance, u16_t address, u16_t memAddress, u16_t memAddressSize,
         u8_t*                   data,     u16_t size,    u32_t mutexTmo,   u32_t triggerTmo
         )
@@ -281,7 +281,7 @@ gos_result_t drv_i2cMemRead (
 /*
  * Function: drv_i2cTransmitBlocking
  */
-gos_result_t drv_i2cTransmitBlocking (
+GOS_INLINE gos_result_t drv_i2cTransmitBlocking (
         drv_i2cPeriphInstance_t instance, u16_t address,  u8_t* pData,
         u16_t                   size,     u32_t mutexTmo, u32_t transmitTmo
         )
@@ -319,7 +319,7 @@ gos_result_t drv_i2cTransmitBlocking (
 /*
  * Function: drv_i2cReceiveBlocking
  */
-gos_result_t drv_i2cReceiveBlocking (
+GOS_INLINE gos_result_t drv_i2cReceiveBlocking (
         drv_i2cPeriphInstance_t instance, u16_t address,  u8_t* pBuffer,
         u16_t                   size,     u32_t mutexTmo, u32_t receiveTmo
         )
@@ -357,7 +357,7 @@ gos_result_t drv_i2cReceiveBlocking (
 /*
  * Function: drv_i2cTransmitIT
  */
-gos_result_t drv_i2cTransmitIT (
+GOS_INLINE gos_result_t drv_i2cTransmitIT (
         drv_i2cPeriphInstance_t instance, u16_t address,  u8_t* pData,
         u16_t                   size,     u32_t mutexTmo, u32_t triggerTmo
         )
@@ -398,7 +398,7 @@ gos_result_t drv_i2cTransmitIT (
 /*
  * Function: drv_i2cReceiveIT
  */
-gos_result_t drv_i2cReceiveIT (
+GOS_INLINE gos_result_t drv_i2cReceiveIT (
         drv_i2cPeriphInstance_t instance, u16_t address,  u8_t* pBuffer,
         u16_t                   size,     u32_t mutexTmo, u32_t triggerTmo
         )
@@ -438,7 +438,7 @@ gos_result_t drv_i2cReceiveIT (
 /*
  * Function: drv_i2cTransmitDMA
  */
-gos_result_t drv_i2cTransmitDMA (
+GOS_INLINE gos_result_t drv_i2cTransmitDMA (
         drv_i2cPeriphInstance_t instance, u16_t address,  u8_t* pData,
         u16_t                   size,     u32_t mutexTmo, u32_t triggerTmo
         )
@@ -479,7 +479,7 @@ gos_result_t drv_i2cTransmitDMA (
 /*
  * Function: drv_i2cReceiveDMA
  */
-gos_result_t drv_i2cReceiveDMA (
+GOS_INLINE gos_result_t drv_i2cReceiveDMA (
         drv_i2cPeriphInstance_t instance, u16_t address,  u8_t* pBuffer,
         u16_t                   size,     u32_t mutexTmo, u32_t triggerTmo
         )

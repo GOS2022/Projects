@@ -233,6 +233,34 @@ gos_result_t drv_mcp23017WritePin (
     return mcp23017WritePinResult;
 }
 
+/*
+ * Function: drv_mcp23017WritePort
+ */
+gos_result_t drv_mcp23017WritePort (
+        drv_mcp23017Descriptor_t* pDevice, u8_t port,
+		u8_t portState
+        )
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t mcp23017WritePortResult = GOS_ERROR;
+
+    /*
+     * Function code.
+     */
+    if (pDevice != NULL)
+    {
+    	mcp23017WritePortResult = drv_mcp23017Write(pDevice, REGISTER_GPIOA | port, &portState);
+    }
+    else
+    {
+        // Null pointer or read error.
+    }
+
+    return mcp23017WritePortResult;
+}
+
 /**
  * TODO
  * @param pDevice

@@ -56,6 +56,7 @@
 #include <drv_25lc256.h>
 #include <drv_25lc640.h>
 #include <drv_w25q64.h>
+#include <drv_ds3231.h>
 #include <drv_adc.h>
 #include <drv_crc.h>
 #include <drv_dac.h>

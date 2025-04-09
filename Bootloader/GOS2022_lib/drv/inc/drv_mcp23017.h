@@ -140,4 +140,10 @@ gos_result_t drv_mcp23017WritePin (
         drv_mcp23017Pin_t         pin,     drv_gpioState_t gpioState
         );
 
+// TODO
+gos_result_t drv_mcp23017WritePort (
+        drv_mcp23017Descriptor_t* pDevice, u8_t port,
+		u8_t portState
+        );
+
 #endif

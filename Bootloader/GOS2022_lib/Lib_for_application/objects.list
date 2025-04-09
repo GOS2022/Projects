@@ -6,6 +6,7 @@
 "./drv/src/drv_crc.o"
 "./drv/src/drv_dac.o"
 "./drv/src/drv_dma.o"
+"./drv/src/drv_ds3231.o"
 "./drv/src/drv_error.o"
 "./drv/src/drv_flash.o"
 "./drv/src/drv_gpio.o"

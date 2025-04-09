@@ -84,6 +84,7 @@ GOS_STATIC void_t app_mdiTask (void_t)
 	float_t vref, vref_avg;
 	float_t temp, temp_avg;
 	u32_t   sum1, sum2;
+	u16_t   rtcTemp;
 
 	/*
 	 * Function code.
@@ -112,12 +113,14 @@ GOS_STATIC void_t app_mdiTask (void_t)
 	    temp = (float_t) ((float_t) ((float_t) (TEMPSENSOR_CAL2_TEMP - TEMPSENSOR_CAL1_TEMP)
 	                           / (float_t) (*TEMPSENSOR_CAL2_ADDR - *TEMPSENSOR_CAL1_ADDR))
 	                           * (temp_avg - *TEMPSENSOR_CAL1_ADDR) + TEMPSENSOR_CAL1_TEMP);
+	    (void_t) bsp_rtcHandlerGetTemperature(&rtcTemp);
 
 	    if (gos_mutexLock(&mdiMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
 	    {
 		    mdiVariables[MDI_VDDA].value.floatValue     = roundf(vdda * 100) / 100;
 			mdiVariables[MDI_VREF].value.floatValue     = roundf(vref * 100) / 100;
 			mdiVariables[MDI_CPU_TEMP].value.floatValue = roundf(temp * 10) / 10;
+			mdiVariables[MDI_RTC_TEMP].value.floatValue = (float_t)rtcTemp / 100;
 
 			(void_t) gos_mutexUnlock(&mdiMutex);
 	    }

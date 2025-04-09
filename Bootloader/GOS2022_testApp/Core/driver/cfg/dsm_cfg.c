@@ -21,6 +21,7 @@ GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 			{ "SDH initialization",                 svl_sdhInit                 },
 			{ "MDI initialization",                 svl_mdiInit                 },
 			{ "ERS initialization",                 svl_ersInit                 },
+			{ "DHS initialization",                 svl_dhsInit                 },
 		}
 	},
 	{
@@ -36,7 +37,10 @@ GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 			{ "LCD initialization",                 app_lcdInit                 },
 			{ "Debouncer initialization",           app_debouncerInit           },
 			{ "RTC handler initialization",         bsp_rtcHandlerInit          },
+			{ "Ex-IO handler initialization",       bsp_exioHandlerInit         },
 			{ "TFT initialization",                 app_tftInit                 },
+			{ "Ex-IO initialization",               app_exioInit                },
+			{ "DHS test initialization",            app_dhsTestInit             }
 		}
 	}
 };

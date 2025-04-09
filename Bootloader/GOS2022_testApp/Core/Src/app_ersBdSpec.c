@@ -17,9 +17,12 @@
 /*
  * Function prototypes
  */
-GOS_STATIC gos_result_t app_ersBdSpecRead  (u32_t address, u8_t* pData, u16_t size);
-GOS_STATIC gos_result_t app_ersBdSpecWrite (u32_t address, u8_t* pData, u16_t size);
-GOS_STATIC void_t       app_ersTask        (void_t);
+GOS_STATIC void_t       app_ersTask         (void_t);
+GOS_STATIC gos_result_t app_ersBdSpecRead   (u32_t address, u8_t* pData, u16_t size);
+GOS_STATIC gos_result_t app_ersBdSpecWrite  (u32_t address, u8_t* pData, u16_t size);
+GOS_STATIC gos_result_t app_ersReadWrapper  (u8_t params, va_list args);
+GOS_STATIC gos_result_t app_ersWriteWrapper (u8_t params, va_list args);
+
 
 /*
  * Static variables
@@ -39,7 +42,7 @@ GOS_STATIC gos_taskDescriptor_t ersTaskDesc =
 /**
  * 25LC256 descriptor.
  */
-drv_25lc256Descriptor_t mem01a1_eeprom1 =
+drv_25lc256Descriptor_t eepromDesc =
 {
 	.spiInstance        = DRV_SPI_INSTANCE_2,
 	.csPin              = IO_SPI2_CS2,
@@ -56,6 +59,21 @@ GOS_STATIC svl_ersCfg_t ersCfg =
 {
 	.readFunction       = app_ersBdSpecRead,
 	.writeFunction      = app_ersBdSpecWrite
+};
+
+/**
+ * Standard device descriptor for ERS EEPROM.
+ */
+GOS_STATIC svl_dhsDevice_t eepromDevice =
+{
+	.name              = "eeprom1",
+	.description       = "External 25LC256 over SPI for events.",
+	.pInitializer      = drv_25lc256Init,
+	.pDeviceDescriptor = (void_t*)&eepromDesc,
+	.readFunctions[0]  = app_ersReadWrapper,
+	.writeFunctions[0] = app_ersWriteWrapper,
+	.enabled           = GOS_TRUE,
+	.errorTolerance    = 16
 };
 
 /*
@@ -77,14 +95,9 @@ gos_result_t app_ersBdSpecInit (void_t)
 	/*
 	 * Function code.
 	 */
-	ersBdSpecInitRes &= drv_25lc256Init((void_t*)&mem01a1_eeprom1);
-	ersBdSpecInitRes &= svl_ersConfigure(&ersCfg);
-	ersBdSpecInitRes &= gos_taskRegister(&ersTaskDesc, NULL);
-
-	if (ersBdSpecInitRes != GOS_SUCCESS)
-	{
-		ersBdSpecInitRes = GOS_ERROR;
-	}
+	GOS_CONCAT_RESULT(ersBdSpecInitRes, svl_dhsRegisterDevice(&eepromDevice));
+	GOS_CONCAT_RESULT(ersBdSpecInitRes, svl_ersConfigure(&ersCfg));
+	GOS_CONCAT_RESULT(ersBdSpecInitRes, gos_taskRegister(&ersTaskDesc, NULL));
 
 	return ersBdSpecInitRes;
 }
@@ -136,7 +149,7 @@ GOS_STATIC gos_result_t app_ersBdSpecRead  (u32_t address, u8_t* pData, u16_t si
 	/*
 	 * Function code.
 	 */
-	return drv_25lc256Read((void_t*)&mem01a1_eeprom1, address, pData, size);
+	return svl_dhsReadDevice(eepromDevice.deviceId, 0, 4, eepromDevice.pDeviceDescriptor, address, pData, size);
 }
 
 // TODO
@@ -145,5 +158,47 @@ GOS_STATIC gos_result_t app_ersBdSpecWrite (u32_t address, u8_t* pData, u16_t si
 	/*
 	 * Function code.
 	 */
-	return drv_25lc256Write((void_t*)&mem01a1_eeprom1, address, pData, size);
+	return svl_dhsWriteDevice(eepromDevice.deviceId, 0, 4, eepromDevice.pDeviceDescriptor, address, pData, size);
+}
+
+GOS_STATIC gos_result_t app_ersReadWrapper  (u8_t params, va_list args)
+{
+	/*
+	 * Local variables.
+	 */
+	void_t* device;
+	u32_t address;
+	u8_t* pData;
+	u16_t size;
+
+	/*
+	 * Function code.
+	 */
+	device = (void_t*)va_arg(args, int);
+	address = (u32_t)va_arg(args, int);
+	pData = (u8_t*)va_arg(args, int);
+	size = (u16_t)va_arg(args, int);
+
+	return drv_25lc256Read(device, address, pData, size);
+}
+
+GOS_STATIC gos_result_t app_ersWriteWrapper (u8_t params, va_list args)
+{
+	/*
+	 * Local variables.
+	 */
+	void_t* device;
+	u32_t address;
+	u8_t* pData;
+	u16_t size;
+
+	/*
+	 * Function code.
+	 */
+	device = (void_t*)va_arg(args, int);
+	address = (u32_t)va_arg(args, int);
+	pData = (u8_t*)va_arg(args, int);
+	size = (u16_t)va_arg(args, int);
+
+	return drv_25lc256Write(device, address, pData, size);
 }

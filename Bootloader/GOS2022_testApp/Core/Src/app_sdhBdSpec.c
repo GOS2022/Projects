@@ -8,10 +8,12 @@
 #include "app.h"
 #include "iodef.h"
 
-GOS_STATIC gos_result_t app_sdhBdSpecRead (u32_t address, u8_t* pData, u32_t size);
-GOS_STATIC gos_result_t app_sdhBdSpecWrite (u32_t address, u8_t* pData, u32_t size);
+GOS_STATIC gos_result_t app_sdhBdSpecRead   (u32_t address, u8_t* pData, u32_t size);
+GOS_STATIC gos_result_t app_sdhBdSpecWrite  (u32_t address, u8_t* pData, u32_t size);
+GOS_STATIC gos_result_t app_sdhReadWrapper  (u8_t params, va_list args);
+GOS_STATIC gos_result_t app_sdhWriteWrapper (u8_t params, va_list args);
 
-GOS_STATIC drv_w25q64Descriptor_t mem01a1flash =
+GOS_STATIC drv_w25q64Descriptor_t flashDesc =
 {
 	.spiInstance     = DRV_SPI_INSTANCE_2,
 	.csPin           = IO_SPI2_CS0,
@@ -27,24 +29,74 @@ GOS_STATIC svl_sdhCfg_t sdhCfg =
 	.writeFunction = app_sdhBdSpecWrite
 };
 
+/**
+ * Standard device descriptor for SDH FLASH.
+ */
+GOS_STATIC svl_dhsDevice_t flashDevice =
+{
+	.name              = "flash",
+	.description       = "External W25Q64 over SPI for SW download.",
+	.pInitializer      = drv_w25q64Init,
+	.pDeviceDescriptor = (void_t*)&flashDesc,
+	.readFunctions[0]  = app_sdhReadWrapper,
+	.writeFunctions[0] = app_sdhWriteWrapper,
+	.enabled           = GOS_TRUE,
+	.errorTolerance    = 100
+};
+
 gos_result_t app_sdhBdSpecInit (void_t)
 {
+	/*
+	 * Local variables.
+	 */
 	gos_result_t sdhBdSpecInitRes = GOS_SUCCESS;
 
-	sdhBdSpecInitRes &= drv_w25q64Init((void_t*)&mem01a1flash);
-	sdhBdSpecInitRes &= svl_sdhConfigure(&sdhCfg);
-
-	if (sdhBdSpecInitRes != GOS_SUCCESS)
-		sdhBdSpecInitRes = GOS_ERROR;
+	/*
+	 * Function code.
+	 */
+	GOS_CONCAT_RESULT(sdhBdSpecInitRes, svl_dhsRegisterDevice(&flashDevice));
+	GOS_CONCAT_RESULT(sdhBdSpecInitRes, svl_sdhConfigure(&sdhCfg));
 
 	return sdhBdSpecInitRes;
 }
 
 GOS_STATIC gos_result_t app_sdhBdSpecRead (u32_t address, u8_t* pData, u32_t size)
 {
-	drv_w25q64ReadData((void_t*)&mem01a1flash, address, pData, size);
+	/*
+	 * Function code.
+	 */
+	return svl_dhsReadDevice(flashDevice.deviceId, 0, 4, flashDevice.pDeviceDescriptor, address, pData, size);
+}
 
-	if ((mem01a1flash.errorFlags & DRV_ERROR_W25Q64_READ) == 0u)
+GOS_STATIC gos_result_t app_sdhBdSpecWrite (u32_t address, u8_t* pData, u32_t size)
+{
+	/*
+	 * Function code.
+	 */
+	return svl_dhsWriteDevice(flashDevice.deviceId, 0, 4, flashDevice.pDeviceDescriptor, address, pData, size);
+}
+
+GOS_STATIC gos_result_t app_sdhReadWrapper   (u8_t params, va_list args)
+{
+	/*
+	 * Local variables.
+	 */
+	void_t* device;
+	u32_t address;
+	u8_t* pData;
+	u16_t size;
+
+	/*
+	 * Function code.
+	 */
+	device = (void_t*)va_arg(args, int);
+	address = (u32_t)va_arg(args, int);
+	pData = (u8_t*)va_arg(args, int);
+	size = (u16_t)va_arg(args, int);
+
+	(void_t) drv_w25q64ReadData(device, address, pData, size);
+
+	if ((((drv_w25q64Descriptor_t*)device)->errorFlags & DRV_ERROR_W25Q64_READ) == 0u)
 	{
 		return GOS_SUCCESS;
 	}
@@ -54,11 +106,27 @@ GOS_STATIC gos_result_t app_sdhBdSpecRead (u32_t address, u8_t* pData, u32_t siz
 	}
 }
 
-GOS_STATIC gos_result_t app_sdhBdSpecWrite (u32_t address, u8_t* pData, u32_t size)
+GOS_STATIC gos_result_t app_sdhWriteWrapper  (u8_t params, va_list args)
 {
-	drv_w25q64WriteData((void_t*)&mem01a1flash, address, pData, size);
+	/*
+	 * Local variables.
+	 */
+	void_t* device;
+	u32_t address;
+	u8_t* pData;
+	u16_t size;
 
-	if ((mem01a1flash.errorFlags & DRV_ERROR_W25Q64_WRITE) == 0u)
+	/*
+	 * Function code.
+	 */
+	device = (void_t*)va_arg(args, int);
+	address = (u32_t)va_arg(args, int);
+	pData = (u8_t*)va_arg(args, int);
+	size = (u16_t)va_arg(args, int);
+
+	(void_t) drv_w25q64WriteData(device, address, pData, size);
+
+	if ((((drv_w25q64Descriptor_t*)device)->errorFlags & DRV_ERROR_W25Q64_WRITE) == 0u)
 	{
 		return GOS_SUCCESS;
 	}

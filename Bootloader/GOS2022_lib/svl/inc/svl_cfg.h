@@ -60,7 +60,7 @@
  * DHS Service Configuration
  */
 //! TODO
-#define SVL_DHS_MAX_DEVICES                  ( 2u )
+#define SVL_DHS_MAX_DEVICES                  ( 10u )
 
 //! TODO
 #define SVL_DHS_DAEMON_PRIO                  ( 200 )

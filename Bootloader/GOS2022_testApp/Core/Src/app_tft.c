@@ -32,11 +32,13 @@ GOS_EXTERN svl_mdiVariable_t mdiVariables [];
 GOS_EXTERN gos_mutex_t mdiMutex;
 
 GOS_STATIC void_t APP_TFT_Task (void_t);
-GOS_STATIC void_t APP_TFT_ExIoPressed (void_t);
-GOS_STATIC void_t APP_TFT_OkButtonPressed (void_t);
-GOS_STATIC void_t APP_TFT_OkButtonReleased (void_t);
+//GOS_STATIC void_t APP_TFT_ExIoPressed (void_t);
+//GOS_STATIC void_t APP_TFT_OkButtonPressed (void_t);
+//GOS_STATIC void_t APP_TFT_OkButtonReleased (void_t);
 GOS_STATIC void_t APP_TFT_PopUpWindowOkClick (g_button_t* pButton);
 GOS_STATIC void_t APP_TFT_PopUpWindowResetClick (g_button_t* pButton);
+
+GOS_STATIC void_t app_tftStepButtonPressed (void_t);
 
 GOS_STATIC g_button_t okButton =
 {
@@ -381,6 +383,8 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 	g_windowInit(&statusWindow, &statusWindowCloseButton, &statusWindowTitleLabel);
 	g_windowInit(&monitoringWindow, &monitoringWindowCloseButton, &monitoringWindowTitleLabel);
 
+	bsp_exioRegisterCallback(GPIO_EX_PIN_4, GPIO_EX_EDGE_FALLING, app_tftStepButtonPressed);
+
 	for (;;)
 	{
 		switch(windowState)
@@ -493,7 +497,7 @@ GOS_STATIC void_t APP_TFT_PopUpWindowResetClick (g_button_t* pButton)
 	gos_kernelReset();
 }
 
-GOS_STATIC void_t APP_TFT_StepButtonPressed (void_t)
+/*GOS_STATIC void_t APP_TFT_StepButtonPressed (void_t)
 {
 	g_windowTabStep(&popupWindow);
 }
@@ -511,4 +515,20 @@ GOS_STATIC void_t APP_TFT_OkButtonPressed (void_t)
 GOS_STATIC void_t APP_TFT_OkButtonReleased (void_t)
 {
 	g_windowReleaseFocused(&popupWindow);
+}*/
+
+GOS_STATIC void_t app_tftStepButtonPressed (void_t)
+{
+	if (statusWindow.isVisible == GOS_TRUE)
+	{
+		g_windowHide(&statusWindow);
+		g_windowShow(&monitoringWindow);
+		windowState = WINDOW_STATE_MONITORING;
+	}
+	else
+	{
+		g_windowHide(&monitoringWindow);
+		g_windowShow(&statusWindow);
+		windowState = WINDOW_STATE_STATUS;
+	}
 }

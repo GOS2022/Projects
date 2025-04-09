@@ -325,7 +325,7 @@ GOS_STATIC gos_result_t lcd_driver_send_cmd (u8_t cmd)
 	data_t[3] = data_l | 0x08;  //en=0, rs=0
 
 	//lcdDriverSendCmdResult = i2c_driver_transmit(LCD_ADDRESS, data_t, 4);
-	lcdDriverSendCmdResult = drv_i2cTransmitIT(DRV_I2C_INSTANCE_1, LCD_ADDRESS, data_t, 4, GOS_MUTEX_ENDLESS_TMO, 1000);
+	lcdDriverSendCmdResult = drv_i2cTransmitIT(DRV_I2C_INSTANCE_1, LCD_ADDRESS, data_t, 4, GOS_MUTEX_ENDLESS_TMO, 100);
 
 	//gos_taskSleep(1);
 
@@ -348,7 +348,7 @@ GOS_STATIC gos_result_t lcd_driver_send_data (u8_t data)
 	//lcdDriverSendDataResult = i2c_driver_transmit(LCD_ADDRESS, data_t, 4);
 	//lcdDriverSendDataResult = drv_i2cTransmitBlocking(DRV_I2C_INSTANCE_1, LCD_ADDRESS, data_t, 4, GOS_MUTEX_ENDLESS_TMO, 1000);
 	// TODO: check
-	lcdDriverSendDataResult = drv_i2cTransmitIT(DRV_I2C_INSTANCE_1, LCD_ADDRESS, data_t, 4, GOS_MUTEX_ENDLESS_TMO, 1000);
+	lcdDriverSendDataResult = drv_i2cTransmitIT(DRV_I2C_INSTANCE_1, LCD_ADDRESS, data_t, 4, GOS_MUTEX_ENDLESS_TMO, 100);
 
 	gos_taskSleep(1);
 

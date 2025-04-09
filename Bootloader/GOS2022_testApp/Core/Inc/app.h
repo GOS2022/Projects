@@ -11,6 +11,7 @@
 #include "gos.h"
 #include <string.h>
 #include "stm32f4xx.h"
+#include "bsp_exio_handler.h"
 
 typedef enum
 {
@@ -50,6 +51,12 @@ gos_result_t app_debouncerActivate (void_t);
 
 gos_result_t bsp_rtcHandlerInit (void_t);
 
+gos_result_t bsp_rtcHandlerGetTemperature (u16_t* pTemp);
+
 gos_result_t app_tftInit (void_t);
+
+gos_result_t app_exioInit (void_t);
+
+gos_result_t app_dhsTestInit (void_t);
 
 #endif /* INC_APP_H_ */
