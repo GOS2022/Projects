@@ -84,6 +84,7 @@ typedef struct
 typedef struct __attribute__((packed))
 {
 	char_t              name [SVL_SDH_BINARY_NAME_LENGTH]; //!< Name of the binary.
+	gos_time_t          installDate;                       //!< Install date of the binary.
 	u32_t               binaryLocation;                    //!< Memory address of the binary.
 	svl_pdhBinaryInfo_t binaryInfo;                        //!< Binary info.
 }svl_sdhBinaryDesc_t;

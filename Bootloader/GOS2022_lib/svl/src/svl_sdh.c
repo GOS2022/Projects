@@ -689,11 +689,18 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
                                     GOS_TRUE,
                                     "SDH new binary info:\r\n"
                                     "Name: %s\r\n"
+									"Date: %04u-%02u-%02u %02u:%02u:%02u\r\n"
                                     "Location: %u\r\n"
                                     "Size: %u\r\n"
                                     "Address: %u\r\n"
                                     "CRC: %u\r\n",
                                     newBinaryDescriptor.name,
+									newBinaryDescriptor.installDate.years,
+									newBinaryDescriptor.installDate.months,
+									newBinaryDescriptor.installDate.days,
+									newBinaryDescriptor.installDate.hours,
+									newBinaryDescriptor.installDate.minutes,
+									newBinaryDescriptor.installDate.seconds,
                                     newBinaryDescriptor.binaryLocation,
                                     newBinaryDescriptor.binaryInfo.size,
                                     newBinaryDescriptor.binaryInfo.startAddress,
