@@ -92,12 +92,13 @@ typedef struct __attribute__((packed))
 
 /**
  * @brief   Initializes the MDI.
- * @details TODO
+ * @details Registers the sysmon user callback messages to serve
+ *          requests.
  *
  * @return  Result of initialization.
  *
- * @retval  GOS_SUCCESS : Initialization successful.
- * @retval  GOS_ERROR   :
+ * @retval  #GOS_SUCCESS Initialization successful.
+ * @retval  #GOS_ERROR   Sysmon user callback registration failed.
  */
 gos_result_t svl_mdiInit (void_t);
 

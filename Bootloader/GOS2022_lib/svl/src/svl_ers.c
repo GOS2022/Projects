@@ -64,10 +64,12 @@
  */
 typedef enum
 {
-    SVL_ERS_SYSMON_MSG_EVENTS_GET_REQ    = 0x4001,
-    SVL_ERS_SYSMON_MSG_EVENTS_GET_RESP   = 0x4A01,
-    SVL_ERS_SYSMON_MSG_EVENTS_CLEAR_REQ  = 0x4002,
-    SVL_ERS_SYSMON_MSG_EVENTS_CLEAR_RESP = 0x4A02,
+	SVL_ERS_SYSMON_MSG_EVENTS_GET_NUM_REQ  = 0x4001,
+	SVL_ERS_SYSMON_MSG_EVENTS_GET_NUM_RESP = 0x4A01,
+    SVL_ERS_SYSMON_MSG_EVENTS_GET_REQ      = 0x4002,
+    SVL_ERS_SYSMON_MSG_EVENTS_GET_RESP     = 0x4A02,
+    SVL_ERS_SYSMON_MSG_EVENTS_CLEAR_REQ    = 0x4003,
+    SVL_ERS_SYSMON_MSG_EVENTS_CLEAR_RESP   = 0x4A03
 }svl_ersSysmonMsgId_t;
 
 /*
@@ -94,6 +96,14 @@ GOS_STATIC gos_mutex_t            ersMutex;
 GOS_STATIC u8_t                   ersBuffer [ERS_BUFFER_SIZE];
 
 /**
+ * Event index.
+ */
+GOS_STATIC u32_t                  ersEventIndex = 0u;
+
+/*
+ * External variables
+ */
+/**
  * Pre-defined event descriptors.
  */
 GOS_EXTERN svl_ersEventDesc_t     ersEvents[];
@@ -106,20 +116,33 @@ GOS_EXTERN u32_t                  ersEventsSize;
 /*
  * Function prototypes
  */
-GOS_STATIC gos_result_t svl_ersSetNumOfEntries   (u32_t numOfEntries);
-GOS_STATIC void_t       svl_ersEventsReqCallback (void_t);
-GOS_STATIC void_t       svl_ersEventsClrCallback (void_t);
+GOS_STATIC gos_result_t svl_ersSetNumOfEntries     (u32_t numOfEntries);
+GOS_STATIC void_t       svl_ersEventNumReqCallback (void_t);
+GOS_STATIC void_t       svl_ersEventReqCallback    (void_t);
+GOS_STATIC void_t       svl_ersEventsClrCallback   (void_t);
+
+/**
+ * Sysmon ERS event number request message.
+ */
+gos_sysmonUserMessageDescriptor_t ersEventNumRequestMsg =
+{
+	.callback        = svl_ersEventNumReqCallback,
+	.messageId       = SVL_ERS_SYSMON_MSG_EVENTS_GET_NUM_REQ,
+	.payloadSize     = 0u,
+	.protocolVersion = 1,
+	.payload         = NULL
+};
 
 /**
  * Sysmon ERS events request message.
  */
 gos_sysmonUserMessageDescriptor_t ersEventsRequestMsg =
 {
-	.callback        = svl_ersEventsReqCallback,
+	.callback        = svl_ersEventReqCallback,
 	.messageId       = SVL_ERS_SYSMON_MSG_EVENTS_GET_REQ,
-	.payloadSize     = 0u,
+	.payloadSize     = sizeof(ersEventIndex),
 	.protocolVersion = 1,
-	.payload         = NULL
+	.payload         = &ersEventIndex
 };
 
 /**
@@ -147,6 +170,7 @@ gos_result_t svl_ersInit (void_t)
 	/*
 	 * Function code.
 	 */
+	GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&ersEventNumRequestMsg));
 	GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&ersEventsRequestMsg));
 	GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&ersEventsClearMsg));
 	GOS_CONCAT_RESULT(initResult, gos_mutexInit(&ersMutex));
@@ -349,34 +373,48 @@ GOS_STATIC gos_result_t svl_ersSetNumOfEntries (u32_t numOfEntries)
 }
 
 /**
+ * TODO
+ * @param
+ * @return
+ */
+GOS_STATIC void_t svl_ersEventNumReqCallback (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	u32_t eventNum = 0u;
+
+	/*
+	 * Function code.
+	 */
+	svl_ersGetNumOfEntries(&eventNum);
+
+	(void_t) gos_gcpTransmitMessage(
+    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			SVL_ERS_SYSMON_MSG_EVENTS_GET_NUM_RESP,
+			(void_t*)&eventNum,
+			sizeof(eventNum),
+			0xFFFF);
+}
+
+/**
  * @brief   Sysmon events request callback.
  * @details TODO
  *
  * @return  -
  */
-GOS_STATIC void_t svl_ersEventsReqCallback (void_t)
+GOS_STATIC void_t svl_ersEventReqCallback (void_t)
 {
-	/*
-	 * Local variables.
-	 */
-	u32_t numOfEvents = 0u;
-	u16_t eventIdx    = 0u;
-
 	/*
 	 * Function code.
 	 */
-	(void_t) svl_ersGetNumOfEntries(&numOfEvents);
-
-	for (eventIdx = 0u; eventIdx < numOfEvents; eventIdx++)
-	{
-		(void_t) svl_ersRead(eventIdx, ersBuffer + eventIdx * sizeof(svl_ersEventDesc_t));
-	}
+	(void_t) svl_ersRead(ersEventIndex, ersBuffer);
 
 	(void_t) gos_gcpTransmitMessage(
     		CFG_SYSMON_GCP_CHANNEL_NUM,
 			SVL_ERS_SYSMON_MSG_EVENTS_GET_RESP,
 			(void_t*)ersBuffer,
-			numOfEvents * sizeof(svl_ersEventDesc_t),
+			sizeof(svl_ersEventDesc_t),
 			0xFFFF);
 }
 

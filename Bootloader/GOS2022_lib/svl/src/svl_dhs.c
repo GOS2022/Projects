@@ -67,12 +67,15 @@
 /*
  * Type definitions
  */
+/**
+ * DHS error types.
+ */
 typedef enum
 {
-	DHS_ERROR_NONE  = 0x0,
-	DHS_ERROR_INIT  = 0x1,
-	DHS_ERROR_READ  = 0x2,
-	DHS_ERROR_WRITE = 0x3
+	DHS_ERROR_NONE  = 0x0,  //!< No error.
+	DHS_ERROR_INIT  = 0x1,  //!< Initialization error.
+	DHS_ERROR_READ  = 0x2,  //!< Read error.
+	DHS_ERROR_WRITE = 0x3   //!< Write error.
 }svl_dhsDeviceError_t;
 
 /**
@@ -102,7 +105,7 @@ GOS_STATIC u8_t            dhsBuffer [DHS_BUFFER_SIZE];
 /**
  * Device number counter.
  */
-GOS_STATIC u8_t numOfDevices = 0u;
+GOS_STATIC u8_t            numOfDevices = 0u;
 
 /*
  * Function prototypes
@@ -112,7 +115,7 @@ GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (void_t);
 GOS_STATIC void_t svl_dhsSysmonDeviceInfoReqCallback (void_t);
 
 /**
- * TODO
+ * DHS daemon task descriptor.
  */
 GOS_STATIC gos_taskDescriptor_t dhsDaemonDesc =
 {
@@ -221,7 +224,7 @@ gos_result_t svl_dhsRegisterDevice (svl_dhsDevice_t* pDevice)
 					}
 				}
 
-				if (numOfReadFunc > 0 && numOfWriteFunc > 0)
+				if ((numOfReadFunc > 0) && (numOfWriteFunc > 0))
 				{
 					devices[index].deviceType = DHS_TYPE_READWRITE;
 				}
@@ -348,16 +351,6 @@ gos_result_t svl_dhsWriteDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t le
 			devices[index].errorCode   |= DHS_ERROR_WRITE;
 			devices[index].deviceState = DHS_STATE_ERROR;
 			devices[index].errorCounter++;
-#if 0 // TODO: Should be handled in task.
-			if (devices[index].pErrorHandler != NULL)
-			{
-				devices[index].pErrorHandler((void_t*)&devices[index]);
-			}
-			else
-			{
-				// There is no error handler function for this device.
-			}
-#endif
 		}
 		else
 		{
@@ -401,16 +394,6 @@ gos_result_t svl_dhsReadDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t len
 			devices[index].errorCode   |= DHS_ERROR_READ;
 			devices[index].deviceState = DHS_STATE_ERROR;
 			devices[index].errorCounter++;
-#if 0 // TODO: Should be handled in task.
-			if (devices[index].pErrorHandler != NULL)
-			{
-				devices[index].pErrorHandler((void_t*)&devices[index]);
-			}
-			else
-			{
-				// There is no error handler function for this device.
-			}
-#endif
 		}
 		else
 		{
@@ -561,9 +544,10 @@ gos_result_t svl_dhsDisableDevice (svl_dhsDevId_t devId)
 }
 
 /**
- * TODO
- * @param
- * @return
+ * @brief   DHS daemon task.
+ * @details Initializes the registered devices that have not been force-initialized.
+
+ * @return  -
  */
 GOS_STATIC void_t svl_dhsDaemon (void_t)
 {
@@ -604,6 +588,12 @@ GOS_STATIC void_t svl_dhsDaemon (void_t)
 	}
 }
 
+/**
+ * @brief   Sysmon device number request callback.
+ * @details Sends out the number of registered devices.
+ *
+ * @return  -
+ */
 GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (void_t)
 {
 	/*
@@ -623,6 +613,12 @@ GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (void_t)
             0xFFFF);
 }
 
+/**
+ * @brief   Sysmon device info request callback.
+ * @details Sends out the device information of the requested device.
+ *
+ * @return  -
+ */
 GOS_STATIC void_t svl_dhsSysmonDeviceInfoReqCallback (void_t)
 {
 	/*

@@ -186,7 +186,6 @@ gos_result_t svl_dsmPrintLibInfo (void_t)
 	 * Function code.
 	 */
 	GOS_CONCAT_RESULT(printResult, svl_pdhGetLibVersion(&libVer));
-
 	GOS_CONCAT_RESULT(printResult, gos_traceTraceFormatted(GOS_FALSE, "\r\n"TRACE_BG_BLUE_START"Library Info"TRACE_FORMAT_RESET"\r\n"));
 	GOS_CONCAT_RESULT(printResult, gos_traceTraceFormatted(GOS_FALSE, "Name:        \t%s\r\n", libVer.name));
 	GOS_CONCAT_RESULT(printResult, gos_traceTraceFormatted(GOS_FALSE, "Description: \t%s\r\n", libVer.description));
@@ -242,8 +241,7 @@ gos_result_t svl_dsmPrintAppInfo (void_t)
 	/*
 	 * Function code.
 	 */
-	//GOS_CONCAT_RESULT(printResult, svl_pdhGetSwInfo(&swInfo)); TODO
-	(void_t) svl_pdhGetSwInfo(&swInfo);
+	GOS_CONCAT_RESULT(printResult, svl_pdhGetSwInfo(&swInfo));
 
 	if (strcmp(swInfo.bldSwVerInfo.name, "") != 0)
 	{

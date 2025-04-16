@@ -55,25 +55,45 @@
  */
 typedef enum
 {
-    SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_REQ  = 0x3001,
-    SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_RESP = 0x3A01
+	SVL_MDI_SYSMON_MSG_MONITORING_DATA_NUM_GET_REQ  = 0x3001,
+	SVL_MDI_SYSMON_MSG_MONITORING_DATA_NUM_GET_RESP = 0x3A01,
+    SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_REQ      = 0x3002,
+    SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_RESP     = 0x3A02
 }svl_mdiSysmonMsgId_t;
+
+/*
+ * Static variables
+ */
+GOS_STATIC u16_t mdiVariableIndex = 0u;
 
 /*
  * Function prototypes
  */
+GOS_STATIC void_t svl_mdiNumReqCallback (void_t);
 GOS_STATIC void_t svl_mdiReqCallback (void_t);
+
+/**
+ * Sysmon MDI variable number request message.
+ */
+GOS_STATIC gos_sysmonUserMessageDescriptor_t mdiNumRequestMsg =
+{
+	.callback        = svl_mdiNumReqCallback,
+	.messageId       = SVL_MDI_SYSMON_MSG_MONITORING_DATA_NUM_GET_REQ,
+	.payloadSize     = 0,
+	.protocolVersion = 1,
+	.payload         = NULL
+};
 
 /**
  * Sysmon MDI variables request message.
  */
-gos_sysmonUserMessageDescriptor_t mdiRequestMsg =
+GOS_STATIC gos_sysmonUserMessageDescriptor_t mdiRequestMsg =
 {
 	.callback        = svl_mdiReqCallback,
 	.messageId       = SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_REQ,
-	.payloadSize     = 0u,
+	.payloadSize     = sizeof(u16_t),
 	.protocolVersion = 1,
-	.payload         = NULL
+	.payload         = &mdiVariableIndex
 };
 
 /**
@@ -92,26 +112,64 @@ GOS_EXTERN u32_t             mdiVariablesSize;
 gos_result_t svl_mdiInit (void_t)
 {
 	/*
+	 * Local variables.
+	 */
+	gos_result_t initResult = GOS_SUCCESS;
+
+	/*
 	 * Function code.
 	 */
-	return gos_sysmonRegisterUserMessage(&mdiRequestMsg);
+	GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&mdiNumRequestMsg));
+	GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&mdiRequestMsg));
+
+	return initResult;
 }
 
-/*
- * TODO
+/**
+ * @brief   Serves the #SVL_MDI_SYSMON_MSG_MONITORING_DATA_NUM_GET_REQ message.
+ * @details Sends out the number of MDI entries in @ref mdiVariables.
+ *
+ * @return  -
+ */
+GOS_STATIC void_t svl_mdiNumReqCallback (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	u16_t varNum = 0u;
+
+	/*
+	 * Function code.
+	 */
+	varNum = mdiVariablesSize / sizeof(svl_mdiVariable_t);
+
+	(void_t) gos_gcpTransmitMessage(
+    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			SVL_MDI_SYSMON_MSG_MONITORING_DATA_NUM_GET_RESP,
+			(void_t*)&varNum,
+			sizeof(varNum),
+			0xFFFF);
+}
+
+/**
+ * @brief   Serves the #SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_REQ message.
+ * @details Sends out the MDI entry in @ref mdiVariables determined by its index.
+ *
+ * @return  -
  */
 GOS_STATIC void_t svl_mdiReqCallback (void_t)
 {
 	/*
 	 * Function code.
 	 */
-	if (mdiVariables != NULL && mdiVariablesSize > 0u)
+	if ((mdiVariables != NULL) && (mdiVariablesSize > 0u) &&
+		(mdiVariableIndex < (mdiVariablesSize / sizeof(svl_mdiVariable_t))))
 	{
 		(void_t) gos_gcpTransmitMessage(
 	    		CFG_SYSMON_GCP_CHANNEL_NUM,
 				SVL_MDI_SYSMON_MSG_MONITORING_DATA_GET_RESP,
-				(void_t*)mdiVariables,
-				mdiVariablesSize,
+				(void_t*)&mdiVariables[mdiVariableIndex],
+				sizeof(svl_mdiVariable_t),
 				0xFFFF);
 	}
 	else

@@ -191,9 +191,9 @@ GOS_INLINE gos_result_t drv_25lc256Read (void_t* pDevice, u16_t address, u8_t* p
         paddrposition = log(PAGE_SIZE)/log(2);
         startPage     = address / PAGE_SIZE;
         endPage       = ((size+address)/PAGE_SIZE);
-        numofpages    = (endPage-startPage) + 1;
         pos           = 0u;
         offset        = address % PAGE_SIZE;
+        numofpages    = (endPage-startPage) + (offset > 0) + (startPage == endPage);
 
         for (idx = 0u; idx < numofpages && readResult == GOS_SUCCESS; idx++)
         {
@@ -293,9 +293,9 @@ GOS_INLINE gos_result_t drv_25lc256Write (void_t* pDevice, u16_t address, u8_t* 
         paddrposition = log(PAGE_SIZE)/log(2);
         startPage     = address / PAGE_SIZE;
         endPage       = ((size+address)/PAGE_SIZE);
-        numofpages    = (endPage-startPage) + 1;
         pos           = 0u;
         offset        = address % PAGE_SIZE;
+        numofpages    = (endPage-startPage) + (offset > 0) + (startPage == endPage);
 
         for (idx = 0u; idx < numofpages && writeResult == GOS_SUCCESS; idx++)
         {

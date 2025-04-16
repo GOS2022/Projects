@@ -65,7 +65,7 @@
 /**
  * Library minor version.
  */
-#define PDH_LIBVER_VERSION_MINOR      ( 21                )
+#define PDH_LIBVER_VERSION_MINOR      ( 22                )
 
 /**
  * Library build number.
@@ -85,7 +85,7 @@
 /**
  * Library version date / day.
  */
-#define PDH_LIBVER_VERSION_DATE_DAY   ( 15                )
+#define PDH_LIBVER_VERSION_DATE_DAY   ( 16                )
 /**
  * Library name.
  */
@@ -121,23 +121,67 @@
 #define PDH_REL_START_ADDR    ( 0u )
 
 // svl_pdhSwInfo_t - swInfo
+/**
+ * Address of software info.
+ */
 #define PDH_ADDR_SW_INFO      ( PDH_REL_START_ADDR )
+
+/**
+ * Address of library version.
+ */
 #define PDH_ADDR_BLD_LIB_VER  ( PDH_ADDR_SW_INFO   )
+
+/**
+ * Address of bootloader software version.
+ */
 #define PDH_ADDR_BLD_SW_VER   ( PDH_ADDR_BLD_LIB_VER  + sizeof(svl_pdhSwVerInfo_t)  )
+
+/**
+ * Address of bootloader OS info.
+ */
 #define PDH_ADDR_BLD_OS_INFO  ( PDH_ADDR_BLD_SW_VER   + sizeof(svl_pdhSwVerInfo_t)  )
+
+/**
+ * Address of bootloader binary info.
+ */
 #define PDH_ADDR_BLD_BIN_INFO ( PDH_ADDR_BLD_OS_INFO  + sizeof(svl_pdhOsInfo_t)     )
+
+/**
+ * Address of application library version.
+ */
 #define PDH_ADDR_APP_LIB_VER  ( PDH_ADDR_BLD_BIN_INFO + sizeof(svl_pdhBinaryInfo_t) )
+
+/**
+ * Address of application software version.
+ */
 #define PDH_ADDR_APP_SW_VER   ( PDH_ADDR_APP_LIB_VER  + sizeof(svl_pdhSwVerInfo_t)  )
+
+/**
+ * Address of application OS info.
+ */
 #define PDH_ADDR_APP_OS_INFO  ( PDH_ADDR_APP_SW_VER   + sizeof(svl_pdhSwVerInfo_t)  )
+
+/**
+ * Address of application binary info.
+ */
 #define PDH_ADDR_APP_BIN_INFO ( PDH_ADDR_APP_OS_INFO  + sizeof(svl_pdhOsInfo_t)     )
 
 // svl_pdhHwInfo_t - hwInfo
+/**
+ * Address of hardware info.
+ */
 #define PDH_ADDR_HW_INFO      ( PDH_ADDR_APP_BIN_INFO + sizeof(svl_pdhBinaryInfo_t) )
 
 // svl_pdhBldCfg_t - bldCfg
+/**
+ * Address of bootloader configuration.
+ */
 #define PDH_ADDR_BLD_CFG      ( PDH_ADDR_HW_INFO      + sizeof(svl_pdhHwInfo_t)     )
 
 // svl_pdhWifiCfg_t - wifiCfg
+/**
+ * Address of WiFi configuration.
+ */
 #define PDH_ADDR_WIFI_CFG     ( PDH_ADDR_BLD_CFG      + sizeof(svl_pdhWifiCfg_t)    )
 
 /**
@@ -269,8 +313,8 @@ typedef struct __attribute__((packed))
  *
  * @return  Result of initialization.
  *
- * @retval  GOS_SUCCESS : Initialization successful.
- * @retval  GOS_ERROR   : Sysmon registration or mutex error.
+ * @retval  #GOS_SUCCESS Initialization successful.
+ * @retval  #GOS_ERROR   Sysmon registration or mutex error.
  */
 gos_result_t svl_pdhInit (void_t);
 
@@ -278,12 +322,12 @@ gos_result_t svl_pdhInit (void_t);
  * @brief   Configures the PDH.
  * @details Stores the function pointers to the user-defined read and write functions.
  *
- * @param   pCfg : Pointer to the configuration variable.
+ * @param   pCfg Pointer to the configuration variable.
  *
  * @return  Result of PDH configuration.
  *
- * @retval  GOS_SUCCESS : Configuration successful.
- * @retval  GOS_ERROR   : NULL pointer.
+ * @retval  #GOS_SUCCESS Configuration successful.
+ * @retval  #GOS_ERROR   NULL pointer.
  */
 gos_result_t svl_pdhConfigure (svl_pdhCfg_t* pCfg);
 
@@ -291,12 +335,12 @@ gos_result_t svl_pdhConfigure (svl_pdhCfg_t* pCfg);
  * @brief   Gets the library version info.
  * @details Copies the library version info into the given variable.
  *
- * @param   pLibVer : Pointer to a variable to store the library version in.
+ * @param   pLibVer Pointer to a variable to store the library version in.
  *
  * @return  Result of library version info getting.
  *
- * @retval  GOS_SUCCESS : Getting successful.
- * @retval  GOS_ERROR   : NULL pointer.
+ * @retval  #GOS_SUCCESS Getting successful.
+ * @retval  #GOS_ERROR   NULL pointer.
  */
 gos_result_t svl_pdhGetLibVersion (svl_pdhSwVerInfo_t* pLibVer);
 
@@ -304,12 +348,12 @@ gos_result_t svl_pdhGetLibVersion (svl_pdhSwVerInfo_t* pLibVer);
  * @brief   Gets the software info.
  * @details Reads the software info from the corresponding address.
  *
- * @param   pSwInfo : Pointer to a variable to store the software info in.
+ * @param   pSwInfo Pointer to a variable to store the software info in.
  *
  * @return  Result of software info getting.
  *
- * @retval  GOS_SUCCESS : Getting successful.
- * @retval  GOS_ERROR   : NULL pointer or missing read function or mutex error.
+ * @retval  #GOS_SUCCESS Getting successful.
+ * @retval  #GOS_ERROR   NULL pointer or missing read function or mutex error.
  */
 gos_result_t svl_pdhGetSwInfo (svl_pdhSwInfo_t* pSwInfo);
 
@@ -317,12 +361,12 @@ gos_result_t svl_pdhGetSwInfo (svl_pdhSwInfo_t* pSwInfo);
  * @brief   Gets the hardware info.
  * @details Reads the hardware info from the corresponding address.
  *
- * @param   pHwInfo : Pointer to a variable to store the hardware info in.
+ * @param   pHwInfo Pointer to a variable to store the hardware info in.
  *
  * @return  Result of hardware info getting.
  *
- * @retval  GOS_SUCCESS : Getting successful.
- * @retval  GOS_ERROR   : NULL pointer or missing read function or mutex error.
+ * @retval  #GOS_SUCCESS Getting successful.
+ * @retval  #GOS_ERROR   NULL pointer or missing read function or mutex error.
  */
 gos_result_t svl_pdhGetHwInfo (svl_pdhHwInfo_t* pHwInfo);
 
@@ -330,12 +374,12 @@ gos_result_t svl_pdhGetHwInfo (svl_pdhHwInfo_t* pHwInfo);
  * @brief   Gets the bootloader configuration.
  * @details Reads the bootloader configuration from the corresponding address.
  *
- * @param   pBldCfg : Pointer to a variable to store the bootloader configuration in.
+ * @param   pBldCfg Pointer to a variable to store the bootloader configuration in.
  *
  * @return  Result of bootloader configuration getting.
  *
- * @retval  GOS_SUCCESS : Getting successful.
- * @retval  GOS_ERROR   : NULL pointer or missing read function or mutex error.
+ * @retval  #GOS_SUCCESS Getting successful.
+ * @retval  #GOS_ERROR   NULL pointer or missing read function or mutex error.
  */
 gos_result_t svl_pdhGetBldCfg (svl_pdhBldCfg_t* pBldCfg);
 
@@ -343,12 +387,12 @@ gos_result_t svl_pdhGetBldCfg (svl_pdhBldCfg_t* pBldCfg);
  * @brief   Gets the WiFi configuration.
  * @details Reads the WiFi configuration from the corresponding address.
  *
- * @param   pWifiCfg : Pointer to a variable to store the WiFi configuration in.
+ * @param   pWifiCfg Pointer to a variable to store the WiFi configuration in.
  *
  * @return  Result of WiFi configuration getting.
  *
- * @retval  GOS_SUCCESS : Getting successful.
- * @retval  GOS_ERROR   : NULL pointer or missing read function or mutex error.
+ * @retval  #GOS_SUCCESS Getting successful.
+ * @retval  #GOS_ERROR   NULL pointer or missing read function or mutex error.
  */
 gos_result_t svl_pdhGetWifiCfg (svl_pdhWifiCfg_t* pWifiCfg);
 
@@ -356,12 +400,12 @@ gos_result_t svl_pdhGetWifiCfg (svl_pdhWifiCfg_t* pWifiCfg);
  * @brief   Sets the software info.
  * @details Writes the software info to the corresponding address.
  *
- * @param   pSwInfo : Pointer to a variable containing the desired info.
+ * @param   pSwInfo Pointer to a variable containing the desired info.
  *
  * @return  Result of software info setting.
  *
- * @retval  GOS_SUCCESS : Setting successful.
- * @retval  GOS_ERROR   : NULL pointer or missing write function or mutex error.
+ * @retval  #GOS_SUCCESS Setting successful.
+ * @retval  #GOS_ERROR   NULL pointer or missing write function or mutex error.
  */
 gos_result_t svl_pdhSetSwInfo (svl_pdhSwInfo_t* pSwInfo);
 
@@ -369,12 +413,12 @@ gos_result_t svl_pdhSetSwInfo (svl_pdhSwInfo_t* pSwInfo);
  * @brief   Sets the hardware info.
  * @details Writes the hardware info to the corresponding address.
  *
- * @param   pHwInfo : Pointer to a variable containing the desired info.
+ * @param   pHwInfo Pointer to a variable containing the desired info.
  *
  * @return  Result of hardware info setting.
  *
- * @retval  GOS_SUCCESS : Setting successful.
- * @retval  GOS_ERROR   : NULL pointer or missing write function or mutex error.
+ * @retval  #GOS_SUCCESS Setting successful.
+ * @retval  #GOS_ERROR   NULL pointer or missing write function or mutex error.
  */
 gos_result_t svl_pdhSetHwInfo (svl_pdhHwInfo_t* pHwInfo);
 
@@ -382,12 +426,12 @@ gos_result_t svl_pdhSetHwInfo (svl_pdhHwInfo_t* pHwInfo);
  * @brief   Sets the bootloader configuration.
  * @details Writes the bootloader configuration to the corresponding address.
  *
- * @param   pBldCfg : Pointer to a variable containing the desired configuration.
+ * @param   pBldCfg Pointer to a variable containing the desired configuration.
  *
  * @return  Result of bootloader configuration setting.
  *
- * @retval  GOS_SUCCESS : Setting successful.
- * @retval  GOS_ERROR   : NULL pointer or missing write function or mutex error.
+ * @retval  #GOS_SUCCESS Setting successful.
+ * @retval  #GOS_ERROR   NULL pointer or missing write function or mutex error.
  */
 gos_result_t svl_pdhSetBldCfg (svl_pdhBldCfg_t* pBldCfg);
 
@@ -395,12 +439,12 @@ gos_result_t svl_pdhSetBldCfg (svl_pdhBldCfg_t* pBldCfg);
  * @brief   Sets the WiFi configuration.
  * @details Writes the WiFi configuration to the corresponding address.
  *
- * @param   pWifiCfg : Pointer to a variable containing the desired configuration.
+ * @param   pWifiCfg Pointer to a variable containing the desired configuration.
  *
  * @return  Result of WiFi configuration setting.
  *
- * @retval  GOS_SUCCESS : Setting successful.
- * @retval  GOS_ERROR   : NULL pointer or missing write function or mutex error.
+ * @retval  #GOS_SUCCESS Setting successful.
+ * @retval  #GOS_ERROR   NULL pointer or missing write function or mutex error.
  */
 gos_result_t svl_pdhSetWifiCfg (svl_pdhWifiCfg_t* pWifiCfg);
 

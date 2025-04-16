@@ -56,9 +56,24 @@
 /*
  * Macros
  */
+/**
+ * Device name maximum length.
+ */
 #define SVL_DHS_NAME_MAX_LENGTH     ( 32u )
+
+/**
+ * Device description maximum length.
+ */
 #define SVL_DHS_DESC_MAX_LENGTH     ( 64u )
+
+/**
+ * Maximum number of write functions.
+ */
 #define SVL_DHS_WRITE_FUNC_MAX_NUM  ( 4u )
+
+/**
+ * Maximum number of read functions.
+ */
 #define SVL_DHS_READ_FUNC_MAX_NUM   ( 4u )
 
 /*
@@ -71,9 +86,9 @@ typedef gos_result_t (*svl_dhsReadWriteFunc_t)(u8_t, va_list args);
  */
 typedef enum
 {
-	DHS_STATE_UNINITIALIZED,/**< DHS_STATE_UNINITIALIZED */
-	DHS_STATE_HEALTHY,      /**< DHS_STATE_HEALTHY */
-	DHS_STATE_ERROR         /**< DHS_STATE_ERROR */
+	DHS_STATE_UNINITIALIZED,  //!< Device uninitialized.
+	DHS_STATE_HEALTHY,        //!< Device healthy.
+	DHS_STATE_ERROR           //!< Device in error state.
 }svl_dhsState_t;
 
 /**
@@ -81,39 +96,56 @@ typedef enum
  */
 typedef enum
 {
-	DHS_TYPE_READONLY, /**< DHS_TYPE_READONLY */
-	DHS_TYPE_WRITEONLY,/**< DHS_TYPE_WRITEONLY */
-	DHS_TYPE_READWRITE,/**< DHS_TYPE_READWRITE */
-	DHS_TYPE_VIRTUAL   /**< DHS_TYPE_VIRTUAL */
+	DHS_TYPE_READONLY,    //!< Read only (only read function).
+	DHS_TYPE_WRITEONLY,   //!< Write only (only write function).
+	DHS_TYPE_READWRITE,   //!< Read/write (both read and write function).
+	DHS_TYPE_VIRTUAL,     //!< Virtual (neither read nor write function).
 }svl_dhsType_t;
 
+/**
+ * Device ID type.
+ */
 typedef u32_t svl_dhsDevId_t;
 
+/**
+ * Device structure that contains all device data.
+ */
 typedef struct __attribute__((packed))
 {
-	char_t                 name [SVL_DHS_NAME_MAX_LENGTH];
-	char_t                 description [SVL_DHS_DESC_MAX_LENGTH];
-	svl_dhsDevId_t         deviceId;
-	void_t*                pDeviceDescriptor;
-	svl_dhsType_t          deviceType;
-	bool_t                 enabled;
-	gos_result_t           (*pInitializer)(void_t*);
-	void_t                 (*pErrorHandler)(void_t*);
-	svl_dhsReadWriteFunc_t readFunctions  [SVL_DHS_READ_FUNC_MAX_NUM];
-	svl_dhsReadWriteFunc_t writeFunctions [SVL_DHS_WRITE_FUNC_MAX_NUM];
-	svl_dhsState_t         deviceState;
-	u32_t                  errorCode;
-	u32_t                  errorCounter;
-	u32_t                  errorTolerance;
-	u32_t                  readCounter;
-	u32_t                  writeCounter;
+	char_t                 name [SVL_DHS_NAME_MAX_LENGTH];              //!< Device name.
+	char_t                 description [SVL_DHS_DESC_MAX_LENGTH];       //!< Description.
+	svl_dhsDevId_t         deviceId;                                    //!< Device ID.
+	void_t*                pDeviceDescriptor;                           //!< Specific device descriptor.
+	svl_dhsType_t          deviceType;                                  //!< Device type.
+	bool_t                 enabled;                                     //!< Enabled flag.
+	gos_result_t           (*pInitializer)(void_t*);                    //!< Initializer function pointer.
+	void_t                 (*pErrorHandler)(void_t*);                   //!< Error handler function pointer.
+	svl_dhsReadWriteFunc_t readFunctions  [SVL_DHS_READ_FUNC_MAX_NUM];  //!< Read function pointer array.
+	svl_dhsReadWriteFunc_t writeFunctions [SVL_DHS_WRITE_FUNC_MAX_NUM]; //!< Write function pointer array.
+	svl_dhsState_t         deviceState;                                 //!< Device state.
+	u32_t                  errorCode;                                   //!< Error code.
+	u32_t                  errorCounter;                                //!< Error counter.
+	u32_t                  errorTolerance;                              //!< Error tolerance.
+	u32_t                  readCounter;                                 //!< Read counter.
+	u32_t                  writeCounter;                                //!< Write counter.
 }svl_dhsDevice_t;
 
-// TODO
+/**
+ * @brief   Initializes the DHS service.
+ * @details Registers the DHS daemon and registers the sysmon callbacks.
+ *
+ * @return  Result of service initialization.
+ *
+ * @retval  #GOS_SUCCESS Initialization successful.
+ * @retval  #GOS_ERROR   One of the following errors occured:
+ *                       - Daemon task registration failed
+ *                       - Sysmon user message callback registration failed
+ */
 gos_result_t svl_dhsInit (
         void_t
         );
 
+// TODO
 gos_result_t svl_dhsRegisterDevice (svl_dhsDevice_t* pDevice);
 
 gos_result_t svl_dhsUnregisterDevice (svl_dhsDevId_t devId);
@@ -133,12 +165,5 @@ gos_result_t svl_dhsGetDeviceData (u8_t index, svl_dhsDevice_t* pDevice);
 gos_result_t svl_dhsEnableDevice (svl_dhsDevId_t devId);
 
 gos_result_t svl_dhsDisableDevice (svl_dhsDevId_t devId);
-
-#if 0
-// TODO
-gos_result_t svl_deviceHandlerRegisterDevice (
-		svl_dhsDescriptor_t* pDevice
-        );
-#endif
 
 #endif
