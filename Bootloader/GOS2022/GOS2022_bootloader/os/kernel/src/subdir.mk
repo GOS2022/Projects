@@ -19,7 +19,7 @@ C_DEPS += \
 
 # Each subdirectory must supply rules for building sources it contributes
 os/kernel/src/%.o os/kernel/src/%.su os/kernel/src/%.cyclo: ../os/kernel/src/%.c os/kernel/src/subdir.mk
-	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=c99 -g3 -DSTM32F446xx -DDEBUG -DGOS2022_BOOTLOADER -c -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022/os/services/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022/os/kernel/inc" -I"C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022/os/driver/inc" -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
+	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=c99 -g3 -DSTM32F446xx -DDEBUG -DGOS2022_BOOTLOADER -c -I"C:/Users/Gabor/Documents/GitHub/GOS2022_root/Projects/Bootloader/GOS2022/os/services/inc" -I"C:/Users/Gabor/Documents/GitHub/GOS2022_root/Projects/Bootloader/GOS2022/os/kernel/inc" -I"C:/Users/Gabor/Documents/GitHub/GOS2022_root/Projects/Bootloader/GOS2022/os/driver/inc" -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
 
 clean: clean-os-2f-kernel-2f-src
 

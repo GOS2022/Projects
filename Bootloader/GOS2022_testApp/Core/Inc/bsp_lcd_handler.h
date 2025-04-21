@@ -2,7 +2,7 @@
  * bsp_lcd_handler.h
  *
  *  Created on: Oct 30, 2023
- *      Author: Gabor
+ *      Author: Ahmed
  */
 
 #ifndef INC_BSP_LCD_HANDLER_H_
@@ -42,10 +42,10 @@ typedef struct
 	lcd_display_blink_state_t blinkState;
 }lcd_display_cfg_t;
 
-gos_result_t BSP_LCD_HandlerInit (void_t);
+gos_result_t bsp_lcdHandlerInit (void_t);
 
-gos_result_t BSP_LCD_HandlerDisplayText (lcd_display_cfg_t* config,  const char_t* text, ...);
+gos_result_t bsp_lcdHandlerrDisplayText (lcd_display_cfg_t* config,  const char_t* text, ...);
 
-gos_result_t BSP_LCD_HandlerWriteNextString (u8_t line, char_t* str);
+gos_result_t bsp_lcdHandlerWriteNextString (u8_t line, char_t* str);
 
 #endif /* INC_BSP_LCD_HANDLER_H_ */

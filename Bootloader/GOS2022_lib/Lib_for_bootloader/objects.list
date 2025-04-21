@@ -12,6 +12,7 @@
 "./drv/src/drv_gpio.o"
 "./drv/src/drv_i2c.o"
 "./drv/src/drv_it.o"
+"./drv/src/drv_lcd.o"
 "./drv/src/drv_mcp23017.o"
 "./drv/src/drv_shell.o"
 "./drv/src/drv_spi.o"

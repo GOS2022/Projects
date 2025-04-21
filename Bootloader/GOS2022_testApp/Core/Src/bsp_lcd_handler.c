@@ -2,11 +2,11 @@
  * bsp_lcd_handler.c
  *
  *  Created on: Oct 30, 2023
- *      Author: Gabor
+ *      Author: Ahmed
  */
 
 #include "bsp_lcd_handler.h"
-#include "lcd_driver.h"
+#include "gos_lib.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -22,45 +22,83 @@ GOS_STATIC gos_mutex_t lcdMutex;
 GOS_STATIC u16_t firstLineShiftCounter;
 GOS_STATIC u16_t secondLineShiftCounter;
 
-GOS_STATIC void_t BSP_LCD_HandlerTask (void_t);
-GOS_STATIC void_t BSP_LCD_HandlerShiftReset (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction);
-GOS_STATIC void_t BSP_LCD_HandlerShiftBuffer (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction);
+GOS_STATIC void_t       bsp_lcdHandlerTask               (void_t);
+GOS_STATIC void_t       bsp_lcdHandlerShiftReset         (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction);
+GOS_STATIC void_t       bsp_lcdHandlerShiftBuffer        (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction);
+GOS_STATIC gos_result_t bsp_lcdHandlerWriteStringWrapper (u8_t params, va_list args);
 
 GOS_STATIC gos_taskDescriptor_t lcdHandlerTaskDesc =
 {
-	.taskName = "bsp_lcd_handler_task",
-	.taskFunction = BSP_LCD_HandlerTask,
-	.taskStackSize = 0x400,
-	.taskPriority = 13,
+	.taskName           = "bsp_lcd_handler_task",
+	.taskFunction       = bsp_lcdHandlerTask,
+	.taskStackSize      = 0x400,
+	.taskPriority       = 13,
 	.taskPrivilegeLevel = GOS_TASK_PRIVILEGE_USER
 };
 
-gos_result_t BSP_LCD_HandlerInit (void_t)
+drv_lcdDescriptor_t lcdDescriptor =
 {
+	.deviceAddress   = 0x22,
+	.i2cInstance     = DRV_I2C_INSTANCE_1,
+	.writeMutexTmo   = GOS_MUTEX_ENDLESS_TMO,
+	.writeTriggerTmo = 100
+};
+
+/**
+ * Standard device descriptor for LCD.
+ */
+GOS_STATIC svl_dhsDevice_t lcdDevice =
+{
+	.name              = "lcd",
+	.description       = "16x2 LCD over I2C. Address: 0x22.",
+	.pInitializer      = drv_lcdInit,
+	.pDeviceDescriptor = (void_t*)&lcdDescriptor,
+	.writeFunctions[0] = bsp_lcdHandlerWriteStringWrapper,
+	.enabled           = GOS_TRUE,
+	.errorTolerance    = 100
+};
+
+/*
+ * Function: bsp_lcdHandlerInit
+ */
+gos_result_t bsp_lcdHandlerInit (void_t)
+{
+	/*
+	 * Local variables.
+	 */
 	gos_result_t initResult = GOS_SUCCESS;
 
-	initResult &= lcd_driver_init();
-	initResult &= gos_mutexInit(&lcdMutex);
-	initResult &= gos_taskRegister(&lcdHandlerTaskDesc, NULL);
-
-	if (initResult != GOS_SUCCESS)
-	{
-		initResult = GOS_ERROR;
-	}
+	/*
+	 * Function code.
+	 */
+	//GOS_CONCAT_RESULT(initResult, drv_lcdInit((void_t*)&lcdDescriptor));
+	GOS_CONCAT_RESULT(initResult, svl_dhsRegisterDevice(&lcdDevice));
+	GOS_CONCAT_RESULT(initResult, svl_dhsForceInitialize(lcdDevice.deviceId));
+	GOS_CONCAT_RESULT(initResult, gos_mutexInit(&lcdMutex));
+	GOS_CONCAT_RESULT(initResult, gos_taskRegister(&lcdHandlerTaskDesc, NULL));
 
 	return initResult;
 }
 
-gos_result_t BSP_LCD_HandlerDisplayText (lcd_display_cfg_t* config,  const char_t* text, ...)
+/*
+ * Function: bsp_lcdHandlerrDisplayText
+ */
+gos_result_t bsp_lcdHandlerrDisplayText (lcd_display_cfg_t* config,  const char_t* text, ...)
 {
+	/*
+	 * Local variables.
+	 */
 	gos_result_t displayTextResult = GOS_ERROR;
 	va_list args;
 
+	/*
+	 * Function code.
+	 */
 	if (gos_mutexLock(&lcdMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
 	{
-		if (config != NULL && text != NULL &&
-			config->line < 3 && config->blinkStartIndex < 16 &&
-			config->blinkEndIndex < 16 && config->blinkStartIndex < config->blinkEndIndex)
+		if ((config != NULL) && (text != NULL) &&
+			(config->line < 2) && (config->blinkStartIndex < 16) &&
+			(config->blinkEndIndex < 16) && (config->blinkStartIndex < config->blinkEndIndex))
 		{
 			va_start(args, text);
 
@@ -70,7 +108,10 @@ gos_result_t BSP_LCD_HandlerDisplayText (lcd_display_cfg_t* config,  const char_
 				vsprintf(firstLine, text, args);
 				firstLineShiftCounter = 0u;
 				if (firstLineConfig.displayMode == LCD_DISPLAY_NORMAL)
-					lcd_driver_write_string(0, firstLine);
+				{
+					//drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
+					svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);
+				}
 			}
 			else
 			{
@@ -78,7 +119,10 @@ gos_result_t BSP_LCD_HandlerDisplayText (lcd_display_cfg_t* config,  const char_
 				vsprintf(secondLine, text, args);
 				secondLineShiftCounter = 0u;
 				if (secondLineConfig.displayMode == LCD_DISPLAY_NORMAL)
-					lcd_driver_write_string(1, secondLine);
+				{
+					//drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
+					svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
+				}
 			}
 			va_end(args);
 
@@ -99,29 +143,40 @@ gos_result_t BSP_LCD_HandlerDisplayText (lcd_display_cfg_t* config,  const char_
 	return displayTextResult;
 }
 
-gos_result_t BSP_LCD_HandlerWriteNextString (u8_t line, char_t* str)
+/*
+ * Function: bsp_lcdHandlerWriteNextString
+ */
+gos_result_t bsp_lcdHandlerWriteNextString (u8_t line, char_t* str)
 {
+	/*
+	 * Local variables.
+	 */
 	gos_result_t writeStringResult = GOS_ERROR;
 	u8_t lineLength = 0u;
 
+	/*
+	 * Function code.
+	 */
 	if (line == 0)
 	{
 		lineLength = strlen(firstLine);
 		strcpy((char_t*)(firstLine + lineLength), str);
-		writeStringResult = lcd_driver_write_string(0, firstLine);
+		writeStringResult = svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);//drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
 	}
 	else if (line == 1)
 	{
 		lineLength = strlen(secondLine);
 		strcpy((char_t*)(secondLine + lineLength), str);
-
-		writeStringResult = lcd_driver_write_string(1, secondLine);
+		writeStringResult = svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine); //drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
 	}
 
 	return writeStringResult;
 }
 
-GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
+/**
+ * TODO
+ */
+GOS_STATIC void_t bsp_lcdHandlerTask (void_t)
 {
 	for (;;)
 	{
@@ -155,7 +210,8 @@ GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
 							firstLineConfig.blinkState = !firstLineConfig.blinkState;
 						}
 
-						lcd_driver_write_string(0, firstLine);
+						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
+						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
 				}
@@ -169,8 +225,9 @@ GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
 					if (gos_mutexLock(&lcdMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
 					{
 						firstLineConfig.lastTick = gos_kernelGetSysTicks();
-						BSP_LCD_HandlerShiftBuffer(firstLine, &firstLineShiftCounter, firstLineConfig.displayMode);
-						lcd_driver_write_string(0, firstLine);
+						bsp_lcdHandlerShiftBuffer(firstLine, &firstLineShiftCounter, firstLineConfig.displayMode);
+						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
+						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
 				}
@@ -192,8 +249,9 @@ GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
 						}
 						else
 						{
-							BSP_LCD_HandlerShiftBuffer(firstLine, &firstLineShiftCounter, firstLineConfig.displayMode);
-							lcd_driver_write_string(0, firstLine);
+							bsp_lcdHandlerShiftBuffer(firstLine, &firstLineShiftCounter, firstLineConfig.displayMode);
+							//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
+							(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);
 						}
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
@@ -207,8 +265,9 @@ GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
 					if (gos_mutexLock(&lcdMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
 					{
 						firstLineConfig.lastTick = gos_kernelGetSysTicks();
-						BSP_LCD_HandlerShiftReset(firstLine, &firstLineShiftCounter, firstLineConfig.originalDisplayMode);
-						lcd_driver_write_string(0, firstLine);
+						bsp_lcdHandlerShiftReset(firstLine, &firstLineShiftCounter, firstLineConfig.originalDisplayMode);
+						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
+						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);
 						firstLineConfig.displayMode = LCD_DISPLAY_SHIFT_WAIT_500;
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
@@ -258,8 +317,8 @@ GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
 							secondLineConfig.blinkState = !secondLineConfig.blinkState;
 						}
 
-						lcd_driver_write_string(1, secondLine);
-
+						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
+						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
 				}
@@ -273,8 +332,9 @@ GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
 					if (gos_mutexLock(&lcdMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
 					{
 						secondLineConfig.lastTick = gos_kernelGetSysTicks();
-						BSP_LCD_HandlerShiftBuffer(secondLine, &secondLineShiftCounter, secondLineConfig.displayMode);
-						lcd_driver_write_string(1, secondLine);
+						bsp_lcdHandlerShiftBuffer(secondLine, &secondLineShiftCounter, secondLineConfig.displayMode);
+						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
+						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
 				}
@@ -296,8 +356,9 @@ GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
 						}
 						else
 						{
-							BSP_LCD_HandlerShiftBuffer(secondLine, &secondLineShiftCounter, secondLineConfig.displayMode);
-							lcd_driver_write_string(1, secondLine);
+							bsp_lcdHandlerShiftBuffer(secondLine, &secondLineShiftCounter, secondLineConfig.displayMode);
+							//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
+							(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
 						}
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
@@ -311,8 +372,9 @@ GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
 					if (gos_mutexLock(&lcdMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
 					{
 						secondLineConfig.lastTick = gos_kernelGetSysTicks();
-						BSP_LCD_HandlerShiftReset(secondLine, &secondLineShiftCounter, secondLineConfig.originalDisplayMode);
-						lcd_driver_write_string(1, secondLine);
+						bsp_lcdHandlerShiftReset(secondLine, &secondLineShiftCounter, secondLineConfig.originalDisplayMode);
+						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
+						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
 						secondLineConfig.displayMode = LCD_DISPLAY_SHIFT_WAIT_500;
 
 						(void_t) gos_mutexUnlock(&lcdMutex);
@@ -335,7 +397,7 @@ GOS_STATIC void_t BSP_LCD_HandlerTask (void_t)
 	}
 }
 
-GOS_STATIC void_t BSP_LCD_HandlerShiftReset (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction)
+GOS_STATIC void_t bsp_lcdHandlerShiftReset (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction)
 {
 	u16_t index = 0u;
 	u16_t cntr  = 0u;
@@ -347,7 +409,7 @@ GOS_STATIC void_t BSP_LCD_HandlerShiftReset (char_t* pBuffer, u16_t* pShiftCount
 		{
 			for (index = 0u; index < resetCycles; index++)
 			{
-				BSP_LCD_HandlerShiftBuffer(pBuffer, &cntr, LCD_DISPLAY_SHIFT_RIGHT);
+				bsp_lcdHandlerShiftBuffer(pBuffer, &cntr, LCD_DISPLAY_SHIFT_RIGHT);
 			}
 			*pShiftCounter = 0U;
 			break;
@@ -357,7 +419,7 @@ GOS_STATIC void_t BSP_LCD_HandlerShiftReset (char_t* pBuffer, u16_t* pShiftCount
 		{
 			for (index = 0u; index < resetCycles; index++)
 			{
-				BSP_LCD_HandlerShiftBuffer(pBuffer, &cntr, LCD_DISPLAY_SHIFT_LEFT);
+				bsp_lcdHandlerShiftBuffer(pBuffer, &cntr, LCD_DISPLAY_SHIFT_LEFT);
 			}
 			*pShiftCounter = 0U;
 			break;
@@ -366,7 +428,7 @@ GOS_STATIC void_t BSP_LCD_HandlerShiftReset (char_t* pBuffer, u16_t* pShiftCount
 	}
 }
 
-GOS_STATIC void_t BSP_LCD_HandlerShiftBuffer (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction)
+GOS_STATIC void_t bsp_lcdHandlerShiftBuffer (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction)
 {
 	u16_t index = 0u;
 
@@ -400,4 +462,24 @@ GOS_STATIC void_t BSP_LCD_HandlerShiftBuffer (char_t* pBuffer, u16_t* pShiftCoun
 		}
 		default: break;
 	}
+}
+
+// TODO
+GOS_STATIC gos_result_t bsp_lcdHandlerWriteStringWrapper (u8_t params, va_list args)
+{
+	/*
+	 * Local variables.
+	 */
+	void_t* pDevice;
+	u8_t    line;
+	const char_t* str;
+
+	/*
+	 * Function code.
+	 */
+	pDevice = (void_t*)va_arg(args, int);
+	line = (u8_t)va_arg(args, int);
+	str = (const char_t*)va_arg(args, int);
+
+	return drv_lcdWriteString(pDevice, line, str);
 }

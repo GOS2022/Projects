@@ -66,6 +66,7 @@
 #include <drv_gpio.h>
 #include <drv_i2c.h>
 #include <drv_it.h>
+#include <drv_lcd.h>
 #include <drv_mcp23017.h>
 #include <drv_shell.h>
 #include <drv_spi.h>

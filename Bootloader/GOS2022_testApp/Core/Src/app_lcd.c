@@ -96,7 +96,7 @@ GOS_STATIC void_t app_lcdTask (void_t)
 	u16_t temperatureValue = 0u;
 	u16_t cpuUse           = 0u;
 
-	(void_t) BSP_LCD_HandlerInit();
+	(void_t) bsp_lcdHandlerInit();
 
 	for (;;)
 	{
@@ -106,11 +106,11 @@ GOS_STATIC void_t app_lcdTask (void_t)
 			{
 				programState = PROGRAM_MAIN_IDLE;
 
-				BSP_LCD_HandlerDisplayText(&normalConfig, "Hello from GOS!");
+				bsp_lcdHandlerrDisplayText(&normalConfig, "Hello from GOS!");
 
 				for (u8_t i = 0; i < 16; i++)
 				{
-					BSP_LCD_HandlerWriteNextString(1, "#");
+					bsp_lcdHandlerWriteNextString(1, "#");
 					gos_taskSleep(200);
 				}
 
@@ -120,9 +120,9 @@ GOS_STATIC void_t app_lcdTask (void_t)
 			case PROGRAM_MAIN_IDLE:
 			{
 				normalConfig.line = 0;
-				BSP_LCD_HandlerDisplayText(&normalConfig, "GOS2022 test    ");
+				bsp_lcdHandlerrDisplayText(&normalConfig, "GOS2022 test    ");
 				normalConfig.line = 1;
-				BSP_LCD_HandlerDisplayText(&normalConfig, "project         ");
+				bsp_lcdHandlerrDisplayText(&normalConfig, "project         ");
 
 				gos_taskSuspend(appLcdTask.taskId);
 				break;
@@ -131,14 +131,14 @@ GOS_STATIC void_t app_lcdTask (void_t)
 			{
 				gos_timeGet(&actualTime);
 				normalConfig.line = 0;
-				BSP_LCD_HandlerDisplayText(&normalConfig, "%4d/%02d/%02d      ",
+				bsp_lcdHandlerrDisplayText(&normalConfig, "%4d/%02d/%02d      ",
 						actualTime.years,
 						actualTime.months,
 						actualTime.days
 						);
 				normalConfig.line = 1;
 
-				BSP_LCD_HandlerDisplayText(&normalConfig, "%02d:%02d:%02d        ",
+				bsp_lcdHandlerrDisplayText(&normalConfig, "%02d:%02d:%02d        ",
 						actualTime.hours,
 						actualTime.minutes,
 						actualTime.seconds
@@ -154,14 +154,14 @@ GOS_STATIC void_t app_lcdTask (void_t)
 				flashingConfig.blinkStartIndex = 1;
 				flashingConfig.blinkEndIndex = 9;
 
-				BSP_LCD_HandlerDisplayText(&flashingConfig, " Flashing test! ");
+				bsp_lcdHandlerrDisplayText(&flashingConfig, " Flashing test! ");
 
 				flashingConfig.line = 1;
 				flashingConfig.periodMs = 350;
 				flashingConfig.blinkStartIndex = 0;
 				flashingConfig.blinkEndIndex = 15;
 
-				BSP_LCD_HandlerDisplayText(&flashingConfig, "    GOS2022     ");
+				bsp_lcdHandlerrDisplayText(&flashingConfig, "    GOS2022     ");
 
 				gos_taskSuspend(appLcdTask.taskId);
 				break;
@@ -171,12 +171,12 @@ GOS_STATIC void_t app_lcdTask (void_t)
 				shiftConfig.line = 0;
 				shiftConfig.periodMs = 100;
 				shiftConfig.displayMode = LCD_DISPLAY_SHIFT_LEFT;
-				BSP_LCD_HandlerDisplayText(&shiftConfig, "This is a normal shifting text example.");
+				bsp_lcdHandlerrDisplayText(&shiftConfig, "This is a normal shifting text example.");
 
 				shiftConfig.line = 1;
 				shiftConfig.periodMs = 400;
 				shiftConfig.displayMode = LCD_DISPLAY_CYCLIC_LEFT;
-				BSP_LCD_HandlerDisplayText(&shiftConfig, "This is a cyclic shifting text example. The text is rotating continuously. ");
+				bsp_lcdHandlerrDisplayText(&shiftConfig, "This is a cyclic shifting text example. The text is rotating continuously. ");
 
 				gos_taskSuspend(appLcdTask.taskId);
 				break;
@@ -206,7 +206,7 @@ GOS_STATIC void_t app_lcdTask (void_t)
 				shiftConfig.line = 1;
 				shiftConfig.periodMs = 300;
 				shiftConfig.displayMode = LCD_DISPLAY_SHIFT_LEFT;
-				BSP_LCD_HandlerDisplayText(&shiftConfig, "The temperature shown here is CPU temperature.");
+				bsp_lcdHandlerrDisplayText(&shiftConfig, "The temperature shown here is CPU temperature.");
 
 				programState = PROGRAM_TEMP_VALUE_DISPLAY;
 				break;
@@ -220,7 +220,7 @@ GOS_STATIC void_t app_lcdTask (void_t)
 
 					(void_t) gos_mutexUnlock(&mdiMutex);
 				}
-				BSP_LCD_HandlerDisplayText(&normalConfig, "Temp.: %u.%u C   ", (temperatureValue / 10), (temperatureValue % 10));
+				bsp_lcdHandlerrDisplayText(&normalConfig, "Temp.: %u.%u C   ", (temperatureValue / 10), (temperatureValue % 10));
 
 				gos_taskSleep(1000);
 				break;
@@ -230,7 +230,7 @@ GOS_STATIC void_t app_lcdTask (void_t)
 				shiftConfig.line = 1;
 				shiftConfig.periodMs = 300;
 				shiftConfig.displayMode = LCD_DISPLAY_SHIFT_LEFT;
-				BSP_LCD_HandlerDisplayText(&shiftConfig, "Overall system CPU usage at the moment.");
+				bsp_lcdHandlerrDisplayText(&shiftConfig, "Overall system CPU usage at the moment.");
 
 				programState = PROGRAM_CPU_USAGE_VALUE_DISPLAY;
 				break;
@@ -239,7 +239,7 @@ GOS_STATIC void_t app_lcdTask (void_t)
 			{
 				normalConfig.line = 0;
 				cpuUse = gos_kernelGetCpuUsage();
-				BSP_LCD_HandlerDisplayText(&normalConfig, "CPU: %u.%02u %%   ", (cpuUse / 100), (cpuUse % 100));
+				bsp_lcdHandlerrDisplayText(&normalConfig, "CPU: %u.%02u %%   ", (cpuUse / 100), (cpuUse % 100));
 				gos_taskSleep(250);
 				break;
 			}
