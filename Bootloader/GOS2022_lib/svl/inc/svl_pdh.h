@@ -65,7 +65,7 @@
 /**
  * Library minor version.
  */
-#define PDH_LIBVER_VERSION_MINOR      ( 22                )
+#define PDH_LIBVER_VERSION_MINOR      ( 23                )
 
 /**
  * Library build number.
@@ -80,12 +80,12 @@
 /**
  * Library version date / month.
  */
-#define PDH_LIBVER_VERSION_DATE_MONTH ( GOS_TIME_APRIL    )
+#define PDH_LIBVER_VERSION_DATE_MONTH ( GOS_TIME_MAY      )
 
 /**
  * Library version date / day.
  */
-#define PDH_LIBVER_VERSION_DATE_DAY   ( 16                )
+#define PDH_LIBVER_VERSION_DATE_DAY   ( 21                )
 /**
  * Library name.
  */

@@ -25,10 +25,10 @@ GOS_CONST drv_adcDescriptor_t adcConfig [] =
 		.scanConvMode          = ENABLE,
 		.externalTrigConv      = ADC_SOFTWARE_START,
 		.externalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE,
-		.nbrOfConversion       = 2,
-		.dmaContinuousRequests = ENABLE,
-		.eocSelection          = ADC_EOC_SEQ_CONV,
-		.dmaConfig             = &dmaConfig[DMA_CFG_ADC1]
+		.nbrOfConversion       = 4,
+		.dmaContinuousRequests = DISABLE,
+		.eocSelection          = ADC_EOC_SINGLE_CONV,
+		//.dmaConfig             = &dmaConfig[DMA_CFG_ADC1]
 	}
 };
 
@@ -46,9 +46,21 @@ GOS_CONST drv_adcChannelDesc_t adcChannelConfig [] =
 	{
 		.periphInstance        = DRV_ADC_INSTANCE_1,
 		.channel               = ADC_CHANNEL_VREFINT,
-		.rank                  = 2,
-		//.samplingTime          = ADC_SAMPLETIME_3CYCLES
-	}
+		.rank                  = 1,
+		.samplingTime          = ADC_SAMPLETIME_15CYCLES
+	},
+	{
+		.periphInstance        = DRV_ADC_INSTANCE_1,
+		.channel               = ADC_CHANNEL_10,
+		.rank                  = 1,
+		.samplingTime          = ADC_SAMPLETIME_15CYCLES
+	},
+	{
+		.periphInstance        = DRV_ADC_INSTANCE_1,
+		.channel               = ADC_CHANNEL_13,
+		.rank                  = 1,
+		.samplingTime          = ADC_SAMPLETIME_15CYCLES
+	},
 };
 
 /**

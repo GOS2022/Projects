@@ -309,7 +309,7 @@ gos_result_t svl_pdhGetLibVersion (svl_pdhSwVerInfo_t* pLibVer)
 	 */
 	if (pLibVer != NULL && pdhReadFunction != NULL)
 	{
-		//(void_t) memset((void_t*)pLibVer, 0, sizeof(*pLibVer));
+		(void_t) memset((void_t*)pLibVer, 0, sizeof(*pLibVer));
 
 		pLibVer->major             = PDH_LIBVER_VERSION_MAJOR;
 		pLibVer->minor             = PDH_LIBVER_VERSION_MINOR;

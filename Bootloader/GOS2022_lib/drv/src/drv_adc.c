@@ -138,7 +138,7 @@ gos_result_t drv_adcInit (void_t)
             sConfig.Rank         = adcChannelConfig[adcIdx].rank;
             sConfig.SamplingTime = adcChannelConfig[adcIdx].samplingTime;
 
-            instance = adcConfig[adcIdx].periphInstance;
+            instance = adcChannelConfig[adcIdx].periphInstance;
 
             GOS_CONCAT_RESULT(adcDriverInitResult, HAL_ADC_ConfigChannel(&hadcs[instance], &sConfig) == HAL_OK ? GOS_SUCCESS : GOS_ERROR);
         }
@@ -209,20 +209,29 @@ gos_result_t drv_adcInitInstance (u8_t adcInstanceIndex)
  * Function: drv_adcGetValueBlocking
  */
 gos_result_t drv_adcGetValueBlocking (
-        drv_adcPeriphInstance_t instance, u32_t* pValue,
-        u32_t                   mutexTmo, u32_t  readTmo
+        u8_t  channel,  u32_t* pValue,
+        u32_t mutexTmo, u32_t  readTmo
         )
 {
     /*
      * Local variables.
      */
-    gos_result_t adcDriverGetValueResult = GOS_ERROR;
+    gos_result_t            adcDriverGetValueResult = GOS_ERROR;
+    drv_adcPeriphInstance_t instance                = 0u;
+    ADC_ChannelConfTypeDef  sConfig                 = {0};
 
     /*
      * Function code.
      */
+    sConfig.Channel      = adcChannelConfig[channel].channel;
+    sConfig.Rank         = adcChannelConfig[channel].rank;
+    sConfig.SamplingTime = adcChannelConfig[channel].samplingTime;
+
+    instance = adcChannelConfig[channel].periphInstance;
+
     if (pValue                                               != NULL &&
         gos_mutexLock(&adcMutexes[instance], mutexTmo)       == GOS_SUCCESS &&
+		HAL_ADC_ConfigChannel(&hadcs[instance], &sConfig)    == HAL_OK &&
         HAL_ADC_Start(&hadcs[instance])                      == HAL_OK &&
         HAL_ADC_PollForConversion(&hadcs[instance], readTmo) == HAL_OK)
     {
@@ -251,21 +260,30 @@ gos_result_t drv_adcGetValueBlocking (
  * Function: drv_adcGetValueIT
  */
 gos_result_t drv_adcGetValueIT (
-        drv_adcPeriphInstance_t instance, u16_t* pValue,
-        u32_t                   mutexTmo, u32_t  triggerTmo
+        u8_t  channel,  u16_t* pValue,
+        u32_t mutexTmo, u32_t  triggerTmo
         )
 {
     /*
      * Local variables.
      */
-    gos_result_t adcDriverGetValueResult = GOS_ERROR;
+    gos_result_t            adcDriverGetValueResult = GOS_ERROR;
+    drv_adcPeriphInstance_t instance                = 0u;
+    ADC_ChannelConfTypeDef  sConfig                 = {0};
 
     /*
      * Function code.
      */
+    sConfig.Channel      = adcChannelConfig[channel].channel;
+    sConfig.Rank         = adcChannelConfig[channel].rank;
+    sConfig.SamplingTime = adcChannelConfig[channel].samplingTime;
+
+    instance = adcChannelConfig[channel].periphInstance;
+
     if (pValue != NULL && gos_mutexLock(&adcMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
-        if (HAL_ADC_Start_IT(&hadcs[instance]) == HAL_OK)
+        if (HAL_ADC_ConfigChannel(&hadcs[instance], &sConfig) == HAL_OK &&
+        	HAL_ADC_Start_IT(&hadcs[instance])                == HAL_OK)
         {
             if (gos_triggerWait (&adcReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
                 gos_triggerReset(&adcReadyTriggers[instance])                == GOS_SUCCESS)
@@ -284,6 +302,7 @@ gos_result_t drv_adcGetValueIT (
             else
             {
                 // Trigger error.
+            	(void_t) HAL_ADC_Stop_IT(&hadcs[instance]);
             }
         }
         else
@@ -321,12 +340,12 @@ gos_result_t drv_adcGetValueDMA (
         gos_mutexLock(&adcMutexes[instance], mutexTmo)       == GOS_SUCCESS &&
         HAL_ADC_Start_DMA(&hadcs[instance], pValue, size)    == HAL_OK)
     {
-        //if (gos_triggerWait(&adcReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
-        //	gos_triggerReset(&adcReadyTriggers[instance])               == GOS_SUCCESS)
+        if (gos_triggerWait(&adcReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
+        	gos_triggerReset(&adcReadyTriggers[instance])               == GOS_SUCCESS)
         {
         	adcDriverGetValueResult = GOS_SUCCESS;
         }
-        //else
+        else
         {
         	// Timeout.
         }

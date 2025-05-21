@@ -34,7 +34,7 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.port = GPIOA,
 			.pin = GPIO_PIN_10,
 			.mode = GPIO_MODE_AF_PP,
-			.pull = GPIO_NOPULL,
+			.pull = GPIO_PULLUP,
 			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
 			.alternate = GPIO_AF7_USART1
 		},
@@ -222,6 +222,20 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
 			.alternate = GPIO_AF6_SPI3
 		},
+		[IO_U_MEAS_IN] =
+		{
+			.port = GPIOC,
+			.pin = GPIO_PIN_0,
+			.mode = GPIO_MODE_ANALOG,
+			.pull = GPIO_NOPULL
+		},
+		[IO_I_MEAS_IN] =
+		{
+			.port = GPIOC,
+			.pin = GPIO_PIN_3,
+			.mode = GPIO_MODE_ANALOG,
+			.pull = GPIO_NOPULL
+		}
 };
 
 /**

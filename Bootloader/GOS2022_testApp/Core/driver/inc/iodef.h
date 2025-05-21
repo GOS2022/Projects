@@ -44,6 +44,9 @@ typedef enum
 	IO_TOUCH_MISO,
 	IO_TOUCH_CS,
 
+	IO_U_MEAS_IN,
+	IO_I_MEAS_IN,
+
 	IO_NUMBER
 }io_pin_t;
 

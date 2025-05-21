@@ -69,8 +69,8 @@ drv_dmaDescriptor_t dmaConfig [] =
 	    .memInc              = DMA_MINC_ENABLE,
 	    .periphDataAlignment = DMA_PDATAALIGN_HALFWORD,
 	    .memDataAlignment    = DMA_MDATAALIGN_HALFWORD,
-	    .mode                = DMA_CIRCULAR,
-	    .priority            = DMA_PRIORITY_HIGH,
+	    .mode                = DMA_NORMAL,
+	    .priority            = DMA_PRIORITY_LOW,
 	    .fifoMode            = DMA_FIFOMODE_DISABLE,
 	},
 	// DMA1 stream 7 -> SPI3 TX

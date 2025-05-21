@@ -31,6 +31,16 @@ svl_mdiVariable_t mdiVariables [] =
 	{
 		.name = "T_rtc [C]",
 		.type = MDI_VAL_TYPE_FLOAT,
+	},
+	[MDI_U_PWR_MEAS] =
+	{
+		.name = "U_pwr [V]",
+		.type = MDI_VAL_TYPE_FLOAT,
+	},
+	[MDI_I_PWR_MEAS] =
+	{
+		.name = "I_pwr [mA]",
+		.type = MDI_VAL_TYPE_FLOAT,
 	}
 };
 

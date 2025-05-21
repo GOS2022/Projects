@@ -14,6 +14,8 @@ typedef enum
 	MDI_VREF,
 	MDI_CPU_TEMP,
 	MDI_RTC_TEMP,
+	MDI_U_PWR_MEAS,
+	MDI_I_PWR_MEAS,
 	MDI_NUM_OF_VARIABLES
 }mdi_variables_t;
 

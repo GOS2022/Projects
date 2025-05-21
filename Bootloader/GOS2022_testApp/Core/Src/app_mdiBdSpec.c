@@ -79,11 +79,16 @@ GOS_STATIC void_t app_mdiTask (void_t)
 	/*
 	 * Local variables.
 	 */
-	u16_t   adcResult [2];
+	/*u16_t   adcResult [2];
 	float_t vdda;
 	float_t vref, vref_avg;
 	float_t temp, temp_avg;
 	u32_t   sum1, sum2;
+	u16_t   rtcTemp;*/
+	u16_t   adcResult [4];
+	float_t vdda;
+	float_t vref, u_pwr, i_pwr;
+	float_t temp;
 	u16_t   rtcTemp;
 
 	/*
@@ -93,7 +98,7 @@ GOS_STATIC void_t app_mdiTask (void_t)
 
 	for (;;)
 	{
-		sum1 = 0;
+		/*sum1 = 0;
 		sum2 = 0;
 
 	    for (u16_t i = 0; i < ADC_SAMPLES; ++i)
@@ -105,15 +110,31 @@ GOS_STATIC void_t app_mdiTask (void_t)
 	    }
 
 	    vref_avg = sum2 / ADC_SAMPLES;
-	    temp_avg = sum1 / ADC_SAMPLES;
+	    temp_avg = sum1 / ADC_SAMPLES;*/
 
-		vdda = (float_t) VREFINT_CAL_VREF * (float_t) *VREFINT_CAL_ADDR / vref_avg / 1000;
+		drv_adcGetValueIT(0, &adcResult[0], 1000, 1000);
+		drv_adcGetValueIT(1, &adcResult[1], 1000, 1000);
+		drv_adcGetValueIT(2, &adcResult[2], 1000, 1000);
+		drv_adcGetValueIT(3, &adcResult[3], 1000, 1000);
+		//(void_t) drv_adcGetValueDMA(DRV_ADC_INSTANCE_1, (u32_t*)adcResult, 4, GOS_MUTEX_ENDLESS_TMO, GOS_TRIGGER_ENDLESS_TMO);
+
+		/*vdda = (float_t) VREFINT_CAL_VREF * (float_t) *VREFINT_CAL_ADDR / vref_avg / 1000;
 		vref = (float_t) vdda / ADC_RESOLUTION * vref_avg;
 
 	    temp = (float_t) ((float_t) ((float_t) (TEMPSENSOR_CAL2_TEMP - TEMPSENSOR_CAL1_TEMP)
 	                           / (float_t) (*TEMPSENSOR_CAL2_ADDR - *TEMPSENSOR_CAL1_ADDR))
 	                           * (temp_avg - *TEMPSENSOR_CAL1_ADDR) + TEMPSENSOR_CAL1_TEMP);
+	    (void_t) bsp_rtcHandlerGetTemperature(&rtcTemp);*/
+
+		vdda = (float_t) VREFINT_CAL_VREF * (float_t) *VREFINT_CAL_ADDR / adcResult[1] / 1000;
+		vref = (float_t) vdda / ADC_RESOLUTION * adcResult[1];
+
+	    temp = (float_t) ((float_t) ((float_t) (TEMPSENSOR_CAL2_TEMP - TEMPSENSOR_CAL1_TEMP)
+	                           / (float_t) (*TEMPSENSOR_CAL2_ADDR - *TEMPSENSOR_CAL1_ADDR))
+	                           * (adcResult[0] - *TEMPSENSOR_CAL1_ADDR) + TEMPSENSOR_CAL1_TEMP);
 	    (void_t) bsp_rtcHandlerGetTemperature(&rtcTemp);
+	    u_pwr = 2 * vdda * adcResult[2] / ADC_RESOLUTION;
+	    i_pwr = (-1)*(1000 * ((vdda * adcResult[3] / ADC_RESOLUTION) - 2.5) / 0.185);
 
 	    if (gos_mutexLock(&mdiMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
 	    {
@@ -121,6 +142,8 @@ GOS_STATIC void_t app_mdiTask (void_t)
 			mdiVariables[MDI_VREF].value.floatValue     = roundf(vref * 100) / 100;
 			mdiVariables[MDI_CPU_TEMP].value.floatValue = roundf(temp * 10) / 10;
 			mdiVariables[MDI_RTC_TEMP].value.floatValue = (float_t)rtcTemp / 100;
+			mdiVariables[MDI_U_PWR_MEAS].value.floatValue = roundf(u_pwr * 100) / 100;
+			mdiVariables[MDI_I_PWR_MEAS].value.floatValue = roundf(i_pwr * 100) / 100;
 
 			(void_t) gos_mutexUnlock(&mdiMutex);
 	    }

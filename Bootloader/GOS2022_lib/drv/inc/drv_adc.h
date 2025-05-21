@@ -112,14 +112,14 @@ gos_result_t drv_adcInitInstance (
 
 // TODO
 gos_result_t drv_adcGetValueBlocking (
-        drv_adcPeriphInstance_t instance, u32_t* pValue,
-        u32_t                   mutexTmo, u32_t  readTmo
+		u8_t  channel,  u32_t* pValue,
+        u32_t mutexTmo, u32_t  readTmo
         );
 
 // TODO
 gos_result_t drv_adcGetValueIT (
-        drv_adcPeriphInstance_t instance, u16_t* pValue,
-        u32_t                   mutexTmo, u32_t  triggerTmo
+		u8_t  channel,  u16_t* pValue,
+        u32_t mutexTmo, u32_t  triggerTmo
         );
 
 // TODO
