@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_uart.h
 //! @author     Ahmed Gazar
-//! @date       2024-04-24
-//! @version    1.1
+//! @date       2025-06-18
+//! @version    1.2
 //!
 //! @brief      GOS2022 Library / UART driver header.
 //! @details    This component provides access to the UART peripheries.
@@ -26,6 +26,7 @@
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-02-21    Ahmed Gazar     Initial version created.
 // 1.1        2024-04-24    Ahmed Gazar     +    Error reporting added
+// 1.2        2025-06-18    Ahmed Gazar     +    System monitoring separate instances added
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -78,7 +79,8 @@ typedef enum
  */
 typedef enum
 {
-    DRV_UART_SYSMON_INSTANCE = 0,            //!< System monitoring instance.
+    DRV_UART_SYSMON_WIRED_INSTANCE = 0,      //!< System monitoring wired instance.
+	DRV_UART_SYSMON_WIRELESS_INSTANCE,       //!< System monitoring wireless instance.
     DRV_UART_SHELL_INSTANCE,                 //!< Shell instance.
     DRV_UART_TRACE_INSTANCE                  //!< Trace instance.
 }drv_uartServiceInstance_t;

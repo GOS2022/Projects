@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_task.c
 //! @author     Ahmed Gazar
-//! @date       2025-04-06
-//! @version    1.3
+//! @date       2025-06-18
+//! @version    1.4
 //!
 //! @brief      GOS task source.
 //! @details    For a more detailed description of this module, please refer to @ref gos_kernel.h
@@ -28,6 +28,8 @@
 // 1.1        2024-04-19    Ahmed Gazar     *    Task register task CPU limit range check fixed
 // 1.2        2024-06-13    Ahmed Gazar     +    gos_taskGetNumber added
 // 1.3        2025-04-06    Ahmed Gazar     *    gos_taskCheckDescriptor check logic inverted
+// 1.4        2025-06-18    Ahmed Gazar     *    gos_taskGetDataByIndex and gos_taskGetData invalid
+//                                               task ID check added
 //*************************************************************************************************
 //
 // Copyright (c) 2023 Ahmed Gazar
@@ -1121,13 +1123,20 @@ gos_result_t gos_taskGetData (gos_tid_t taskId, gos_taskDescriptor_t* pTaskData)
      */
     GOS_ATOMIC_ENTER
     if (taskId >= GOS_DEFAULT_TASK_ID && (taskId - GOS_DEFAULT_TASK_ID) < CFG_TASK_MAX_NUMBER &&
-    		pTaskData != NULL)
+    	pTaskData != NULL)
     {
         taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
 
-        (void_t) memcpy((void*)pTaskData, (void*)&taskDescriptors[taskIndex], sizeof(*pTaskData));
+        if (taskDescriptors[taskIndex].taskId != GOS_INVALID_TASK_ID)
+        {
+            (void_t) memcpy((void*)pTaskData, (void*)&taskDescriptors[taskIndex], sizeof(*pTaskData));
 
-        taskGetDataResult = GOS_SUCCESS;
+            taskGetDataResult = GOS_SUCCESS;
+        }
+        else
+        {
+        	// Task is not used.
+        }
     }
     else
     {
@@ -1153,6 +1162,7 @@ gos_result_t gos_taskGetDataByIndex (u16_t taskIndex, gos_taskDescriptor_t* pTas
      */
     GOS_ATOMIC_ENTER
     if (taskIndex < CFG_TASK_MAX_NUMBER &&
+    	taskDescriptors[taskIndex].taskId != GOS_INVALID_TASK_ID &&
     	pTaskData != NULL &&
         (taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_TASK_PRIVILEGE_KERNEL) == GOS_TASK_PRIVILEGE_KERNEL)
     {

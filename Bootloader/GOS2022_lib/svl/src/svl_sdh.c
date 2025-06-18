@@ -53,6 +53,7 @@
  */
 #include <svl_cfg.h>
 #include <svl_ipl.h>
+#include <svl_sysmon.h>
 #include <svl_sdh.h>
 #include <drv_crc.h>
 #include <string.h>
@@ -212,12 +213,12 @@ GOS_STATIC svl_sdhState_t sdhRequestedState = SDH_STATE_IDLE;
  * Function prototypes
  */
 GOS_STATIC void_t svl_sdhDaemon                           (void_t);
-GOS_STATIC void_t svl_sdhSysmonBinaryNumReqCallback       (void_t);
-GOS_STATIC void_t svl_sdhSysmonBinaryInfoReqCallback      (void_t);
-GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback        (void_t);
-GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback     (void_t);
-GOS_STATIC void_t svl_sdhSysmonSoftwareInstallReqCallback (void_t);
-GOS_STATIC void_t svl_sdhSysmonBinaryEraseReqCallback     (void_t);
+GOS_STATIC void_t svl_sdhSysmonBinaryNumReqCallback       (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_sdhSysmonBinaryInfoReqCallback      (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback        (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback     (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_sdhSysmonSoftwareInstallReqCallback (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_sdhSysmonBinaryEraseReqCallback     (gos_gcpChannelNumber_t gcpChannel);
 GOS_STATIC void_t svl_sdhIplBinaryNumReqCallback          (u8_t* pData, u32_t size, u32_t crc);
 GOS_STATIC void_t svl_sdhIplBinaryInfoReqCallback         (u8_t* pData, u32_t size, u32_t crc);
 GOS_STATIC void_t svl_sdhIplDownloadReqCallback           (u8_t* pData, u32_t size, u32_t crc);
@@ -228,73 +229,67 @@ GOS_STATIC void_t svl_sdhIplBinaryEraseReqCallback        (u8_t* pData, u32_t si
 /**
  * Sysmon binary number request.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonBinaryNumReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonBinaryNumReqMsg =
 {
     .callback        = svl_sdhSysmonBinaryNumReqCallback,
     .messageId       = SVL_SDH_SYSMON_MSG_BINARY_NUM_REQ,
     .payload         = NULL,
     .payloadSize     = 0u,
-    .protocolVersion = 1u
 };
 
 /**
  * Sysmon binary info request.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonBinaryInfoReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonBinaryInfoReqMsg =
 {
     .callback        = svl_sdhSysmonBinaryInfoReqCallback,
     .messageId       = SVL_SDH_SYSMON_MSG_BINARY_INFO_REQ,
     .payload         = (void_t*)sdhBuffer,
     .payloadSize     = sizeof(u16_t),
-    .protocolVersion = 1u
 };
 
 /**
  * Sysmon download request.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonDownloadReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonDownloadReqMsg =
 {
     .callback        = svl_sdhSysmonDownloadReqCallback,
     .messageId       = SVL_SDH_SYSMON_MSG_DOWNLOAD_REQ,
     .payload         = (void_t*)sdhBuffer,
     .payloadSize     = sizeof(svl_sdhBinaryDesc_t),
-    .protocolVersion = 1u
 };
 
 /**
  * Sysmon binary chunk request.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonBinaryChunkReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonBinaryChunkReqMsg =
 {
     .callback        = svl_sdhSysmonBinaryChunkReqCallback,
     .messageId       = SVL_SDH_SYSMON_MSG_BINARY_CHUNK_REQ,
     .payload         = (void_t*)sdhBuffer,
     .payloadSize     = sizeof(svl_sdhChunkDesc_t) + SVL_SDH_CHUNK_SIZE,
-    .protocolVersion = 1u
 };
 
 /**
  * Sysmon software install request.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonSoftwareInstallReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonSoftwareInstallReqMsg =
 {
     .callback        = svl_sdhSysmonSoftwareInstallReqCallback,
     .messageId       = SVL_SDH_SYSMON_MSG_SOFTWARE_INSTALL_REQ,
     .payload         = (void_t*)sdhBuffer,
     .payloadSize     = sizeof(u16_t),
-    .protocolVersion = 1u
 };
 
 /**
  * Sysmon binary erase request.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonBinaryEraseReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonBinaryEraseReqMsg =
 {
     .callback        = svl_sdhSysmonBinaryEraseReqCallback,
     .messageId       = SVL_SDH_SYSMON_MSG_BINARY_ERASE_REQ,
     .payload         = (void_t*)sdhBuffer,
     .payloadSize     = sizeof(u16_t) + sizeof(bool_t),
-    .protocolVersion = 1u
 };
 
 /**
@@ -377,12 +372,12 @@ gos_result_t svl_sdhInit (void_t)
      * Function code.
      */
     // Register sysmon callbacks.
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonBinaryNumReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonBinaryInfoReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonDownloadReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonBinaryChunkReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonSoftwareInstallReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonBinaryEraseReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonBinaryNumReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonBinaryInfoReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonDownloadReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonBinaryChunkReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonSoftwareInstallReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonBinaryEraseReqMsg));
 
     // Register IPL callbacks.
     GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplBinaryNumReqMsg));
@@ -908,7 +903,7 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_sdhSysmonBinaryNumReqCallback (void_t)
+GOS_STATIC void_t svl_sdhSysmonBinaryNumReqCallback (gos_gcpChannelNumber_t gcpChannel)
 {
     /*
      * Function code.
@@ -921,7 +916,7 @@ GOS_STATIC void_t svl_sdhSysmonBinaryNumReqCallback (void_t)
     if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 3000) == GOS_SUCCESS)
     {
         (void_t) gos_gcpTransmitMessage(
-                CFG_SYSMON_GCP_CHANNEL_NUM,
+        		gcpChannel,
                 SVL_SDH_SYSMON_MSG_BINARY_NUM_RESP,
                 (void_t*)sdhBuffer,
                 sizeof(u16_t),
@@ -942,7 +937,7 @@ GOS_STATIC void_t svl_sdhSysmonBinaryNumReqCallback (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_sdhSysmonBinaryInfoReqCallback (void_t)
+GOS_STATIC void_t svl_sdhSysmonBinaryInfoReqCallback (gos_gcpChannelNumber_t gcpChannel)
 {
     /*
      * Function code.
@@ -955,7 +950,7 @@ GOS_STATIC void_t svl_sdhSysmonBinaryInfoReqCallback (void_t)
     if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 3000) == GOS_SUCCESS)
     {
         (void_t) gos_gcpTransmitMessage(
-                CFG_SYSMON_GCP_CHANNEL_NUM,
+        		gcpChannel,
                 SVL_SDH_SYSMON_MSG_BINARY_INFO_RESP,
                 (void_t*)sdhBuffer,
                 sizeof(svl_sdhBinaryDesc_t),
@@ -976,7 +971,7 @@ GOS_STATIC void_t svl_sdhSysmonBinaryInfoReqCallback (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback (void_t)
+GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback (gos_gcpChannelNumber_t gcpChannel)
 {
     /*
      * Function code.
@@ -989,7 +984,7 @@ GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback (void_t)
     if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 3000) == GOS_SUCCESS)
     {
         (void_t) gos_gcpTransmitMessage(
-                CFG_SYSMON_GCP_CHANNEL_NUM,
+        		gcpChannel,
                 SVL_SDH_SYSMON_MSG_DOWNLOAD_RESP,
                 (void_t*)sdhBuffer,
                 sizeof(u8_t),
@@ -1010,7 +1005,7 @@ GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback (void_t)
+GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback (gos_gcpChannelNumber_t gcpChannel)
 {
     /*
      * Function code.
@@ -1023,7 +1018,7 @@ GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback (void_t)
     if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 10000) == GOS_SUCCESS)
     {
         (void_t) gos_gcpTransmitMessage(
-                CFG_SYSMON_GCP_CHANNEL_NUM,
+        		gcpChannel,
                 SVL_SDH_SYSMON_MSG_BINARY_CHUNK_RESP,
                 (void_t*)sdhBuffer,
                 sizeof(svl_sdhChunkDesc_t),
@@ -1044,7 +1039,7 @@ GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_sdhSysmonSoftwareInstallReqCallback (void_t)
+GOS_STATIC void_t svl_sdhSysmonSoftwareInstallReqCallback (gos_gcpChannelNumber_t gcpChannel)
 {
     /*
      * Function code.
@@ -1057,7 +1052,7 @@ GOS_STATIC void_t svl_sdhSysmonSoftwareInstallReqCallback (void_t)
     if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 3000) == GOS_SUCCESS)
     {
         (void_t) gos_gcpTransmitMessage(
-                CFG_SYSMON_GCP_CHANNEL_NUM,
+        		gcpChannel,
                 SVL_SDH_SYSMON_MSG_SOFTWARE_INSTALL_RESP,
                 (void_t*)sdhBuffer,
                 sizeof(u16_t),
@@ -1078,7 +1073,7 @@ GOS_STATIC void_t svl_sdhSysmonSoftwareInstallReqCallback (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_sdhSysmonBinaryEraseReqCallback (void_t)
+GOS_STATIC void_t svl_sdhSysmonBinaryEraseReqCallback (gos_gcpChannelNumber_t gcpChannel)
 {
     /*
      * Function code.
@@ -1091,7 +1086,7 @@ GOS_STATIC void_t svl_sdhSysmonBinaryEraseReqCallback (void_t)
     if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 5000) == GOS_SUCCESS)
     {
         (void_t) gos_gcpTransmitMessage(
-                CFG_SYSMON_GCP_CHANNEL_NUM,
+        		gcpChannel,
                 SVL_SDH_SYSMON_MSG_BINARY_ERASE_RESP,
                 (void_t*)sdhBuffer,
                 sizeof(u16_t),

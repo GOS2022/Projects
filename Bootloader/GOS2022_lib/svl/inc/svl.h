@@ -57,5 +57,6 @@
 #include <svl_mdi.h>
 #include <svl_pdh.h>
 #include <svl_sdh.h>
+#include <svl_sysmon.h>
 
 #endif

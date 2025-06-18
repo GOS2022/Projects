@@ -55,7 +55,6 @@
 #include <gos_crc_driver.h>
 #include <gos_trace_driver.h>
 #include <gos_shell_driver.h>
-#include <gos_sysmon_driver.h>
 #include <gos_timer_driver.h>
 
 /*
@@ -71,8 +70,6 @@ typedef struct
     gos_traceDriverTransmitString_t        traceDriverTransmitString;       //!< Log string transmit function.
     gos_traceDriverTransmitString_Unsafe_t traceDriverTransmitStringUnsafe; //!< Log unsafe string transmit function.
     gos_timerDriverSysTimerGetVal_t        timerDriverSysTimerGetValue;     //!< System timer get function.
-    gos_sysmonDriverTransmit_t             sysmonDriverTransmit;            //!< Sysmon transmit function.
-    gos_sysmonDriverReceive_t              sysmonDriverReceive;             //!< Sysmon receive function.
 }gos_driver_functions_t;
 
 /*

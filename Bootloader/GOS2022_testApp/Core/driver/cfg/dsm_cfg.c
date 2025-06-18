@@ -16,12 +16,14 @@ GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 		// Phase: SVL
 		"Initializing SVL...",
 		{
+			{ "Sysmon initialization",              svl_sysmonInit              },
 			{ "PDH initialization",                 svl_pdhInit                 },
-			{ "IPL initialization",                 svl_iplInit                 },
+			//{ "IPL initialization",                 svl_iplInit                 },
 			{ "SDH initialization",                 svl_sdhInit                 },
 			{ "MDI initialization",                 svl_mdiInit                 },
 			{ "ERS initialization",                 svl_ersInit                 },
-			{ "DHS initialization",                 svl_dhsInit                 },
+			{ "DHS initialization",                 svl_dhsInit                 }
+
 		}
 	},
 	{

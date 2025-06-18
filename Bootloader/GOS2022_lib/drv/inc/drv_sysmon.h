@@ -71,7 +71,7 @@
  * @retval  GOS_ERROR   : Empty UART service configuration or low-level
  *                        driver error.
  */
-gos_result_t drv_sysmonTransmit (u8_t* pData, u16_t size);
+gos_result_t drv_sysmonWiredTransmit (u8_t* pData, u16_t size);
 
 /**
  * @brief   Sysmon receive function.
@@ -88,6 +88,6 @@ gos_result_t drv_sysmonTransmit (u8_t* pData, u16_t size);
  * @retval  GOS_ERROR   : Empty UART service configuration or low-level
  *                        driver error.
  */
-gos_result_t drv_sysmonReceive (u8_t* pBuffer, u16_t size);
+gos_result_t drv_sysmonWiredReceive (u8_t* pBuffer, u16_t size);
 
 #endif

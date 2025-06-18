@@ -109,7 +109,7 @@ gos_result_t svl_dsmInit (void_t)
 	/*
 	 * Local variables.
 	 */
-	gos_result_t dsmInitResult = GOS_SUCCESS;
+	gos_result_t dsmInitResult = GOS_ERROR;
 	u8_t         initIdx       = 0u;
 	u8_t         initBlockIdx  = 0u;
 
@@ -119,7 +119,7 @@ gos_result_t svl_dsmInit (void_t)
 	if (initPhaseConfig != NULL && initPhaseConfigSize > 0u)
 	{
 		// Register DSM task.
-		GOS_CONCAT_RESULT(dsmInitResult, gos_taskRegister(&svlDsmDaemonDesc, NULL));
+		dsmInitResult = gos_errorTraceInit("DSM initialization", gos_taskRegister(&svlDsmDaemonDesc, NULL));
 
 		// Loop through all init phases.
 		for (initIdx = 0u; initIdx < initPhaseConfigSize / sizeof(svl_dsmInitPhaseDesc_t); initIdx++)
@@ -132,9 +132,9 @@ gos_result_t svl_dsmInit (void_t)
 			{
 				if (initPhaseConfig[initIdx].initBlock[initBlockIdx].pInitializer != NULL)
 				{
-					GOS_CONCAT_RESULT(dsmInitResult, gos_errorTraceInit(
+					dsmInitResult &= gos_errorTraceInit(
 							initPhaseConfig[initIdx].initBlock[initBlockIdx].description,
-							initPhaseConfig[initIdx].initBlock[initBlockIdx].pInitializer()));
+							initPhaseConfig[initIdx].initBlock[initBlockIdx].pInitializer());
 				}
 				else
 				{
@@ -147,6 +147,15 @@ gos_result_t svl_dsmInit (void_t)
 	else
 	{
 		// Configuration is empty.
+	}
+
+	if (dsmInitResult != GOS_SUCCESS)
+	{
+		dsmInitResult = GOS_ERROR;
+	}
+	else
+	{
+		// Value OK.
 	}
 
 	return dsmInitResult;

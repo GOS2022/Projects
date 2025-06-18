@@ -104,6 +104,7 @@ GOS_STATIC void_t app_pdhTestTask (void_t)
 	 * Local variables.
 	 */
 	u32_t sysTicks = gos_kernelGetSysTicks();
+	gos_runtime_t sysRunTime = {0};
 
 	/*
 	 * Function code.
@@ -117,8 +118,10 @@ GOS_STATIC void_t app_pdhTestTask (void_t)
 
 		if (gos_kernelGetSysTicks() - sysTicks >= 1000)
 		{
+			(void_t) gos_runTimeGet(&sysRunTime);
 			(void_t) gos_traceTrace(GOS_FALSE, "\r");
-			(void_t) gos_traceTrace(GOS_TRUE, "");
+			(void_t) gos_traceTraceFormatted(GOS_TRUE, "System runtime: %04u:%02u:%02u:%02u.%3u",
+					sysRunTime.days, sysRunTime.hours, sysRunTime.minutes, sysRunTime.seconds, sysRunTime.milliseconds);
 			sysTicks = gos_kernelGetSysTicks();
 		}
 	}

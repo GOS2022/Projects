@@ -284,7 +284,7 @@
 /**
  * Sysmon use service flag.
  */
-#define CFG_SYSMON_USE_SERVICE          ( 1 )
+#define CFG_SYSMON_USE_SERVICE          ( 0 )
 
 /**
  * Define sysmon GCP channel number.

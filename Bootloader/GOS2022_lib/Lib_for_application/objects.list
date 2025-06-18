@@ -29,3 +29,4 @@
 "./svl/src/svl_mdi.o"
 "./svl/src/svl_pdh.o"
 "./svl/src/svl_sdh.o"
+"./svl/src/svl_sysmon.o"

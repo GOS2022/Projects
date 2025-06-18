@@ -251,24 +251,6 @@
 #define CFG_TRACE_MAX_LENGTH            ( 200 )
 
 /*
- * Sysmon service parameters.
- */
-/**
- * Sysmon use service flag.
- */
-#define CFG_SYSMON_USE_SERVICE          ( 1 )
-
-/**
- * Define sysmon GCP channel number.
- */
-#define CFG_SYSMON_GCP_CHANNEL_NUM      ( 0 )
-
-/**
- * Maximum number of user messages.
- */
-#define CFG_SYSMON_MAX_USER_MESSAGES    ( 24 )
-
-/*
  * Error handling parameters.
  */
 /**

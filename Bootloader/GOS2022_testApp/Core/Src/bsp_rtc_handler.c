@@ -53,7 +53,7 @@ GOS_STATIC drv_ds3231Descriptor_t rtcDesc =
  * Function prototypes
  */
 GOS_STATIC void_t       bsp_rtcHandlerTask                  (void_t);
-GOS_STATIC void_t       bsp_rtcHandlerTimeSetReqCallback    (void_t);
+GOS_STATIC void_t       bsp_rtcHandlerTimeSetReqCallback    (gos_gcpChannelNumber_t gcpChannel);
 GOS_STATIC gos_result_t bsp_rtcHandlerGetTimeWrapper        (u8_t params, va_list args);
 GOS_STATIC gos_result_t bsp_rtcHandlerGetTemperatureWrapper (u8_t params, va_list args);
 GOS_STATIC gos_result_t bsp_rtcHandlerSetTimeWrapper        (u8_t params, va_list args);
@@ -73,13 +73,12 @@ GOS_STATIC gos_taskDescriptor_t bspRtcTask =
 /**
  * Sysmon RTC time set message descriptor.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t bspRtcTimeSetMsgDesc =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t bspRtcTimeSetMsgDesc =
 {
 	.callback        = bsp_rtcHandlerTimeSetReqCallback,
 	.messageId       = APP_SYSMON_MSG_RTC_SET_REQ,
 	.payload         = (void_t*)rtcBuffer,
 	.payloadSize     = sizeof(gos_time_t),
-	.protocolVersion = 1u
 };
 
 /**
@@ -111,7 +110,7 @@ gos_result_t bsp_rtcHandlerInit (void_t)
 	/*
 	 * Function code.
 	 */
-	GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&bspRtcTimeSetMsgDesc));
+	GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&bspRtcTimeSetMsgDesc));
 	GOS_CONCAT_RESULT(initResult, gos_taskRegister(&bspRtcTask, NULL));
 	GOS_CONCAT_RESULT(initResult, svl_dhsRegisterDevice(&rtcDevice));
 	GOS_CONCAT_RESULT(initResult, svl_dhsForceInitialize(rtcDevice.deviceId));
@@ -155,7 +154,7 @@ GOS_STATIC void_t bsp_rtcHandlerTask (void_t)
 	}
 }
 
-GOS_STATIC void_t bsp_rtcHandlerTimeSetReqCallback (void_t)
+GOS_STATIC void_t bsp_rtcHandlerTimeSetReqCallback (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Local variables.
@@ -179,7 +178,7 @@ GOS_STATIC void_t bsp_rtcHandlerTimeSetReqCallback (void_t)
 	}
 
 	(void_t) gos_gcpTransmitMessage(
-    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			gcpChannel,
 			APP_SYSMON_MSG_RTC_SET_RESP,
 			(void_t*)&result,
 			sizeof(u8_t),

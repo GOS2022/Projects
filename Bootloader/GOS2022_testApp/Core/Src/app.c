@@ -17,10 +17,6 @@ GOS_STATIC gos_driver_functions_t driverFunctions =
 {
 	.traceDriverTransmitString       = drv_traceTransmit,
 	.traceDriverTransmitStringUnsafe = drv_traceTransmitUnsafe,
-	.shellDriverTransmitString       = drv_shellTransmitString,
-	.shellDriverReceiveChar          = drv_shellReceiveChar,
-	.sysmonDriverTransmit            = drv_sysmonTransmit,
-	.sysmonDriverReceive             = drv_sysmonReceive,
 	.timerDriverSysTimerGetValue     = drv_systimerGetValue,
 };
 

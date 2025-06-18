@@ -50,6 +50,7 @@
  */
 #include <svl_pdh.h>
 #include <string.h>
+#include <svl_sysmon.h>
 
 /*
  * Macros
@@ -58,6 +59,29 @@
  * PDH buffer size.
  */
 #define PDH_BUFFER_SIZE ( 1024 )
+
+/*
+ * Type definitions
+ */
+typedef enum
+{
+    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_GET_REQ  = 0x2001,
+    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_GET_RESP = 0x2A01,
+    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_GET_REQ  = 0x2002,
+    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_GET_RESP = 0x2A02,
+    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_REQ    = 0x2003,
+    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_RESP   = 0x2A03,
+    SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_REQ     = 0x2004,
+    SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_RESP    = 0x2A04,
+    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_SET_REQ  = 0x2005,
+    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_SET_RESP = 0x2A05,
+    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_SET_REQ  = 0x2006,
+    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_SET_RESP = 0x2A06,
+    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_REQ    = 0x2007,
+    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_RESP   = 0x2A07,
+    SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_REQ     = 0x2008,
+    SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_RESP    = 0x2A08
+}svl_pdhSysmonMsgId_t;
 
 /*
  * Static variables
@@ -108,134 +132,108 @@ GOS_STATIC svl_pdhWifiCfg_t       wifiCfgMsg       = {0};
 GOS_STATIC svl_pdhBldCfg_t        bldCfgMsg        = {0};
 
 /*
- * Type definitions
+ * External variables
  */
-typedef enum
-{
-    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_GET_REQ  = 0x2001,
-    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_GET_RESP = 0x2A01,
-    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_GET_REQ  = 0x2002,
-    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_GET_RESP = 0x2A02,
-    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_REQ    = 0x2003,
-    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_RESP   = 0x2A03,
-    SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_REQ     = 0x2004,
-    SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_RESP    = 0x2A04,
-    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_SET_REQ  = 0x2005,
-    SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_SET_RESP = 0x2A05,
-    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_SET_REQ  = 0x2006,
-    SVL_PDH_SYSMON_MSG_HARDWARE_INFO_SET_RESP = 0x2A06,
-    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_REQ    = 0x2007,
-    SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_RESP   = 0x2A07,
-    SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_REQ     = 0x2008,
-    SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_RESP    = 0x2A08
-}svl_pdhSysmonMsgId_t;
+GOS_EXTERN GOS_CONST svl_sysmonServiceConfig_t sysmonConfig;
 
 /*
  * Function prototypes
  */
-GOS_STATIC void_t svl_pdhSoftwareInfoReqMsgReceived (void_t);
-GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (void_t);
-GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived      (void_t);
-GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived       (void_t);
-GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (void_t);
-GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (void_t);
-GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived      (void_t);
-GOS_STATIC void_t svl_pdhBldCfgSetMsgReceived       (void_t);
+GOS_STATIC void_t svl_pdhSoftwareInfoReqMsgReceived (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived      (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived       (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived      (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_pdhBldCfgSetMsgReceived       (gos_gcpChannelNumber_t gcpChannel);
 
 /**
  * System monitoring software information request message.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t softwareInfoReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t softwareInfoReqMsg =
 {
 	.callback        = svl_pdhSoftwareInfoReqMsgReceived,
 	.messageId       = SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_GET_REQ,
 	.payload         = NULL,
 	.payloadSize     = 0u,
-	.protocolVersion = 1u
 };
 
 /**
  * System monitoring hardware information request message.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t hardwareInfoReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t hardwareInfoReqMsg =
 {
 	.callback        = svl_pdhHardwareInfoReqMsgReceived,
 	.messageId       = SVL_PDH_SYSMON_MSG_HARDWARE_INFO_GET_REQ,
 	.payload         = NULL,
 	.payloadSize     = 0u,
-	.protocolVersion = 1u
 };
 
 /**
  * WiFi configuration information request message.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t wifiCfgReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t wifiCfgReqMsg =
 {
 	.callback        = svl_pdhWifiCfgReqMsgReceived,
 	.messageId       = SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_REQ,
 	.payload         = NULL,
 	.payloadSize     = 0u,
-	.protocolVersion = 1u
 };
 
 /**
  * Bootloader configuration information request message.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t bldCfgReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t bldCfgReqMsg =
 {
 	.callback        = svl_pdhBldCfgReqMsgReceived,
 	.messageId       = SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_REQ,
 	.payload         = NULL,
 	.payloadSize     = 0u,
-	.protocolVersion = 1u
 };
 
 /**
  * System monitoring software information set message.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t softwareInfoSetMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t softwareInfoSetMsg =
 {
 	.callback        = svl_pdhSoftwareInfoSetMsgReceived,
 	.messageId       = SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_SET_REQ,
 	.payload         = (void_t*)pdhBuffer,
 	.payloadSize     = sizeof(svl_pdhSwInfo_t),
-	.protocolVersion = 1u
 };
 
 /**
  * System monitoring hardware information set message.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t hardwareInfoSetMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t hardwareInfoSetMsg =
 {
 	.callback        = svl_pdhHardwareInfoSetMsgReceived,
 	.messageId       = SVL_PDH_SYSMON_MSG_HARDWARE_INFO_SET_REQ,
 	.payload         = (void_t*)pdhBuffer,
 	.payloadSize     = sizeof(svl_pdhHwInfo_t),
-	.protocolVersion = 1u
 };
 
 /**
  * System monitoring WiFi configuration set message.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t wifiCfgSetMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t wifiCfgSetMsg =
 {
 	.callback        = svl_pdhWifiCfgSetMsgReceived,
 	.messageId       = SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_REQ,
 	.payload         = (void_t*)pdhBuffer,
 	.payloadSize     = sizeof(svl_pdhWifiCfg_t),
-	.protocolVersion = 1u
 };
 
 /**
  * System monitoring bootloader configuration set message.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t bldCfgSetMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t bldCfgSetMsg =
 {
 	.callback        = svl_pdhBldCfgSetMsgReceived,
 	.messageId       = SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_REQ,
 	.payload         = (void_t*)pdhBuffer,
 	.payloadSize     = sizeof(svl_pdhBldCfg_t),
-	.protocolVersion = 1u
 };
 
 /*
@@ -251,14 +249,14 @@ gos_result_t svl_pdhInit (void_t)
 	/*
 	 * Function code.
 	 */
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&softwareInfoReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&hardwareInfoReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&wifiCfgReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&bldCfgReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&softwareInfoSetMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&hardwareInfoSetMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&wifiCfgSetMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&bldCfgSetMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&softwareInfoReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&hardwareInfoReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&wifiCfgReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&bldCfgReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&softwareInfoSetMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&hardwareInfoSetMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&wifiCfgSetMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&bldCfgSetMsg));
 
     GOS_CONCAT_RESULT(initResult, gos_mutexInit(&pdhMutex));
 
@@ -558,7 +556,7 @@ gos_result_t svl_pdhSetWifiCfg (svl_pdhWifiCfg_t* pWifiCfg)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_pdhSoftwareInfoReqMsgReceived (void_t)
+GOS_STATIC void_t svl_pdhSoftwareInfoReqMsgReceived (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Function code.
@@ -566,7 +564,7 @@ GOS_STATIC void_t svl_pdhSoftwareInfoReqMsgReceived (void_t)
 	(void_t) svl_pdhGetSwInfo(&swInfoMsg);
 
 	(void_t) gos_gcpTransmitMessage(
-    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			gcpChannel,
 			SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_GET_RESP,
 			(void_t*)&swInfoMsg,
 			sizeof(swInfoMsg),
@@ -579,7 +577,7 @@ GOS_STATIC void_t svl_pdhSoftwareInfoReqMsgReceived (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (void_t)
+GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Function code.
@@ -587,7 +585,7 @@ GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (void_t)
 	(void_t) svl_pdhGetHwInfo(&hwInfoMsg);
 
 	(void_t) gos_gcpTransmitMessage(
-    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			gcpChannel,
 			SVL_PDH_SYSMON_MSG_HARDWARE_INFO_GET_RESP,
 			(void_t*)&hwInfoMsg,
 			sizeof(hwInfoMsg),
@@ -595,7 +593,7 @@ GOS_STATIC void_t svl_pdhHardwareInfoReqMsgReceived (void_t)
 }
 
 // TODO
-GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived (void_t)
+GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Function code.
@@ -603,7 +601,7 @@ GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived (void_t)
 	(void_t) svl_pdhGetWifiCfg(&wifiCfgMsg);
 
 	(void_t) gos_gcpTransmitMessage(
-    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			gcpChannel,
 			SVL_PDH_SYSMON_MSG_WIFI_CONFIG_GET_RESP,
 			(void_t*)&wifiCfgMsg,
 			sizeof(wifiCfgMsg),
@@ -611,7 +609,7 @@ GOS_STATIC void_t svl_pdhWifiCfgReqMsgReceived (void_t)
 }
 
 // TODO
-GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived (void_t)
+GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Function code.
@@ -619,7 +617,7 @@ GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived (void_t)
 	(void_t) svl_pdhGetBldCfg(&bldCfgMsg);
 
 	(void_t) gos_gcpTransmitMessage(
-    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			gcpChannel,
 			SVL_PDH_SYSMON_MSG_BLD_CONFIG_GET_RESP,
 			(void_t*)&bldCfgMsg,
 			sizeof(bldCfgMsg),
@@ -627,7 +625,7 @@ GOS_STATIC void_t svl_pdhBldCfgReqMsgReceived (void_t)
 }
 
 // TODO
-GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (void_t)
+GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Function code.
@@ -638,7 +636,7 @@ GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (void_t)
 	(void_t) svl_pdhGetSwInfo(&swInfoMsg);
 
 	(void_t) gos_gcpTransmitMessage(
-    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			gcpChannel,
 			SVL_PDH_SYSMON_MSG_SOFTWARE_INFO_SET_RESP,
 			(void_t*)&swInfoMsg,
 			sizeof(swInfoMsg),
@@ -646,7 +644,7 @@ GOS_STATIC void_t svl_pdhSoftwareInfoSetMsgReceived (void_t)
 }
 
 // TODO
-GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (void_t)
+GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Function code.
@@ -657,7 +655,7 @@ GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (void_t)
 	(void_t) svl_pdhGetHwInfo(&hwInfoMsg);
 
 	(void_t) gos_gcpTransmitMessage(
-    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			gcpChannel,
 			SVL_PDH_SYSMON_MSG_HARDWARE_INFO_SET_RESP,
 			(void_t*)&hwInfoMsg,
 			sizeof(hwInfoMsg),
@@ -665,7 +663,7 @@ GOS_STATIC void_t svl_pdhHardwareInfoSetMsgReceived (void_t)
 }
 
 // TODO
-GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived (void_t)
+GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Function code.
@@ -676,7 +674,7 @@ GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived (void_t)
 	(void_t) svl_pdhGetWifiCfg(&wifiCfgMsg);
 
 	(void_t) gos_gcpTransmitMessage(
-    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			gcpChannel,
 			SVL_PDH_SYSMON_MSG_WIFI_CONFIG_SET_RESP,
 			(void_t*)&wifiCfgMsg,
 			sizeof(wifiCfgMsg),
@@ -684,7 +682,7 @@ GOS_STATIC void_t svl_pdhWifiCfgSetMsgReceived (void_t)
 }
 
 // TODO
-GOS_STATIC void_t svl_pdhBldCfgSetMsgReceived (void_t)
+GOS_STATIC void_t svl_pdhBldCfgSetMsgReceived (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Function code.
@@ -695,7 +693,7 @@ GOS_STATIC void_t svl_pdhBldCfgSetMsgReceived (void_t)
 	(void_t) svl_pdhGetBldCfg(&bldCfgMsg);
 
 	(void_t) gos_gcpTransmitMessage(
-    		CFG_SYSMON_GCP_CHANNEL_NUM,
+			gcpChannel,
 			SVL_PDH_SYSMON_MSG_BLD_CONFIG_SET_RESP,
 			(void_t*)&bldCfgMsg,
 			sizeof(bldCfgMsg),

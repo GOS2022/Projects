@@ -66,9 +66,9 @@ GOS_EXTERN GOS_CONST drv_uartPeriphInstance_t uartServiceConfig [];
 GOS_EXTERN drv_uartServiceTimeoutConfig_t     uartServiceTmoConfig;
 
 /*
- * Function: drv_sysmonTransmit
+ * Function: drv_sysmonWiredTransmit
  */
-GOS_INLINE gos_result_t drv_sysmonTransmit (u8_t* pData, u16_t size)
+GOS_INLINE gos_result_t drv_sysmonWiredTransmit (u8_t* pData, u16_t size)
 {
     /*
      * Local variables.
@@ -81,7 +81,7 @@ GOS_INLINE gos_result_t drv_sysmonTransmit (u8_t* pData, u16_t size)
      */
     if (uartServiceConfig != NULL)
     {
-        instance = uartServiceConfig[DRV_UART_SYSMON_INSTANCE];
+        instance = uartServiceConfig[DRV_UART_SYSMON_WIRED_INSTANCE];
 
         uartTransmitResult = drv_uartTransmitIT(instance, pData, size,
                 uartServiceTmoConfig.sysmonTxMutexTmo, uartServiceTmoConfig.sysmonTxTriggerTmo);
@@ -95,9 +95,9 @@ GOS_INLINE gos_result_t drv_sysmonTransmit (u8_t* pData, u16_t size)
 }
 
 /*
- * Function: drv_sysmonReceive
+ * Function: drv_sysmonWiredReceive
  */
-GOS_INLINE gos_result_t drv_sysmonReceive (u8_t* pBuffer, u16_t size)
+GOS_INLINE gos_result_t drv_sysmonWiredReceive (u8_t* pBuffer, u16_t size)
 {
     /*
      * Local variables.
@@ -110,7 +110,7 @@ GOS_INLINE gos_result_t drv_sysmonReceive (u8_t* pBuffer, u16_t size)
      */
     if (uartServiceConfig != NULL)
     {
-        instance = uartServiceConfig[DRV_UART_SYSMON_INSTANCE];
+        instance = uartServiceConfig[DRV_UART_SYSMON_WIRED_INSTANCE];
 
         uartReceiveResult = drv_uartReceiveDMA(instance, pBuffer, size,
                 uartServiceTmoConfig.sysmonRxMutexTmo, uartServiceTmoConfig.sysmonRxTriggerTmo);

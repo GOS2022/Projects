@@ -78,7 +78,6 @@
 #include <gos_queue.h>
 #include <gos_shell.h>
 #include <gos_signal.h>
-#include <gos_sysmon.h>
 #include <gos_time.h>
 #include <gos_trace.h>
 #include <gos_trigger.h>

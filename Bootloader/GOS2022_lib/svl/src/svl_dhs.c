@@ -50,6 +50,7 @@
  */
 #include <string.h>
 #include <svl_dhs.h>
+#include <svl_sysmon.h>
 
 /*
  * Macros
@@ -111,8 +112,8 @@ GOS_STATIC u8_t            numOfDevices = 0u;
  * Function prototypes
  */
 GOS_STATIC void_t svl_dhsDaemon (void_t);
-GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (void_t);
-GOS_STATIC void_t svl_dhsSysmonDeviceInfoReqCallback (void_t);
+GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_dhsSysmonDeviceInfoReqCallback (gos_gcpChannelNumber_t gcpChannel);
 
 /**
  * DHS daemon task descriptor.
@@ -129,25 +130,23 @@ GOS_STATIC gos_taskDescriptor_t dhsDaemonDesc =
 /**
  * Sysmon device number request.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonDeviceNumReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonDeviceNumReqMsg =
 {
     .callback        = svl_dhsSysmonDeviceNumReqCallback,
     .messageId       = SVL_DHS_SYSMON_MSG_DEVICE_NUM_REQ,
     .payload         = NULL,
     .payloadSize     = 0u,
-    .protocolVersion = 1u
 };
 
 /**
  * Sysmon device info request.
  */
-GOS_STATIC gos_sysmonUserMessageDescriptor_t sysmonDeviceInfoReqMsg =
+GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonDeviceInfoReqMsg =
 {
     .callback        = svl_dhsSysmonDeviceInfoReqCallback,
     .messageId       = SVL_DHS_SYSMON_MSG_DEVICE_INFO_REQ,
     .payload         = (void_t*)dhsBuffer,
     .payloadSize     = sizeof(u16_t),
-    .protocolVersion = 1u
 };
 
 /*
@@ -164,8 +163,8 @@ gos_result_t svl_dhsInit (void_t)
      * Function code.
      */
     GOS_CONCAT_RESULT(initResult, gos_taskRegister(&dhsDaemonDesc, NULL));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonDeviceNumReqMsg));
-    GOS_CONCAT_RESULT(initResult, gos_sysmonRegisterUserMessage(&sysmonDeviceInfoReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonDeviceNumReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonDeviceInfoReqMsg));
 
     return initResult;
 }
@@ -594,7 +593,7 @@ GOS_STATIC void_t svl_dhsDaemon (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (void_t)
+GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Local variables.
@@ -606,7 +605,7 @@ GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (void_t)
 	 */
 	(void_t) memcpy((void_t*)dhsBuffer, (void_t*)&numOfDev, sizeof(u16_t));
     (void_t) gos_gcpTransmitMessage(
-            CFG_SYSMON_GCP_CHANNEL_NUM,
+    		gcpChannel,
             SVL_DHS_SYSMON_MSG_DEVICE_NUM_RESP,
             (void_t*)dhsBuffer,
             sizeof(u16_t),
@@ -619,7 +618,7 @@ GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t svl_dhsSysmonDeviceInfoReqCallback (void_t)
+GOS_STATIC void_t svl_dhsSysmonDeviceInfoReqCallback (gos_gcpChannelNumber_t gcpChannel)
 {
 	/*
 	 * Local variables.
@@ -635,7 +634,7 @@ GOS_STATIC void_t svl_dhsSysmonDeviceInfoReqCallback (void_t)
 	(void_t) memcpy((void_t*)dhsBuffer, (void_t*)&deviceData, sizeof(svl_dhsDevice_t));
 
     (void_t) gos_gcpTransmitMessage(
-            CFG_SYSMON_GCP_CHANNEL_NUM,
+    		gcpChannel,
             SVL_DHS_SYSMON_MSG_DEVICE_INFO_RESP,
             (void_t*)dhsBuffer,
             sizeof(svl_dhsDevice_t),

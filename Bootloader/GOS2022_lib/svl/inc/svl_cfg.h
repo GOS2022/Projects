@@ -168,5 +168,29 @@
 //! TODO
 #define SVL_MDI_VAR_NAME_LENGTH              ( 16u )
 
+/*
+ * Sysmon Service Configuration
+ */
+//! TODO
+#define SVL_SYSMON_WIRED_DAEMON_PRIO         ( 191u )
+
+//! TODO
+#define SVL_SYSMON_WIRED_DAEMON_STACK        ( 0x800 )
+
+//! TODO
+#define SVL_SYSMON_WIRELESS_DAEMON_PRIO      ( 191u )
+
+//! TODO
+#define SVL_SYSMON_WIRELESS_DAEMON_STACK     ( 0x800 )
+
+//! TODO
+#define SVL_SYSMON_MAX_USER_MESSAGES         ( 24u )
+
+//! TODO
+#define SVL_SYSMON_WIRED_RX_BUFF_SIZE        ( 2048u )
+
+//! TODO
+#define SVL_SYSMON_WIRELESS_RX_BUFF_SIZE     ( 2048u )
+
 #endif
 #endif
