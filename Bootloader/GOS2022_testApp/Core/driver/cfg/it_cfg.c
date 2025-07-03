@@ -39,6 +39,11 @@ GOS_CONST drv_itDescriptor_t itConfig [] =
 		.subPriority    = 0
 	},
 	{
+		.irqType        = TIM2_IRQn,
+		.preemtPriority = 0,
+		.subPriority    = 0
+	},
+	{
 		.irqType        = UART4_IRQn,
 		.preemtPriority = 0,
 		.subPriority    = 0

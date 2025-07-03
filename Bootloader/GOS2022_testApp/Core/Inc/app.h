@@ -55,6 +55,8 @@ gos_result_t bsp_rtcHandlerGetTemperature (u16_t* pTemp);
 
 gos_result_t app_tftInit (void_t);
 
+void_t       app_tftSetBrightness (u8_t percentage);
+
 gos_result_t app_exioInit (void_t);
 
 gos_result_t app_dhsTestInit (void_t);

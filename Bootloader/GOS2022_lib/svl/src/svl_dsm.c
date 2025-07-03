@@ -52,12 +52,18 @@
 #include <svl_dsm.h>
 #include <svl_pdh.h>
 #include <gos_trace_driver.h>
+#include <drv_trace.h>
 #include <string.h>
 
 /**
- * Initialization phase configuration array.
+ * Platform initialization phase configuration array.
  */
-GOS_EXTERN GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [];
+GOS_EXTERN GOS_CONST svl_dsmInitPhaseDesc_t platformInitPhaseConfig [];
+
+/**
+ * Application initialization phase configuration array.
+ */
+GOS_EXTERN GOS_CONST svl_dsmInitPhaseDesc_t appInitPhaseConfig [];
 
 /**
  * Reaction configuration array.
@@ -65,9 +71,14 @@ GOS_EXTERN GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [];
 GOS_EXTERN GOS_CONST svl_dsmReaction_t      reactionConfig [];
 
 /**
- * Number of the initialization phases (shall be defined by user).
+ * Number of the platform initialization phases (shall be defined by user).
  */
-GOS_EXTERN u32_t                            initPhaseConfigSize;
+GOS_EXTERN u32_t                            platformInitPhaseConfigSize;
+
+/**
+ * Number of the application initialization phases (shall be defined by user).
+ */
+GOS_EXTERN u32_t                            appInitPhaseConfigSize;
 
 /**
  * Size of the reaction configuration (shall be defined by user).
@@ -116,25 +127,25 @@ gos_result_t svl_dsmInit (void_t)
 	/*
 	 * Function code.
 	 */
-	if (initPhaseConfig != NULL && initPhaseConfigSize > 0u)
+	if (appInitPhaseConfig != NULL && appInitPhaseConfigSize > 0u)
 	{
 		// Register DSM task.
 		dsmInitResult = gos_errorTraceInit("DSM initialization", gos_taskRegister(&svlDsmDaemonDesc, NULL));
 
 		// Loop through all init phases.
-		for (initIdx = 0u; initIdx < initPhaseConfigSize / sizeof(svl_dsmInitPhaseDesc_t); initIdx++)
+		for (initIdx = 0u; initIdx < appInitPhaseConfigSize / sizeof(svl_dsmInitPhaseDesc_t); initIdx++)
 		{
 			(void_t) gos_traceDriverTransmitString_Unsafe("\r\n");
-			(void_t) gos_traceDriverTransmitString_Unsafe(initPhaseConfig[initIdx].phaseName);
+			(void_t) gos_traceDriverTransmitString_Unsafe(appInitPhaseConfig[initIdx].phaseName);
 			(void_t) gos_traceDriverTransmitString_Unsafe("\r\n");
 
 			for (initBlockIdx = 0u; initBlockIdx < SVL_DSM_MAX_INITIALIZERS; initBlockIdx++)
 			{
-				if (initPhaseConfig[initIdx].initBlock[initBlockIdx].pInitializer != NULL)
+				if (appInitPhaseConfig[initIdx].initBlock[initBlockIdx].pInitializer != NULL)
 				{
 					dsmInitResult &= gos_errorTraceInit(
-							initPhaseConfig[initIdx].initBlock[initBlockIdx].description,
-							initPhaseConfig[initIdx].initBlock[initBlockIdx].pInitializer());
+							appInitPhaseConfig[initIdx].initBlock[initBlockIdx].description,
+							appInitPhaseConfig[initIdx].initBlock[initBlockIdx].pInitializer());
 				}
 				else
 				{
@@ -149,14 +160,7 @@ gos_result_t svl_dsmInit (void_t)
 		// Configuration is empty.
 	}
 
-	if (dsmInitResult != GOS_SUCCESS)
-	{
-		dsmInitResult = GOS_ERROR;
-	}
-	else
-	{
-		// Value OK.
-	}
+	GOS_CONVERT_RESULT(dsmInitResult);
 
 	return dsmInitResult;
 }
@@ -307,6 +311,111 @@ GOS_INLINE void_t svl_dsmSetState (svl_dsmState_t requiredState)
 	 */
 	devicePrevState = deviceState;
 	deviceState     = requiredState;
+}
+
+/*
+ * Function: svl_dsmPlatformInit
+ */
+__attribute__((weak)) gos_result_t svl_dsmPlatformInit (void_t)
+{
+    /*
+     * Function code.
+     */
+	(void_t) gos_errorHandler(GOS_ERROR_LEVEL_USER_WARNING, __func__, __LINE__, "Platform initializer not implemented!");
+
+	return GOS_SUCCESS;
+}
+
+/*
+ * Function: svl_dsmApplicationInit
+ */
+__attribute__((weak)) gos_result_t svl_dsmApplicationInit (void_t)
+{
+    /*
+     * Function code.
+     */
+	(void_t) gos_errorHandler(GOS_ERROR_LEVEL_USER_WARNING, __func__, __LINE__, "Application initializer not implemented!");
+
+	return GOS_SUCCESS;
+}
+
+/*
+ * Function: gos_platformDriverInit
+ */
+gos_result_t gos_platformDriverInit (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	gos_result_t initResult   = GOS_ERROR;
+	u8_t         initIdx      = 0u;
+	u8_t         initBlockIdx = 0u;
+	char_t       tempBuff [48];
+
+    /*
+     * Function code.
+     */
+	initResult = svl_dsmPlatformInit();
+
+	if (platformInitPhaseConfig != NULL && platformInitPhaseConfigSize > 0u)
+	{
+		// Loop through all init phases.
+		for (initIdx = 0u; initIdx < platformInitPhaseConfigSize / sizeof(svl_dsmInitPhaseDesc_t); initIdx++)
+		{
+			(void_t) sprintf(tempBuff, "\r\n%s\r\n", platformInitPhaseConfig[initIdx].phaseName);
+			(void_t) drv_traceEnqueueTraceMessage(tempBuff, GOS_TRUE, GOS_SUCCESS);
+
+			for (initBlockIdx = 0u; initBlockIdx < SVL_DSM_MAX_INITIALIZERS; initBlockIdx++)
+			{
+				if (platformInitPhaseConfig[initIdx].initBlock[initBlockIdx].pInitializer != NULL)
+				{
+					initResult &= drv_traceEnqueueTraceMessage(
+							platformInitPhaseConfig[initIdx].initBlock[initBlockIdx].description,
+							GOS_FALSE,
+							platformInitPhaseConfig[initIdx].initBlock[initBlockIdx].pInitializer());
+				}
+				else
+				{
+					// End of initializers.
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		// Configuration is empty.
+	}
+
+	GOS_CONVERT_RESULT(initResult);
+
+    return initResult;
+}
+
+/*
+ * Function: gos_userApplicationInit
+ */
+gos_result_t gos_userApplicationInit (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	gos_result_t initResult = GOS_ERROR;
+
+    /*
+     * Function code.
+     */
+	// Flush collected traces.
+	drv_traceFlushTraceEntries();
+
+	initResult = svl_dsmInit();
+
+	// Final step is to call application initializer.
+	initResult &= svl_dsmApplicationInit();
+
+	GOS_CONVERT_RESULT(initResult);
+
+    return initResult;
 }
 
 /**

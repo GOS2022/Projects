@@ -13,6 +13,21 @@
  */
 /*GOS_CONST*/ drv_tmrDescriptor_t tmrConfig [] =
 {
+	// TIM2
+	/*{
+		.periphInstance      = DRV_TMR_INSTANCE_2,
+		.prescaler           = 0,
+		.repetitionCounter   = 0,
+		.counterMode         = TIM_COUNTERMODE_UP,
+	    .period              = 65536-1,
+	    .clockDivision       = TIM_CLOCKDIVISION_DIV1,
+	    .autoReloadPreload   = TIM_AUTORELOAD_PRELOAD_DISABLE,
+		.useClockConfig      = GOS_TRUE,
+	    .clockSource         = TIM_CLOCKSOURCE_INTERNAL,
+		.useMasterConfig     = GOS_TRUE,
+	    .masterOutputTrigger = TIM_TRGO_RESET,
+	    .masterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE
+	},*/
 	// TIM3
 	{
 	    .periphInstance      = DRV_TMR_INSTANCE_3,

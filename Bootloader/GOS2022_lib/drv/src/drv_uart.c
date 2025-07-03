@@ -723,10 +723,40 @@ void_t HAL_UART_MspInit (UART_HandleTypeDef* pHuart)
                     // Continue.
                 }
             }
+            break;
         }
         else
         {
             // Continue.
+        }
+    }
+}
+
+void HAL_UART_ErrorCallback (UART_HandleTypeDef* pHuart)
+{
+    /*
+     * Local variables.
+     */
+    drv_uartPeriphInstance_t instance = 0u;
+
+    /*
+     * Function code.
+     */
+    for (instance = 0u; instance < DRV_UART_NUM_OF_INSTANCES; instance++)
+    {
+        if (uartInstanceLut[instance] == pHuart->Instance)
+        {
+        	HAL_UART_Abort_IT(pHuart);
+
+        	__HAL_UART_CLEAR_PEFLAG(pHuart);
+        	__HAL_UART_CLEAR_FEFLAG(pHuart);
+        	__HAL_UART_CLEAR_NEFLAG(pHuart);
+        	__HAL_UART_CLEAR_OREFLAG(pHuart);
+        	break;
+        }
+        else
+        {
+        	// Continue.
         }
     }
 }

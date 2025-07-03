@@ -352,6 +352,19 @@
                                                                  finalResult = GOS_ERROR;      \
                                                              }                                 \
                                                          }
+/**
+ * Result converting macro.
+ */
+#define GOS_CONVERT_RESULT(result)                       {                                     \
+                                                              if (result != GOS_SUCCESS)       \
+															  {                                \
+                                                            	  result = GOS_ERROR;          \
+															  }                                \
+															  else                             \
+															  {                                \
+																  /* Nothing to do. */         \
+                                                              }                                \
+                                                         }
 
 /*
  * Type definitions
@@ -1269,25 +1282,23 @@ gos_result_t gos_taskYield (
  */
 /**
  * @brief   Platform driver initializer. Used for the platform-specific driver initializations.
- * @details This function is weak and therefore should be over-defined by the user. It prints
- *          a warning message to the log output in case it is not over-defined.
+ * @details This function shall be defined by the user.
  *
  * @return  -
  *
  * @retval  GOS_ERROR -
  */
-__attribute__((weak)) gos_result_t gos_platformDriverInit (void_t);
+GOS_EXTERN gos_result_t gos_platformDriverInit (void_t);
 
 /**
  * @brief   User application initializer. Used for the application-related initializations.
- * @details This function is weak and therefore should be over-defined by the user. It prints
- *          a warning message to the log output in case it is not over-defined.
+ * @details This function shall be defined by the user.
  *
  * @return  -
  *
  * @retval  GOS_ERROR -
  */
-__attribute__((weak)) gos_result_t gos_userApplicationInit (void_t);
+GOS_EXTERN gos_result_t gos_userApplicationInit (void_t);
 
 /**
  * @}

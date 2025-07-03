@@ -6,11 +6,13 @@
  */
 #include <app.h>
 #include <gos_lib.h>
+#include "rcc_driver.h"
+#include "pwm_driver.h"
 
 /**
  * TODO
  */
-GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
+GOS_CONST svl_dsmInitPhaseDesc_t appInitPhaseConfig [] =
 {
 	{
 		// Phase: SVL
@@ -18,7 +20,7 @@ GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 		{
 			{ "Sysmon initialization",              svl_sysmonInit              },
 			{ "PDH initialization",                 svl_pdhInit                 },
-			//{ "IPL initialization",                 svl_iplInit                 },
+			//{ "IPL initialization",                 svl_iplInit                 }, TODO
 			{ "SDH initialization",                 svl_sdhInit                 },
 			{ "MDI initialization",                 svl_mdiInit                 },
 			{ "ERS initialization",                 svl_ersInit                 },
@@ -51,7 +53,37 @@ GOS_CONST svl_dsmInitPhaseDesc_t initPhaseConfig [] =
 /**
  * TODO
  */
-u32_t initPhaseConfigSize = sizeof(initPhaseConfig);
+u32_t appInitPhaseConfigSize = sizeof(appInitPhaseConfig);
+
+/**
+ * TODO
+ */
+GOS_CONST svl_dsmInitPhaseDesc_t platformInitPhaseConfig [] =
+{
+	{
+		// Phase: DRV
+		"Initializing drivers...",
+		{
+			{ "RCC driver initialization",           rcc_driver_init            },
+			{ "PWM driver initialization",           pwm_driver_init            },
+			{ "Timer driver initialization",         drv_tmrInit                },
+			{ "System timer start",                  drv_systimerStart          },
+			{ "GPIO driver initialization",          drv_gpioInit               },
+			{ "I2C driver initialization",           drv_i2cInit                },
+			{ "SPI driver initialization",           drv_spiInit                },
+			{ "DMA driver initialization",           drv_dmaInit                },
+			{ "UART driver initialization",          drv_uartInit               },
+			{ "IT driver initialization",            drv_itInit                 },
+			{ "ADC driver initialization",           drv_adcInit                },
+			{ "SPI driver initialization",           drv_spiInit                }
+		}
+	},
+};
+
+/**
+ * TODO
+ */
+u32_t platformInitPhaseConfigSize = sizeof(platformInitPhaseConfig);
 
 /**
  * TODO

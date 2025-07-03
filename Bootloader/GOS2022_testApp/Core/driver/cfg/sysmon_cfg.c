@@ -13,7 +13,7 @@ GOS_CONST svl_sysmonServiceConfig_t sysmonConfig =
 	.wiredChannelNumber    = 0u,
 	.wiredTxFunction       = drv_sysmonWiredTransmit,
 	.wiredRxFunction       = drv_sysmonWiredReceive,
-	.wirelessChannelNumber = 100,
-	.wirelessTxFunction    = NULL,
-	.wirelessRxFunction    = NULL
+	.wirelessChannelNumber = 1u,
+	.wirelessTxFunction    = drv_sysmonWirelessTransmit,
+	.wirelessRxFunction    = drv_sysmonWirelessReceive
 };

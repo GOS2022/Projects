@@ -66,7 +66,7 @@ typedef struct
  */
 typedef struct
 {
-	char_t*                       phaseName;                           //!< Initialization phase name.
+	char_t*                      phaseName;                            //!< Initialization phase name.
 	GOS_CONST svl_dsmInitBlock_t initBlock [SVL_DSM_MAX_INITIALIZERS]; //!< Initializer block array.
 }svl_dsmInitPhaseDesc_t;
 
@@ -171,5 +171,19 @@ void_t svl_dsmWaitForState (svl_dsmState_t requiredState);
  * @return  -
  */
 void_t svl_dsmSetState (svl_dsmState_t requiredState);
+
+/**
+ *
+ * @param
+ * @return
+ */
+__attribute__((weak)) gos_result_t svl_dsmPlatformInit (void_t);
+
+/**
+ *
+ * @param
+ * @return
+ */
+__attribute__((weak)) gos_result_t svl_dsmApplicationInit (void_t);
 
 #endif

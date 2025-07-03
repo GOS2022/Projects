@@ -98,6 +98,8 @@ GOS_STATIC void_t app_lcdTask (void_t)
 
 	(void_t) bsp_lcdHandlerInit();
 
+	(void_t) gos_taskSleep(50);
+
 	for (;;)
 	{
 		switch (programState)

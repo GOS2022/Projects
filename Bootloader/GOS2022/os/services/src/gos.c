@@ -234,30 +234,6 @@ void_t gos_Dump (void_t)
     (void_t) gos_shellSuspend();
 }
 
-/*
- * Function: gos_platformDriverInit
- */
-__attribute__((weak)) gos_result_t gos_platformDriverInit (void_t)
-{
-    /*
-     * Function code.
-     */
-    (void_t) gos_errorHandler(GOS_ERROR_LEVEL_OS_WARNING, __func__, __LINE__, "Platform driver initializer missing!");
-    return GOS_ERROR;
-}
-
-/*
- * Function: gos_userApplicationInit
- */
-__attribute__((weak)) gos_result_t gos_userApplicationInit (void_t)
-{
-    /*
-     * Function code.
-     */
-    (void_t) gos_errorHandler(GOS_ERROR_LEVEL_OS_WARNING, __func__, __LINE__, "User application initializer missing!");
-    return GOS_ERROR;
-}
-
 /**
  * @brief   Starts the OS.
  * @details Checks whether the initializer function has set the error flag to GOS_FALSE,

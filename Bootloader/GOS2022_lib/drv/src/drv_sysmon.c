@@ -122,3 +122,61 @@ GOS_INLINE gos_result_t drv_sysmonWiredReceive (u8_t* pBuffer, u16_t size)
 
     return uartReceiveResult;
 }
+
+/*
+ * Function: drv_sysmonWirelessTransmit
+ */
+GOS_INLINE gos_result_t drv_sysmonWirelessTransmit (u8_t* pData, u16_t size)
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t             uartTransmitResult = GOS_ERROR;
+    drv_uartPeriphInstance_t instance           = 0u;
+
+    /*
+     * Function code.
+     */
+    if (uartServiceConfig != NULL)
+    {
+        instance = uartServiceConfig[DRV_UART_SYSMON_WIRELESS_INSTANCE];
+
+        uartTransmitResult = drv_uartTransmitIT(instance, pData, size,
+                uartServiceTmoConfig.sysmonTxMutexTmo, uartServiceTmoConfig.sysmonTxTriggerTmo);
+    }
+    else
+    {
+        // Configuration array is NULL.
+    }
+
+    return uartTransmitResult;
+}
+
+/*
+ * Function: drv_sysmonWirelessReceive
+ */
+GOS_INLINE gos_result_t drv_sysmonWirelessReceive (u8_t* pBuffer, u16_t size)
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t             uartReceiveResult  = GOS_ERROR;
+    drv_uartPeriphInstance_t instance           = 0u;
+
+    /*
+     * Function code.
+     */
+    if (uartServiceConfig != NULL)
+    {
+        instance = uartServiceConfig[DRV_UART_SYSMON_WIRELESS_INSTANCE];
+
+        uartReceiveResult = drv_uartReceiveDMA(instance, pBuffer, size,
+                uartServiceTmoConfig.sysmonRxMutexTmo, uartServiceTmoConfig.sysmonRxTriggerTmo);
+    }
+    else
+    {
+        // Configuration array is NULL.
+    }
+
+    return uartReceiveResult;
+}

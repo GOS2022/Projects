@@ -120,7 +120,7 @@ GOS_STATIC void_t app_pdhTestTask (void_t)
 		{
 			(void_t) gos_runTimeGet(&sysRunTime);
 			(void_t) gos_traceTrace(GOS_FALSE, "\r");
-			(void_t) gos_traceTraceFormatted(GOS_TRUE, "System runtime: %04u:%02u:%02u:%02u.%3u",
+			(void_t) gos_traceTraceFormatted(GOS_TRUE, "System runtime: %04u:%02u:%02u:%02u.%03u",
 					sysRunTime.days, sysRunTime.hours, sysRunTime.minutes, sysRunTime.seconds, sysRunTime.milliseconds);
 			sysTicks = gos_kernelGetSysTicks();
 		}

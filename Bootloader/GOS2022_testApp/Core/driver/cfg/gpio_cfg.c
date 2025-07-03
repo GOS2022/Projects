@@ -205,6 +205,15 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.pull = GPIO_NOPULL,
 			.speed = GPIO_SPEED_FREQ_HIGH
 		},
+		[IO_DISPL_BNESS] =
+		{
+			.port = GPIOA,
+			.pin = GPIO_PIN_15,
+			.mode = GPIO_MODE_AF_PP,
+			.pull = GPIO_NOPULL,
+			.speed = GPIO_SPEED_FREQ_LOW,
+			.alternate = GPIO_AF1_TIM2
+		},
 		[IO_TOUCH_CS] =
 		{
 			.port = GPIOB,

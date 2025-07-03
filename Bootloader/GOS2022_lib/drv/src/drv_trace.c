@@ -53,6 +53,45 @@
 #include <string.h>
 
 /*
+ * Macros
+ */
+/**
+ * Enqueueable messages maximum length.
+ */
+#define TRACE_ENQ_MESSAGE_MAX_LENGTH ( 48u )
+
+/**
+ * Enqueueable messages maximum number.
+ */
+#define TRACE_ENQ_ENTRY_MAX_NUM      ( 12u )
+
+/*
+ * Type definitions
+ */
+/**
+ * Enqueued trace entry.
+ */
+typedef struct
+{
+	char_t       message [TRACE_ENQ_MESSAGE_MAX_LENGTH];
+	bool_t       plainText;
+	gos_result_t result;
+}drv_traceEntry_t;
+
+/*
+ * Static variables
+ */
+/**
+ * Enqueued trace entry array.
+ */
+GOS_STATIC drv_traceEntry_t traceEntries [TRACE_ENQ_ENTRY_MAX_NUM];
+
+/**
+ * Enqueued trace entry index.
+ */
+GOS_STATIC u8_t             nextEntryIndex = 0u;
+
+/*
  * External variables
  */
 /**
@@ -121,4 +160,55 @@ GOS_INLINE gos_result_t drv_traceTransmit (char_t* pMessage)
     }
 
     return uartTransmitResult;
+}
+
+/*
+ * Function: drv_traceEnqueueTraceMessage
+ */
+gos_result_t drv_traceEnqueueTraceMessage (const char_t* message, bool_t plainText, gos_result_t result)
+{
+    /*
+     * Function code.
+     */
+	if (nextEntryIndex < TRACE_ENQ_ENTRY_MAX_NUM)
+	{
+		(void_t) strcpy(traceEntries[nextEntryIndex].message, message);
+		traceEntries[nextEntryIndex].result    = result;
+		traceEntries[nextEntryIndex].plainText = plainText;
+		nextEntryIndex++;
+	}
+	else
+	{
+		// Trace queue full.
+	}
+
+	return result;
+}
+
+/*
+ * Function: drv_traceFlushTraceEntries
+ */
+void_t drv_traceFlushTraceEntries (void_t)
+{
+	/*
+	 * Local variables.
+	 */
+	u8_t traceIndex = 0u;
+
+    /*
+     * Function code.
+     */
+	for (traceIndex = 0u; traceIndex < nextEntryIndex; traceIndex++)
+	{
+		if (traceEntries[traceIndex].plainText == GOS_TRUE)
+		{
+			(void_t) gos_traceTraceFormattedUnsafe(traceEntries[traceIndex].message);
+		}
+		else
+		{
+			(void_t) gos_errorTraceInit(traceEntries[traceIndex].message, traceEntries[traceIndex].result);
+		}
+	}
+
+	nextEntryIndex = 0u;
 }

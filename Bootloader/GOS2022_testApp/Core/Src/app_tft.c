@@ -12,6 +12,7 @@
 #include "g_driver.h"
 #include "mdi_def.h"
 #include "gos_lib.h"
+#include "pwm_driver.h"
 
 #define CPU_LOAD_AVG_SAMPLES ( 16u )
 
@@ -39,6 +40,8 @@ GOS_STATIC void_t APP_TFT_PopUpWindowOkClick (g_button_t* pButton);
 GOS_STATIC void_t APP_TFT_PopUpWindowResetClick (g_button_t* pButton);
 
 GOS_STATIC void_t app_tftStepButtonPressed (void_t);
+GOS_STATIC void_t app_tftIncBrightnessPressed (void_t);
+GOS_STATIC void_t app_tftDecBrightnessPressed (void_t);
 
 GOS_STATIC g_button_t okButton =
 {
@@ -165,6 +168,7 @@ GOS_STATIC u16_t cpuLoad;
 GOS_STATIC u16_t cpuLoadArray [128];
 GOS_STATIC u16_t cpuLoadIdx = 0u;
 GOS_STATIC app_tftWindowState_t windowState = WINDOW_STATE_MONITORING;
+GOS_STATIC u8_t displayBrightness = 50;
 
 /**
  * Labels for tasks.
@@ -219,6 +223,11 @@ gos_result_t app_tftInit (void_t)
 	}
 
 	return tftInitResult;
+}
+
+void_t app_tftSetBrightness (u8_t percentage)
+{
+	pwm_driver_set_duty(percentage);
 }
 
 
@@ -383,7 +392,11 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 	g_windowInit(&statusWindow, &statusWindowCloseButton, &statusWindowTitleLabel);
 	g_windowInit(&monitoringWindow, &monitoringWindowCloseButton, &monitoringWindowTitleLabel);
 
+	app_tftSetBrightness(displayBrightness);
+
 	bsp_exioRegisterCallback(GPIO_EX_PIN_4, GPIO_EX_EDGE_FALLING, app_tftStepButtonPressed);
+	bsp_exioRegisterCallback(GPIO_EX_PIN_1, GPIO_EX_EDGE_FALLING, app_tftIncBrightnessPressed);
+	bsp_exioRegisterCallback(GPIO_EX_PIN_0, GPIO_EX_EDGE_FALLING, app_tftDecBrightnessPressed);
 
 	for (;;)
 	{
@@ -531,4 +544,30 @@ GOS_STATIC void_t app_tftStepButtonPressed (void_t)
 		g_windowShow(&statusWindow);
 		windowState = WINDOW_STATE_STATUS;
 	}
+}
+
+GOS_STATIC void_t app_tftIncBrightnessPressed (void_t)
+{
+	displayBrightness += 5;
+
+	if (displayBrightness > 100)
+	{
+		displayBrightness = 100;
+	}
+
+	app_tftSetBrightness(displayBrightness);
+}
+
+GOS_STATIC void_t app_tftDecBrightnessPressed (void_t)
+{
+	if (displayBrightness < 5)
+	{
+		displayBrightness = 0;
+	}
+	else
+	{
+		displayBrightness -= 5;
+	}
+
+	app_tftSetBrightness(displayBrightness);
 }

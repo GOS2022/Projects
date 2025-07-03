@@ -289,12 +289,12 @@ GOS_STATIC gos_mutex_t                            sysmonMutex;
 /**
  * Wired receive buffer.
  */
-GOS_STATIC u8_t                                   wiredRRxBuffer    [SVL_SYSMON_WIRED_RX_BUFF_SIZE];
+GOS_STATIC u8_t                                   wiredRxBuffer    [SVL_SYSMON_WIRED_RX_BUFF_SIZE];
 
 /**
  * Wireless receive buffer.
  */
-GOS_STATIC u8_t                                   wirelessRRxBuffer [SVL_SYSMON_WIRELESS_RX_BUFF_SIZE];
+GOS_STATIC u8_t                                   wirelessRxBuffer [SVL_SYSMON_WIRELESS_RX_BUFF_SIZE];
 
 /**
  * Ping message structure.
@@ -1221,7 +1221,7 @@ GOS_STATIC void_t svl_sysmonWiredDaemonTask (void_t)
         messageId = 0u;
 
         // Check if a message was received.
-        if (gos_gcpReceiveMessage(sysmonConfig.wiredChannelNumber, &messageId, wiredRRxBuffer, SVL_SYSMON_WIRED_RX_BUFF_SIZE, 0xFFFF) == GOS_SUCCESS)
+        if (gos_gcpReceiveMessage(sysmonConfig.wiredChannelNumber, &messageId, wiredRxBuffer, SVL_SYSMON_WIRED_RX_BUFF_SIZE, 0xFFFF) == GOS_SUCCESS)
         {
     		if (gos_mutexLock(&sysmonMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
     		{
@@ -1246,7 +1246,7 @@ GOS_STATIC void_t svl_sysmonWiredDaemonTask (void_t)
                             // If payload is not NULL, copy it.
                             if (userMessages[userMessageIndex].payload != NULL)
                             {
-                                (void_t) memcpy(userMessages[userMessageIndex].payload, (void_t*)wiredRRxBuffer, userMessages[userMessageIndex].payloadSize);
+                                (void_t) memcpy(userMessages[userMessageIndex].payload, (void_t*)wiredRxBuffer, userMessages[userMessageIndex].payloadSize);
                             }
                             else
                             {
@@ -1256,6 +1256,9 @@ GOS_STATIC void_t svl_sysmonWiredDaemonTask (void_t)
                             // Call callback function.
                             if (userMessages[userMessageIndex].callback != NULL)
                             {
+#if SVL_SYSMON_TRACE_LEVEL > 0
+                                (void_t) gos_traceTraceFormatted(GOS_TRUE, "[Wired] User message received with ID: 0x%04x\r\n", messageId);
+#endif
                             	userMessages[userMessageIndex].callback(sysmonConfig.wiredChannelNumber);
                             }
                             else
@@ -1283,10 +1286,16 @@ GOS_STATIC void_t svl_sysmonWiredDaemonTask (void_t)
                 	// Check if handler exists.
                     if (sysmonLut[lutIndex].pHandler != NULL)
                     {
-                    	sysmonLut[lutIndex].pHandler(sysmonConfig.wiredChannelNumber, wiredRRxBuffer, lutIndex);
+#if SVL_SYSMON_TRACE_LEVEL > 0
+                        (void_t) gos_traceTraceFormatted(GOS_TRUE, "[Wired] Sysmon message received with ID: 0x%04x\r\n", messageId);
+#endif
+                    	sysmonLut[lutIndex].pHandler(sysmonConfig.wiredChannelNumber, wiredRxBuffer, lutIndex);
                     }
                     else
                     {
+#if SVL_SYSMON_TRACE_LEVEL > 0
+                        (void_t) gos_traceTraceFormatted(GOS_TRUE, "[Wired] Unknown message received with ID: 0x%04x\r\n", messageId);
+#endif
                         (void_t) svl_sysmonSendResponse(sysmonConfig.wiredChannelNumber, SVL_SYSMON_MSG_UNKNOWN);
                     }
 
@@ -1315,8 +1324,114 @@ GOS_STATIC void_t svl_sysmonWiredDaemonTask (void_t)
  */
 GOS_STATIC void_t svl_sysmonWirelessDaemonTask (void_t)
 {
-	for(;;)
-	{
-		(void_t) gos_taskSuspend(sysmonWirelessDaemonTaskDesc.taskId);
-	}
+    /*
+     * Local variables.
+     */
+    svl_sysmonMessageEnum_t lutIndex         = 0u;
+    u8_t                    userMessageIndex = 0u;
+    u16_t                   messageId        = 0u;
+
+    /*
+     * Function code.
+     */
+    (void_t) gos_taskSleep(3000);
+
+    for (;;)
+    {
+        // Reset message ID.
+        messageId = 0u;
+
+        // Check if a message was received.
+        if (gos_gcpReceiveMessage(sysmonConfig.wirelessChannelNumber, &messageId, wirelessRxBuffer, SVL_SYSMON_WIRELESS_RX_BUFF_SIZE, 0xFFFF) == GOS_SUCCESS)
+        {
+    		if (gos_mutexLock(&sysmonMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+    		{
+                // Get LUT index.
+                lutIndex = svl_sysmonGetLutIndex(messageId);
+                (void_t) gos_mutexUnlock(&sysmonMutex);
+    		}
+    		else
+    		{
+    			// Mutex error.
+    		}
+
+            // Check user registered messages.
+            if ((lutIndex == SVL_SYSMON_MSG_UNKNOWN) || (lutIndex == SVL_SYSMON_MSG_NUM_OF_MESSAGES))
+            {
+                for (userMessageIndex = 0u; userMessageIndex < SVL_SYSMON_MAX_USER_MESSAGES; userMessageIndex++)
+                {
+                    if (userMessages[userMessageIndex].messageId == messageId)
+                    {
+                    	if (gos_mutexLock(&sysmonMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+                    	{
+                            // If payload is not NULL, copy it.
+                            if (userMessages[userMessageIndex].payload != NULL)
+                            {
+                                (void_t) memcpy(userMessages[userMessageIndex].payload, (void_t*)wirelessRxBuffer, userMessages[userMessageIndex].payloadSize);
+                            }
+                            else
+                            {
+                                // Message has no payload.
+                            }
+
+                            // Call callback function.
+                            if (userMessages[userMessageIndex].callback != NULL)
+                            {
+#if SVL_SYSMON_TRACE_LEVEL > 0
+                                (void_t) gos_traceTraceFormatted(GOS_TRUE, "[Wireless] User message received with ID: 0x%04x\r\n", messageId);
+#endif
+                            	userMessages[userMessageIndex].callback(sysmonConfig.wirelessChannelNumber);
+                            }
+                            else
+                            {
+                            	// NULL pointer.
+                            }
+
+                    		(void_t) gos_mutexUnlock(&sysmonMutex);
+                    	}
+                    	else
+                    	{
+                    		// Mutex error.
+                    	}
+                    }
+                    else
+                    {
+                        // Message error.
+                    }
+                }
+            }
+            else
+            {
+            	if (gos_mutexLock(&sysmonMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+            	{
+                	// Check if handler exists.
+                    if (sysmonLut[lutIndex].pHandler != NULL)
+                    {
+#if SVL_SYSMON_TRACE_LEVEL > 0
+                        (void_t) gos_traceTraceFormatted(GOS_TRUE, "[Wireless] Sysmon message received with ID: 0x%04x\r\n", messageId);
+#endif
+                    	sysmonLut[lutIndex].pHandler(sysmonConfig.wirelessChannelNumber, wirelessRxBuffer, lutIndex);
+                    }
+                    else
+                    {
+#if SVL_SYSMON_TRACE_LEVEL > 0
+                        (void_t) gos_traceTraceFormatted(GOS_TRUE, "[Wireless] Unknown message received with ID: 0x%04x\r\n", messageId);
+#endif
+                        (void_t) svl_sysmonSendResponse(sysmonConfig.wirelessChannelNumber, SVL_SYSMON_MSG_UNKNOWN);
+                    }
+
+            		(void_t) gos_mutexUnlock(&sysmonMutex);
+            	}
+            	else
+            	{
+            		// Mutex error.
+            	}
+            }
+        }
+        else
+        {
+            // Reception error.
+            //(void_t) gos_taskSleep(10);
+        }
+    }
 }

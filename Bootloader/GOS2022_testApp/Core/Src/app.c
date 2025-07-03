@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include "app.h"
-#include "driver.h"
 #include "drv.h"
 #include "iodef.h"
 
@@ -23,7 +22,8 @@ GOS_STATIC gos_driver_functions_t driverFunctions =
 /*
  * Function: gos_platformDriverInit
  */
-gos_result_t gos_platformDriverInit (void_t)
+//gos_result_t gos_platformDriverInit (void_t)
+gos_result_t svl_dsmPlatformInit (void_t)
 {
 	/*
 	 * Local variables.
@@ -40,15 +40,12 @@ gos_result_t gos_platformDriverInit (void_t)
 		platformDriverInitResult = GOS_ERROR;
 	}
 
-	platformDriverInitResult = driver_init();
+	platformDriverInitResult &= drv_traceEnqueueTraceMessage("Register systick hook", GOS_FALSE, gos_kernelRegisterSysTickHook(/*sysTickHook*/HAL_IncTick));
 
 	// Register kernel drivers.
 	platformDriverInitResult &= gos_driverInit(&driverFunctions);
 
-    if (platformDriverInitResult != GOS_SUCCESS)
-	{
-    	platformDriverInitResult = GOS_ERROR;
-	}
+    GOS_CONVERT_RESULT(platformDriverInitResult);
 
     SysTick->VAL = 0;
     SysTick->CTRL = 0b111;
@@ -61,7 +58,8 @@ gos_result_t gos_platformDriverInit (void_t)
 /*
  * Function: gos_userApplicationInit
  */
-gos_result_t gos_userApplicationInit (void_t)
+//gos_result_t gos_userApplicationInit (void_t)
+gos_result_t svl_dsmApplicationInit (void_t)
 {
 	/*
 	 * Local variables.
@@ -72,7 +70,7 @@ gos_result_t gos_userApplicationInit (void_t)
 	 * Function code.
 	 */
 	// Initialize device state manager for startup.
-	appInitResult &= svl_dsmInit();
+	//appInitResult &= svl_dsmInit();
 
 	// Welcome message.
 	(void_t) gos_traceTrace(GOS_FALSE, "Welcome to the GOS test application!");

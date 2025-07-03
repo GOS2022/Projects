@@ -87,4 +87,10 @@ gos_result_t drv_traceTransmitUnsafe (char_t* pMessage);
  */
 gos_result_t drv_traceTransmit (char_t* pMessage);
 
+// TODO
+gos_result_t drv_traceEnqueueTraceMessage (const char_t* message, bool_t plainText, gos_result_t result);
+
+// TODO
+void_t drv_traceFlushTraceEntries (void_t);
+
 #endif

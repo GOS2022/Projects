@@ -90,4 +90,10 @@ gos_result_t drv_sysmonWiredTransmit (u8_t* pData, u16_t size);
  */
 gos_result_t drv_sysmonWiredReceive (u8_t* pBuffer, u16_t size);
 
+// TODO
+gos_result_t drv_sysmonWirelessTransmit (u8_t* pData, u16_t size);
+
+// TODO
+gos_result_t drv_sysmonWirelessReceive (u8_t* pBuffer, u16_t size);
+
 #endif

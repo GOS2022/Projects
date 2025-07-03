@@ -68,7 +68,7 @@ drv_uartServiceTimeoutConfig_t uartServiceTmoConfig =
 	//.shellTxMutexTmo        = 2000u,
 	//.shellTxTriggerTmo      = 2000u,
 	.sysmonRxMutexTmo       = 2000u,
-	.sysmonRxTriggerTmo     = GOS_TRIGGER_ENDLESS_TMO,
+	.sysmonRxTriggerTmo     = 200u,//GOS_TRIGGER_ENDLESS_TMO,
 	.sysmonTxMutexTmo       = 2000u,
 	.sysmonTxTriggerTmo     = 2000u
 };

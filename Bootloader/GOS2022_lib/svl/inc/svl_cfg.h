@@ -192,5 +192,14 @@
 //! TODO
 #define SVL_SYSMON_WIRELESS_RX_BUFF_SIZE     ( 2048u )
 
+/**
+ * Trace level for sysmon debugging.
+ *
+ * 0 : Debug messages disabled.
+ * 1 : Only state machine state info.
+ * 2 : All debug info.
+ */
+#define SVL_SYSMON_TRACE_LEVEL               ( 2 )
+
 #endif
 #endif
