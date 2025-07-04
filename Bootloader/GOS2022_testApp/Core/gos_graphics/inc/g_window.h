@@ -10,11 +10,11 @@
 
 #include <g_control.h>
 #include "gos.h"
-#include "ili9341.h"
-#include "ili9341_gfx.h"
-#include "ili9341_font.h"
 #include <g_button.h>
 #include <g_label.h>
+#include "../../drv/inc/ili9341.h"
+#include "../../drv/inc/ili9341_font.h"
+#include "../../drv/inc/ili9341_gfx.h"
 
 #define WINDOW_TITLE_MAX_LENGTH   ( 24u )
 #define WINDOW_BUTTONS_MAX_NUMBER ( 5u  )

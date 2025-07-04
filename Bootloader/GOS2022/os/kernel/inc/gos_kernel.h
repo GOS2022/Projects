@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_kernel.h
 //! @author     Ahmed Gazar
-//! @date       2025-03-22
-//! @version    1.22
+//! @date       2025-07-04
+//! @version    1.23
 //!
 //! @brief      GOS kernel header.
 //! @details    The GOS kernel is the core of the GOS system. It contains the basic type
@@ -81,10 +81,12 @@
 //                                          *    GOS_ATOMIC_ENTER and GOS_ATOMIC_EXIT modified
 //                                          *    gos_kernel_privilege_t moved here
 //                                          -    taskIdEx removed from task descriptor structure
-// 1.20       2024-02-27    Ahmed Gazar     +    GOS_CONCAT_RESULT added
+// 1.20       2024-02-27    Ahmed Gazar     +    GOS_CONCAT_RESULT() added
 // 1.21       2024-06-13    Ahmed Gazar     +    gos_taskGetNumber added
 // 1.22       2025-03-22    Ahmed Gazar     +    gos_preResetHook_t added
 //                                          +    gos_kernelRegisterPreResetHook() added
+// 1.23       2025-07-04    Ahmed Gazar     +    GOS_UNUSED_PAR() added
+//                                          +    GOS_CONVERT_RESULT() added
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -216,6 +218,11 @@
  * ASM.
  */
 #define GOS_ASM                        __asm volatile
+
+/**
+ * Unused.
+ */
+#define GOS_UNUSED_PAR(x)             (void_t) x
 
 /**
  * @}

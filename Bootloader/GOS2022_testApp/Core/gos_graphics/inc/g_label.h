@@ -10,9 +10,10 @@
 
 #include <g_control.h>
 #include "gos.h"
-#include "ili9341.h"
-#include "ili9341_gfx.h"
-#include "ili9341_font.h"
+
+#include "../../drv/inc/ili9341.h"
+#include "../../drv/inc/ili9341_font.h"
+#include "../../drv/inc/ili9341_gfx.h"
 
 #define LABEL_TEXT_MAX_LENGTH ( 60U )
 #define LABEL_AUTO_WIDTH      ( UINT16_MAX )

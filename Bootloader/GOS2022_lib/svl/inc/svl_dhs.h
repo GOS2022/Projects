@@ -76,6 +76,45 @@
  */
 #define SVL_DHS_READ_FUNC_MAX_NUM   ( 4u )
 
+/**
+ * Macro for declaring a read function.
+ */
+#define SVL_DHS_READ_FUNC_DECL(funcName) GOS_STATIC gos_result_t funcName (u32_t address, u8_t* pData, u32_t size)
+
+/**
+ * Macro for defining a read function.
+ */
+#define SVL_DHS_READ_FUNC_DEF(funcName, devDescr, funcIdx, len)                                                                                                                  \
+SVL_DHS_READ_FUNC_DECL(funcName)                                                                                 \
+{                                                                                                                \
+    return svl_dhsReadDevice(devDescr.deviceId, funcIdx, len, devDescr.pDeviceDescriptor, address, pData, size); \
+}
+
+/**
+ * Macro for declaring a write function.
+ */
+#define SVL_DHS_WRITE_FUNC_DECL(funcName) GOS_STATIC gos_result_t funcName (u32_t address, u8_t* pData, u32_t size)
+
+/**
+ * Macro for defining a write function.
+ */
+#define SVL_DHS_WRITE_FUNC_DEF(funcName, devDescr, funcIdx, len)                                                                                                                  \
+SVL_DHS_WRITE_FUNC_DECL(funcName)                                                                                 \
+{                                                                                                                 \
+    return svl_dhsWriteDevice(devDescr.deviceId, funcIdx, len, devDescr.pDeviceDescriptor, address, pData, size); \
+}
+
+/**
+ * Macro for declaring read function wrapper.
+ */
+#define SVL_DHS_READ_FUNC_WRAPPER_DECL(funcName) GOS_STATIC gos_result_t funcName (u8_t params, va_list args)
+
+/**
+ * Macro for declaring write function wrapper.
+ */
+#define SVL_DHS_WRITE_FUNC_WRAPPER_DECL(funcName) GOS_STATIC gos_result_t funcName (u8_t params, va_list args)
+
+
 /*
  * Type definitions
  */
@@ -86,9 +125,10 @@ typedef gos_result_t (*svl_dhsReadWriteFunc_t)(u8_t, va_list args);
  */
 typedef enum
 {
-	DHS_STATE_UNINITIALIZED,  //!< Device uninitialized.
-	DHS_STATE_HEALTHY,        //!< Device healthy.
-	DHS_STATE_ERROR           //!< Device in error state.
+	DHS_STATE_UNINITIALIZED = 0,  //!< Device uninitialized.
+	DHS_STATE_HEALTHY       = 1,  //!< Device healthy (no errors).
+	DHS_STATE_WARNING       = 2,  //!< Device healthy (errors within tolerance).
+	DHS_STATE_ERROR         = 3   //!< Device in error (errors reached tolerance).
 }svl_dhsState_t;
 
 /**
@@ -96,10 +136,10 @@ typedef enum
  */
 typedef enum
 {
-	DHS_TYPE_READONLY,    //!< Read only (only read function).
-	DHS_TYPE_WRITEONLY,   //!< Write only (only write function).
-	DHS_TYPE_READWRITE,   //!< Read/write (both read and write function).
-	DHS_TYPE_VIRTUAL,     //!< Virtual (neither read nor write function).
+	DHS_TYPE_READONLY       = 0,  //!< Read only (only read function).
+	DHS_TYPE_WRITEONLY      = 1,  //!< Write only (only write function).
+	DHS_TYPE_READWRITE      = 2,  //!< Read/write (both read and write function).
+	DHS_TYPE_VIRTUAL        = 3,  //!< Virtual (neither read nor write function).
 }svl_dhsType_t;
 
 /**

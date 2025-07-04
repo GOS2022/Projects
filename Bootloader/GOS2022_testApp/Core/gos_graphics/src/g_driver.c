@@ -49,9 +49,9 @@
  * Includes
  */
 #include "g_driver.h"
-#include "ili9341.h"
-#include "iodef.h"
 #include <string.h>
+#include "../../drv/inc/ili9341.h"
+#include "../../drv/inc/iodef.h"
 
 /*
  * Static variables

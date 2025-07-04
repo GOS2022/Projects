@@ -348,13 +348,23 @@ gos_result_t svl_dhsWriteDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t le
 		if (devices[index].writeFunctions[functionIdx](length, args) == GOS_ERROR)
 		{
 			devices[index].errorCode   |= DHS_ERROR_WRITE;
-			devices[index].deviceState = DHS_STATE_ERROR;
+			devices[index].deviceState = DHS_STATE_WARNING;
 			devices[index].errorCounter++;
 		}
 		else
 		{
 			devices[index].writeCounter++;
 			writeResult = GOS_SUCCESS;
+		}
+
+		// Check error tolerance.
+		if (devices[index].errorCounter > devices[index].errorTolerance)
+		{
+			devices[index].deviceState = DHS_STATE_ERROR;
+		}
+		else
+		{
+			// Within tolerance.
 		}
 
 		va_end(args);
@@ -391,13 +401,23 @@ gos_result_t svl_dhsReadDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t len
 		if (devices[index].readFunctions[functionIdx](length, args) == GOS_ERROR)
 		{
 			devices[index].errorCode   |= DHS_ERROR_READ;
-			devices[index].deviceState = DHS_STATE_ERROR;
+			devices[index].deviceState = DHS_STATE_WARNING;
 			devices[index].errorCounter++;
 		}
 		else
 		{
 			devices[index].readCounter++;
 			readResult = GOS_SUCCESS;
+		}
+
+		// Check error tolerance.
+		if (devices[index].deviceState > devices[index].errorTolerance)
+		{
+			devices[index].deviceState = DHS_STATE_ERROR;
+		}
+		else
+		{
+			// Within tolerance.
 		}
 
 		va_end(args);

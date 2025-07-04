@@ -71,7 +71,7 @@ typedef struct __attribute__((packed))
 /**
  * ERS read/write function type.
  */
-typedef gos_result_t (*svl_ersReadWriteFunc_t)(u32_t address, u8_t* pData, u16_t size);
+typedef gos_result_t (*svl_ersReadWriteFunc_t)(u32_t address, u8_t* pData, u32_t size);
 
 /**
  * ERS configuration structure.

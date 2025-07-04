@@ -3,8 +3,8 @@
 	<name>GOS2022_testApp</name>
 	<comment></comment>
 	<projects>
-		<project>GOS2022</project>
 		<project>GOS2022_lib</project>
+		<project>GOS2022</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

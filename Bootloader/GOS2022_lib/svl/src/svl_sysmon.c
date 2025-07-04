@@ -1310,7 +1310,7 @@ GOS_STATIC void_t svl_sysmonWiredDaemonTask (void_t)
         else
         {
             // Reception error.
-            (void_t) gos_taskSleep(10);
+            (void_t) gos_taskSleep(5);
         }
     }
 }
