@@ -162,14 +162,10 @@ gos_result_t gos_gcpTransmitMessage (
  *                                 frame reception error occurred.
  */
 gos_result_t gos_gcpReceiveMessage (
-        /*gos_gcpChannelNumber_t  channel,
-        gos_gcpMessageHeader_t* pTargetMessageHeader,
-        void_t*                 pPayloadTarget*/
-
         gos_gcpChannelNumber_t  channel,
 		u16_t*                  pMessageId,
         void_t*                 pPayloadTarget,
-		u16_t                   targetSize,
+		u16_t*                  targetSize,
         u16_t                   maxChunkSize
         );
 #endif

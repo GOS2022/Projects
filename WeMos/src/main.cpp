@@ -3,18 +3,19 @@
 #include "Ticker.h"
 #include <ESP8266WiFi.h>
 #include "wifiserver.h"
-#include "SoftwareSerial.h"
 #include "drv_uart.h"
+#include <svl_sysmon.h>
 
 extern "C" {
 #include "app_ipl.h"
 #include <cont.h>
 #include "gos_gcp.h"
-#include "gos_task.h"
+#include "gos_kernel.h"
 #include "gos_driver.h"
 #include "gos_trace.h"
 #include "gos_time.h"
 #include "gos.h"
+#include "app.h"
 }
 
 #define LED_BUILTINN D4
@@ -40,12 +41,9 @@ void setup()
   	gos_driverInit(&driverFunctions);  
   	pinMode(LED_BUILTINN, OUTPUT); 
 	digitalWrite(LED_BUILTINN, HIGH);
-  	//Serial.begin(115200);
   	sysTicker.attach_ms(1, Systick_callback);
   	gos_init();
-	app_iplInit();
-	//wifiServerInit();
-	//svl_ipcInit();
+	app_init();
 }
 
 void loop()

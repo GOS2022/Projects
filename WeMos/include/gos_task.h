@@ -1,5 +1,5 @@
-#ifndef GOS_LIGHT_H
-#define GOS_LIGHT_H
+#ifndef GOS_TASK_H
+#define GOS_TASK_H
 
 #include "gos_kernel.h"
 #include <cont.h>

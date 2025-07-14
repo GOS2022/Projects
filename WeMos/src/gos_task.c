@@ -52,8 +52,9 @@
  */
 #include <gos_error.h>
 #include <gos_kernel.h>
-#include <gos_task.h>
+#include "gos_task.h"
 #include <string.h>
+
 
 /*
  * External variables

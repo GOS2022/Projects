@@ -61,6 +61,7 @@ extern "C"{
 #include <gos_crc_driver.h>
 #include <gos_gcp.h>
 #include <string.h>
+#include "gos_task.h"
 }
 
 /*
@@ -141,7 +142,7 @@ GOS_STATIC GOS_INLINE gos_result_t gos_gcpReceiveMessageInternal (
         gos_gcpChannelNumber_t  channel,
         u16_t*                  pMessageId,
         void_t*                 pPayloadTarget,
-        u16_t                   targetSize,
+        u16_t*                  targetSize,
         u16_t                   maxChunkSize
         );
 
@@ -229,7 +230,7 @@ gos_result_t gos_gcpReceiveMessage (
         gos_gcpChannelNumber_t  channel,
         u16_t*                  pMessageId,
         void_t*                 pPayloadTarget,
-        u16_t                   targetSize,
+        u16_t*                  targetSize,
         u16_t                   maxChunkSize
         )
 {
@@ -285,7 +286,6 @@ GOS_STATIC GOS_INLINE gos_result_t gos_gcpTransmitMessageInternal(
 
         if (channelFunctions[channel].gcpTransmitFunction((u8_t *)&requestHeaderFrame, (u16_t)sizeof(requestHeaderFrame)) == GOS_SUCCESS)
         {
-
             if (requestHeaderFrame.dataSize == 0u)
             {
                 if (channelFunctions[channel].gcpReceiveFunction((u8_t *)&responseHeaderFrame, (u16_t)sizeof(responseHeaderFrame)) == GOS_SUCCESS &&
@@ -359,7 +359,7 @@ GOS_STATIC GOS_INLINE gos_result_t gos_gcpReceiveMessageInternal (
         gos_gcpChannelNumber_t  channel,
         u16_t*                  pMessageId,
         void_t*                 pPayloadTarget,
-        u16_t                   targetSize,
+        u16_t*                  targetSize,
         u16_t                   maxChunkSize
         )
 {
@@ -392,6 +392,15 @@ GOS_STATIC GOS_INLINE gos_result_t gos_gcpReceiveMessageInternal (
         if (channelFunctions[channel].gcpReceiveFunction((u8_t*)&requestHeaderFrame, (u16_t)sizeof(requestHeaderFrame)) == GOS_SUCCESS &&
             gos_gcpValidateHeader(&requestHeaderFrame, &headerAck) == GOS_SUCCESS)
         {
+            if (targetSize != NULL)
+            {
+                *targetSize = requestHeaderFrame.dataSize;
+            }
+            else
+            {
+                // Nothing to do.
+            }
+            
         	if (requestHeaderFrame.dataSize == 0)
         	{
         		// OK.

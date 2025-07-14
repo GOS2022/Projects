@@ -56,7 +56,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define CFG_SHELL_COMMAND_BUFFER_SIZE ( 200u )
+#define CFG_SHELL_COMMAND_BUFFER_SIZE ( 64u )
 
 /*
  * Static variables
