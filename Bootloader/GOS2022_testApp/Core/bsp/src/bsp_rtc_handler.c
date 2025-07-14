@@ -170,6 +170,7 @@ GOS_STATIC void_t bsp_rtcHandlerTimeSetReqCallback (gos_gcpChannelNumber_t gcpCh
 	if (svl_dhsWriteDevice(rtcDevice.deviceId, RTC_SET_TIME_FUNC_IDX, 3,
 		rtcDevice.pDeviceDescriptor, &desiredTime, 3) == GOS_SUCCESS)
 	{
+		gos_timeSet(&desiredTime);
 		result = 40;
 	}
 	else

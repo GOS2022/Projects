@@ -544,9 +544,12 @@ GOS_STATIC GOS_INLINE gos_result_t gos_gcpReceiveMessageInternal (
         else
         {
             // Send response.
-            responseHeaderFrame.ackType   = (u8_t)headerAck;
-            responseHeaderFrame.headerCrc = gos_crcDriverGetCrc((u8_t*)&responseHeaderFrame, (u16_t)(sizeof(responseHeaderFrame) - sizeof(responseHeaderFrame.headerCrc)));
-            (void_t) channelFunctions[channel].gcpTransmitFunction((u8_t*)&responseHeaderFrame, (u16_t)sizeof(responseHeaderFrame));
+        	if (requestHeaderFrame.messageId != 0u)
+        	{
+        		responseHeaderFrame.ackType   = (u8_t)headerAck;
+        		responseHeaderFrame.headerCrc = gos_crcDriverGetCrc((u8_t*)&responseHeaderFrame, (u16_t)(sizeof(responseHeaderFrame) - sizeof(responseHeaderFrame.headerCrc)));
+        		(void_t) channelFunctions[channel].gcpTransmitFunction((u8_t*)&responseHeaderFrame, (u16_t)sizeof(responseHeaderFrame));
+        	}
         }
     }
     else

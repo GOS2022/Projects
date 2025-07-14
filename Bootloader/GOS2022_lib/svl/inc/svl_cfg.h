@@ -133,7 +133,7 @@
  * 1 : Only state machine state info.
  * 2 : All debug info.
  */
-#define SVL_SDH_TRACE_LEVEL                  ( 0 )
+#define SVL_SDH_TRACE_LEVEL                  ( 2 )
 
 //! SDH daemon task priority.
 #define SVL_SDH_DAEMON_PRIORITY              ( 189 )
@@ -178,7 +178,7 @@
 #define SVL_SYSMON_WIRED_DAEMON_STACK        ( 0x800 )
 
 //! TODO
-#define SVL_SYSMON_WIRELESS_DAEMON_PRIO      ( 191u )
+#define SVL_SYSMON_WIRELESS_DAEMON_PRIO      ( 190u )
 
 //! TODO
 #define SVL_SYSMON_WIRELESS_DAEMON_STACK     ( 0x800 )
@@ -187,10 +187,10 @@
 #define SVL_SYSMON_MAX_USER_MESSAGES         ( 24u )
 
 //! TODO
-#define SVL_SYSMON_WIRED_RX_BUFF_SIZE        ( 2048u )
+#define SVL_SYSMON_WIRED_RX_BUFF_SIZE        ( 1024u )
 
 //! TODO
-#define SVL_SYSMON_WIRELESS_RX_BUFF_SIZE     ( 2048u )
+#define SVL_SYSMON_WIRELESS_RX_BUFF_SIZE     ( 1024u )
 
 /**
  * Trace level for sysmon debugging.

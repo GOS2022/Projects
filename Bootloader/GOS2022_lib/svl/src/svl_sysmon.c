@@ -1342,7 +1342,7 @@ GOS_STATIC void_t svl_sysmonWirelessDaemonTask (void_t)
         messageId = 0u;
 
         // Check if a message was received.
-        if (gos_gcpReceiveMessage(sysmonConfig.wirelessChannelNumber, &messageId, wirelessRxBuffer, SVL_SYSMON_WIRELESS_RX_BUFF_SIZE, 0xFFFF) == GOS_SUCCESS)
+        if (gos_gcpReceiveMessage(sysmonConfig.wirelessChannelNumber, &messageId, wirelessRxBuffer, SVL_SYSMON_WIRELESS_RX_BUFF_SIZE, 0xFFFFu) == GOS_SUCCESS)
         {
     		if (gos_mutexLock(&sysmonMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
     		{

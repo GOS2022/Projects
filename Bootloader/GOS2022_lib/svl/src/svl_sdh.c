@@ -99,12 +99,15 @@
 /**
  * SDH binary chunk size.
  */
-#define SVL_SDH_CHUNK_SIZE                  ( 1024u )
+#define SVL_SDH_CHUNK_SIZE                  ( 512u )
 
 /**
  * SDH binary buffer size.
  */
-#define SVL_SDH_BUFFER_SIZE                 ( SVL_SDH_CHUNK_SIZE + 64u )
+#define SVL_SDH_BUFFER_SIZE                 ( SVL_SDH_CHUNK_SIZE + sizeof(svl_sdhChunkDesc_t) )
+
+// TODO
+#define SVL_SDH_FLASH_BUFFER_SIZE           ( 4096u )
 
 /**
  * SDH daemon expected trigger value.
@@ -187,7 +190,10 @@ GOS_STATIC svl_sdhReadWriteFunc_t sdhWriteFunction = NULL;
 /**
  * SDH buffer for sysmon messages.
  */
-GOS_STATIC u8_t  sdhBuffer [SVL_SDH_BUFFER_SIZE];
+GOS_STATIC u8_t sdhBuffer [SVL_SDH_BUFFER_SIZE];
+
+// TODO
+GOS_STATIC u8_t sdhFlashBuffer [SVL_SDH_FLASH_BUFFER_SIZE];
 
 /**
  * Control trigger from IPL or sysmon to SDH task.
@@ -219,12 +225,6 @@ GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback        (gos_gcpChannelNumber_
 GOS_STATIC void_t svl_sdhSysmonBinaryChunkReqCallback     (gos_gcpChannelNumber_t gcpChannel);
 GOS_STATIC void_t svl_sdhSysmonSoftwareInstallReqCallback (gos_gcpChannelNumber_t gcpChannel);
 GOS_STATIC void_t svl_sdhSysmonBinaryEraseReqCallback     (gos_gcpChannelNumber_t gcpChannel);
-GOS_STATIC void_t svl_sdhIplBinaryNumReqCallback          (u8_t* pData, u32_t size, u32_t crc);
-GOS_STATIC void_t svl_sdhIplBinaryInfoReqCallback         (u8_t* pData, u32_t size, u32_t crc);
-GOS_STATIC void_t svl_sdhIplDownloadReqCallback           (u8_t* pData, u32_t size, u32_t crc);
-GOS_STATIC void_t svl_sdhIplBinaryChunkReqCallback        (u8_t* pData, u32_t size, u32_t crc);
-GOS_STATIC void_t svl_sdhIplSoftwareInstallReqCallback    (u8_t* pData, u32_t size, u32_t crc);
-GOS_STATIC void_t svl_sdhIplBinaryEraseReqCallback        (u8_t* pData, u32_t size, u32_t crc);
 
 /**
  * Sysmon binary number request.
@@ -293,60 +293,6 @@ GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonBinaryEraseReqMsg =
 };
 
 /**
- * IPL binary number request.
- */
-GOS_STATIC svl_iplUserMsgDesc_t iplBinaryNumReqMsg =
-{
-    .callback        = svl_sdhIplBinaryNumReqCallback,
-    .msgId           = 0x02
-};
-
-/**
- * IPL binary info request.
- */
-GOS_STATIC svl_iplUserMsgDesc_t iplBinaryInfoReqMsg =
-{
-    .callback        = svl_sdhIplBinaryInfoReqCallback,
-    .msgId           = 0x12
-};
-
-/**
- * IPL download request.
- */
-GOS_STATIC svl_iplUserMsgDesc_t iplDownloadReqMsg =
-{
-    .callback        = svl_sdhIplDownloadReqCallback,
-    .msgId           = 0x22
-};
-
-/**
- * IPL binary chunk request.
- */
-GOS_STATIC svl_iplUserMsgDesc_t iplBinaryChunkReqMsg =
-{
-    .callback        = svl_sdhIplBinaryChunkReqCallback,
-    .msgId           = 0x32
-};
-
-/**
- * IPL software install request.
- */
-GOS_STATIC svl_iplUserMsgDesc_t iplSoftwareInstallReqMsg =
-{
-    .callback        = svl_sdhIplSoftwareInstallReqCallback,
-    .msgId           = 0x42
-};
-
-/**
- * IPL binary erase request.
- */
-GOS_STATIC svl_iplUserMsgDesc_t iplEraseReqMsg =
-{
-    .callback        = svl_sdhIplBinaryEraseReqCallback,
-    .msgId           = 0x52
-};
-
-/**
  * SDH daemon descriptor.
  */
 GOS_STATIC gos_taskDescriptor_t svlSdhTaskDesc =
@@ -378,14 +324,6 @@ gos_result_t svl_sdhInit (void_t)
     GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonBinaryChunkReqMsg));
     GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonSoftwareInstallReqMsg));
     GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonBinaryEraseReqMsg));
-
-    // Register IPL callbacks.
-    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplBinaryNumReqMsg));
-    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplBinaryInfoReqMsg));
-    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplDownloadReqMsg));
-    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplBinaryChunkReqMsg));
-    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplSoftwareInstallReqMsg));
-    GOS_CONCAT_RESULT(initResult, svl_iplRegisterUserMsg(&iplEraseReqMsg));
 
     GOS_CONCAT_RESULT(initResult, gos_taskRegister(&svlSdhTaskDesc, NULL));
     GOS_CONCAT_RESULT(initResult, gos_triggerInit(&sdhControlTrigger));
@@ -552,6 +490,8 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
     u32_t               fromAddress         = 0u;
     u32_t               totalCopySize       = 0u;
     bool_t              defragment          = GOS_FALSE;
+    u8_t                flashBufferIndex    = 0u;
+    u8_t                flashChunkIndex     = 0u;
 
     /*
      * Function code.
@@ -729,6 +669,9 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 
                         (void_t) memcpy((void_t*)sdhBuffer, (void_t*)&result, sizeof(result));
                         (void_t) gos_triggerIncrement(&sdhControlFeedbackTrigger);
+
+                        flashBufferIndex = 0u;
+                        flashChunkIndex = 0u;
                     }
                     else
                     {
@@ -748,23 +691,55 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
 #endif
 
 #if SVL_SDH_TRACE_LEVEL == 2
-                        u32_t percentage = 100 * 100 * (chunkDesc.chunkIdx + 1) / numOfChunks;
-                        (void_t) gos_traceTraceFormatted(
-                                GOS_TRUE,
-                                "SDH chunk counter [%u/%u] ... %3u.%02u%%\r\n",
-                                chunkDesc.chunkIdx + 1,
-                                numOfChunks,
-                                percentage / 100,
-                                percentage % 100
-                        );
+                        if (numOfChunks > 0)
+                        {
+                            u32_t percentage = 100 * 100 * (chunkDesc.chunkIdx + 1) / numOfChunks;
+                            (void_t) gos_traceTraceFormatted(
+                                    GOS_TRUE,
+                                    "SDH chunk counter [%u/%u] ... %3u.%02u%%\r\n",
+                                    chunkDesc.chunkIdx + 1,
+                                    numOfChunks,
+                                    percentage / 100,
+                                    percentage % 100
+                            );
+                        }
+                        else
+                        {
+                        	// Wrong number.
+                        }
 #endif
 
+                        // Copy chunk to FLASH buffer.
+                        (void_t) memcpy((void_t*)(sdhFlashBuffer + flashBufferIndex * SVL_SDH_CHUNK_SIZE),
+                        		(void_t*)(sdhBuffer + sizeof(chunkDesc)), SVL_SDH_CHUNK_SIZE);
+
+                        // Increase offset.
+                        flashBufferIndex++;
+
+                        // If buffer is full or last chunk was received, write it to FLASH.
+                        if (((flashBufferIndex * SVL_SDH_CHUNK_SIZE) >= SVL_SDH_FLASH_BUFFER_SIZE) || (chunkDesc.chunkIdx == (numOfChunks - 1)))
+                        {
+                            (void_t) sdhWriteFunction(
+                                    newBinaryDescriptor.binaryLocation + flashChunkIndex * SVL_SDH_FLASH_BUFFER_SIZE,
+                                    sdhFlashBuffer,
+									SVL_SDH_FLASH_BUFFER_SIZE
+                            );
+                        	flashBufferIndex = 0u;
+                        	flashChunkIndex++;
+                        }
+                        else
+                        {
+                        	// Wait for buffer to get full or for last chunk to be received.
+                        }
+
+#if 0 //TODO
                         // Save chunk.
                         (void_t) sdhWriteFunction(
                                 newBinaryDescriptor.binaryLocation + chunkDesc.chunkIdx * SVL_SDH_CHUNK_SIZE,
-                                (u8_t*)(/*controlMsg.pData*/sdhBuffer + sizeof(chunkDesc)),
+                                (u8_t*)(sdhBuffer + sizeof(chunkDesc)),
                                 SVL_SDH_CHUNK_SIZE
                         );
+#endif
 
                         // Send response.
                         chunkDesc.result = 1;
@@ -981,7 +956,7 @@ GOS_STATIC void_t svl_sdhSysmonDownloadReqCallback (gos_gcpChannelNumber_t gcpCh
     // Increment trigger to signal for task.
     (void_t) gos_triggerIncrement(&sdhControlTrigger);
 
-    if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 3000) == GOS_SUCCESS)
+    if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 5000) == GOS_SUCCESS)
     {
         (void_t) gos_gcpTransmitMessage(
         		gcpChannel,
@@ -1091,259 +1066,6 @@ GOS_STATIC void_t svl_sdhSysmonBinaryEraseReqCallback (gos_gcpChannelNumber_t gc
                 (void_t*)sdhBuffer,
                 sizeof(u16_t),
                 0xFFFF);
-    }
-    else
-    {
-        // Nothing to do.
-    }
-
-    // Reset trigger to 0.
-    (void_t) gos_triggerReset(&sdhControlFeedbackTrigger);
-}
-
-/**
- * @brief     Callback function for binary number request.
- * @details   Handles the binary number request via IPL.
- *
- * @param[in] pData Pointer to the array containing the received data.
- * @param     size  Size of the received data.
- * @param     crc   CRC of the received data.
- *
- * @return  -
- */
-GOS_STATIC void_t svl_sdhIplBinaryNumReqCallback (u8_t* pData, u32_t size, u32_t crc)
-{
-    /*
-     * Function code.
-     */
-    sdhRequestedState = SDH_STATE_BINARY_NUM_REQ;
-
-    // Increment trigger to signal for task.
-    (void_t) gos_triggerIncrement(&sdhControlTrigger);
-
-    if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 3000) == GOS_SUCCESS)
-    {
-        (void_t) svl_iplSendMessage(0xA02, sdhBuffer, sizeof(u16_t));
-    }
-    else
-    {
-        // Nothing to do.
-    }
-
-    // Reset trigger to 0.
-    (void_t) gos_triggerReset(&sdhControlFeedbackTrigger);
-}
-
-/**
- * @brief     Callback function for binary info request.
- * @details   Handles the binary info request via IPL.
- *
- * @param[in] pData Pointer to the array containing the received data.
- * @param     size  Size of the received data.
- * @param     crc   CRC of the received data.
- *
- * @return    -
- */
-GOS_STATIC void_t svl_sdhIplBinaryInfoReqCallback (u8_t* pData, u32_t size, u32_t crc)
-{
-    /*
-     * Function code.
-     */
-    sdhRequestedState = SDH_STATE_BINARY_INFO_REQ;
-
-    if (size > SVL_SDH_BUFFER_SIZE)
-    {
-        size = SVL_SDH_BUFFER_SIZE;
-    }
-    else
-    {
-        // Size check OK.
-    }
-
-    (void_t) memcpy((void_t*)sdhBuffer, (void_t*)pData, size);
-
-    // Increment trigger to signal for task.
-    (void_t) gos_triggerIncrement(&sdhControlTrigger);
-
-    if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 3000) == GOS_SUCCESS)
-    {
-        (void_t) svl_iplSendMessage(0xA12, (u8_t*)sdhBuffer, sizeof(svl_sdhBinaryDesc_t));
-    }
-    else
-    {
-        // Nothing to do.
-    }
-
-    // Reset trigger to 0.
-    (void_t) gos_triggerReset(&sdhControlFeedbackTrigger);
-}
-
-/**
- * @brief     Callback function for download request.
- * @details   Handles the download request via IPL.
- *
- * @param[in] pData Pointer to the array containing the received data.
- * @param     size  Size of the received data.
- * @param     crc   CRC of the received data.
- *
- * @return    -
- */
-GOS_STATIC void_t svl_sdhIplDownloadReqCallback (u8_t* pData, u32_t size, u32_t crc)
-{
-    /*
-     * Function code.
-     */
-    sdhRequestedState = SDH_STATE_BINARY_DOWNLOAD_REQ;
-
-    if (size > SVL_SDH_BUFFER_SIZE)
-    {
-        size = SVL_SDH_BUFFER_SIZE;
-    }
-    else
-    {
-        // Size check OK.
-    }
-
-    (void_t) memcpy((void_t*)sdhBuffer, (void_t*)pData, size);
-
-    // Increment trigger to signal for task.
-    (void_t) gos_triggerIncrement(&sdhControlTrigger);
-
-    if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 3000) == GOS_SUCCESS)
-    {
-        (void_t) svl_iplSendMessage(0xA22, sdhBuffer, sizeof(u8_t));
-    }
-    else
-    {
-        // Nothing to do.
-    }
-
-    // Reset trigger to 0.
-    (void_t) gos_triggerReset(&sdhControlFeedbackTrigger);
-}
-
-/**
- * @brief     Callback function for binary chunk request.
- * @details   Handles the binary chunk request via IPL.
- *
- * @param[in] pData Pointer to the array containing the received data.
- * @param     size  Size of the received data.
- * @param     crc   CRC of the received data.
- *
- * @return    -
- */
-GOS_STATIC void_t svl_sdhIplBinaryChunkReqCallback (u8_t* pData, u32_t size, u32_t crc)
-{
-    /*
-     * Function code.
-     */
-    sdhRequestedState = SDH_STATE_DOWNLOADING_BINARY;
-
-    if (size > SVL_SDH_BUFFER_SIZE)
-    {
-        size = SVL_SDH_BUFFER_SIZE;
-    }
-    else
-    {
-        // Size check OK.
-    }
-
-    (void_t) memcpy((void_t*)sdhBuffer, (void_t*)pData, size);
-
-    // Increment trigger to signal for task.
-    (void_t) gos_triggerIncrement(&sdhControlTrigger);
-
-    if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 10000) == GOS_SUCCESS)
-    {
-        (void_t) svl_iplSendMessage(0xA32, sdhBuffer, sizeof(svl_sdhChunkDesc_t));
-    }
-    else
-    {
-        // Nothing to do.
-    }
-
-    // Reset trigger to 0.
-    (void_t) gos_triggerReset(&sdhControlFeedbackTrigger);
-}
-
-/**
- * @brief     Callback function for install request.
- * @details   Handles the install request via IPL.
- *
- * @param[in] pData Pointer to the array containing the received data.
- * @param     size  Size of the received data.
- * @param     crc   CRC of the received data.
- *
- * @return    -
- */
-GOS_STATIC void_t svl_sdhIplSoftwareInstallReqCallback (u8_t* pData, u32_t size, u32_t crc)
-{
-    /*
-     * Function code.
-     */
-    sdhRequestedState = SDH_STATE_BINARY_INSTALL_REQ;
-
-    if (size > SVL_SDH_BUFFER_SIZE)
-    {
-        size = SVL_SDH_BUFFER_SIZE;
-    }
-    else
-    {
-        // Size check OK.
-    }
-
-    (void_t) memcpy((void_t*)sdhBuffer, (void_t*)pData, size);
-
-    // Increment trigger to signal for task.
-    (void_t) gos_triggerIncrement(&sdhControlTrigger);
-
-    if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 3000) == GOS_SUCCESS)
-    {
-        (void_t) svl_iplSendMessage(0xA42, sdhBuffer, sizeof(u16_t));
-    }
-    else
-    {
-        // Nothing to do.
-    }
-
-    // Reset trigger to 0.
-    (void_t) gos_triggerReset(&sdhControlFeedbackTrigger);
-}
-
-/**
- * @brief     Callback function for erase request.
- * @details   Handles the erase request via IPL.
- *
- * @param[in] pData Pointer to the array containing the received data.
- * @param     size  Size of the received data.
- * @param     crc   CRC of the received data.
- *
- * @return    -
- */
-GOS_STATIC void_t svl_sdhIplBinaryEraseReqCallback (u8_t* pData, u32_t size, u32_t crc)
-{
-    /*
-     * Function code.
-     */
-    sdhRequestedState = SDH_STATE_BINARY_ERASE_REQ;
-
-    if (size > SVL_SDH_BUFFER_SIZE)
-    {
-        size = SVL_SDH_BUFFER_SIZE;
-    }
-    else
-    {
-        // Size check OK.
-    }
-
-    (void_t) memcpy((void_t*)sdhBuffer, (void_t*)pData, size);
-
-    // Increment trigger to signal for task.
-    (void_t) gos_triggerIncrement(&sdhControlTrigger);
-
-    if (gos_triggerWait(&sdhControlFeedbackTrigger, SVL_SDH_FEEDBACK_TRIGGER_VALUE, 5000) == GOS_SUCCESS)
-    {
-        (void_t) svl_iplSendMessage(0xA52, sdhBuffer, sizeof(u16_t));
     }
     else
     {
