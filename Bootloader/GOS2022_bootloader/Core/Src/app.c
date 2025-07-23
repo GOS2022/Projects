@@ -18,17 +18,13 @@ GOS_STATIC gos_driver_functions_t driverFunctions =
 {
 	.traceDriverTransmitString       = drv_traceTransmit,
 	.traceDriverTransmitStringUnsafe = drv_traceTransmitUnsafe,
-	.shellDriverTransmitString       = drv_shellTransmitString,
-	.shellDriverReceiveChar          = drv_shellReceiveChar,
-	.sysmonDriverTransmit            = drv_sysmonTransmit,
-	.sysmonDriverReceive             = drv_sysmonReceive,
 	.timerDriverSysTimerGetValue     = drv_systimerGetValue,
 };
 
 /*
- * Function: gos_platformDriverInit
+ * Function: svl_dsmPlatformInit
  */
-gos_result_t gos_platformDriverInit (void_t)
+gos_result_t svl_dsmPlatformInit (void_t)
 {
 	/*
 	 * Local variables.
@@ -36,20 +32,21 @@ gos_result_t gos_platformDriverInit (void_t)
 	// Platform driver initialization result.
 	gos_result_t platformDriverInitResult = GOS_SUCCESS;
 
-    /*
-     * Function code.
-     */
-    // Low-level initialization.
+	/*
+	 * Function code.
+	 */
+	// Driver init.
     platformDriverInitResult &= trace_driverEnqueueTraceMessage(
     		"HAL library initialization",
 			HAL_Init() == HAL_OK ? GOS_SUCCESS : GOS_ERROR
     );
 
-    // Driver initialization.
-    platformDriverInitResult &= trace_driverEnqueueTraceMessage("Driver initialization", driver_init());
+    platformDriverInitResult &= driver_init();
 
-    // Register kernel drivers.
-    platformDriverInitResult &= trace_driverEnqueueTraceMessage("Kernel driver registration", gos_driverInit(&driverFunctions));
+	// Register kernel drivers.
+	platformDriverInitResult &= gos_driverInit(&driverFunctions);
+
+    GOS_CONVERT_RESULT(platformDriverInitResult);
 
     SysTick->VAL = 0;
     SysTick->CTRL = 0b111;
@@ -60,18 +57,13 @@ gos_result_t gos_platformDriverInit (void_t)
     platformDriverInitResult &= trace_driverEnqueueTraceMessage("PDH board-specific initialization", app_pdhBdSpecInit());
     platformDriverInitResult &= trace_driverEnqueueTraceMessage("APP bootloader initialization", app_bld_init());
 
-    if (platformDriverInitResult != GOS_SUCCESS)
-	{
-    	platformDriverInitResult = GOS_ERROR;
-	}
-
 	return platformDriverInitResult;
 }
 
 /*
- * Function: gos_userApplicationInit
+ * Function: svl_dsmApplicationInit
  */
-gos_result_t gos_userApplicationInit (void_t)
+gos_result_t svl_dsmApplicationInit (void_t)
 {
     /*
      * Local variables.
@@ -83,9 +75,6 @@ gos_result_t gos_userApplicationInit (void_t)
      */
     // Flush trace entries.
     trace_driverFlushTraceEntries();
-
-	// Initialize device state manager for startup.
-	appInitResult &= svl_dsmInit();
 
 	// Enable WiFi module.
 	(void_t) drv_gpioWritePin(IO_WEMOS_RST, GPIO_STATE_HIGH);

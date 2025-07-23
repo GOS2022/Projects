@@ -6,7 +6,6 @@
  */
 #include "gos_lib.h"
 #include "app.h"
-
 #include "iodef.h"
 
 GOS_STATIC drv_25lc640Descriptor_t eepromDesc =
@@ -39,10 +38,6 @@ GOS_STATIC svl_pdhSwInfo_t testSwInfo;
 
 GOS_STATIC void_t       app_pdhTestTask                (void_t);
 GOS_STATIC void_t       app_pdhBdSpecCheckSoftwareInfo (void_t);
-//GOS_STATIC gos_result_t app_pdhBdSpecRead              (u32_t address, u8_t* pData, u16_t size);
-//GOS_STATIC gos_result_t app_pdhBdSpecWrite             (u32_t address, u8_t* pData, u16_t size);
-//GOS_STATIC gos_result_t app_pdhReadWrapper             (u8_t params, va_list args);
-//GOS_STATIC gos_result_t app_pdhWriteWrapper            (u8_t params, va_list args);
 
 SVL_DHS_READ_FUNC_DECL(app_pdhBdSpecRead);
 SVL_DHS_WRITE_FUNC_DECL(app_pdhBdSpecWrite);

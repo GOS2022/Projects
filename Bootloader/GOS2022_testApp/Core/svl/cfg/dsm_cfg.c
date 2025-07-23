@@ -21,7 +21,6 @@ GOS_CONST svl_dsmInitPhaseDesc_t appInitPhaseConfig [] =
 		{
 			{ "Sysmon initialization",              svl_sysmonInit              },
 			{ "PDH initialization",                 svl_pdhInit                 },
-			//{ "IPL initialization",                 svl_iplInit                 }, TODO
 			{ "SDH initialization",                 svl_sdhInit                 },
 			{ "MDI initialization",                 svl_mdiInit                 },
 			{ "ERS initialization",                 svl_ersInit                 },
@@ -33,7 +32,6 @@ GOS_CONST svl_dsmInitPhaseDesc_t appInitPhaseConfig [] =
 		// Phase: user tasks.
 		"Initializing user tasks...",
 		{
-			//{ "IPL board-specific initialization",  app_iplBdSpecInit           },
 			{ "PDH board-specific initialization",  app_pdhBdSpecInit           },
 			{ "SDH board-specific initialization",  app_sdhBdSpecInit           },
 			{ "MDI board-specific initialization",  app_mdiBdSpecInit           },
@@ -76,7 +74,6 @@ GOS_CONST svl_dsmInitPhaseDesc_t platformInitPhaseConfig [] =
 			{ "UART driver initialization",          drv_uartInit               },
 			{ "IT driver initialization",            drv_itInit                 },
 			{ "ADC driver initialization",           drv_adcInit                },
-			{ "SPI driver initialization",           drv_spiInit                }
 		}
 	},
 };

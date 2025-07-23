@@ -33,12 +33,13 @@ gos_result_t svl_dsmPlatformInit (void_t)
 	 * Function code.
 	 */
 	// Driver init.
-	if (HAL_Init() != HAL_OK)
-	{
-		platformDriverInitResult = GOS_ERROR;
-	}
+    platformDriverInitResult &= drv_traceEnqueueTraceMessage(
+    		"HAL library initialization",
+			GOS_FALSE,
+			HAL_Init() == HAL_OK ? GOS_SUCCESS : GOS_ERROR
+    );
 
-	platformDriverInitResult &= drv_traceEnqueueTraceMessage("Register systick hook", GOS_FALSE, gos_kernelRegisterSysTickHook(/*sysTickHook*/HAL_IncTick));
+	platformDriverInitResult &= drv_traceEnqueueTraceMessage("Register systick hook", GOS_FALSE, gos_kernelRegisterSysTickHook(HAL_IncTick));
 
 	// Register kernel drivers.
 	platformDriverInitResult &= gos_driverInit(&driverFunctions);

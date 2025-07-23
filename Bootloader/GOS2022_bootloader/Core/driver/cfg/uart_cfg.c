@@ -63,12 +63,8 @@ drv_uartServiceTimeoutConfig_t uartServiceTmoConfig =
 	.traceMutexTmo          = 2000u,
 	.traceTriggerTmo        = 2000u,
 	.traceUnsafeTransmitTmo = 1000u,
-	.shellRxMutexTmo        = GOS_MUTEX_ENDLESS_TMO,
-	.shellRxTriggerTmo      = GOS_TRIGGER_ENDLESS_TMO,
-	.shellTxMutexTmo        = 2000u,
-	.shellTxTriggerTmo      = 2000u,
 	.sysmonRxMutexTmo       = 2000u,
-	.sysmonRxTriggerTmo     = GOS_TRIGGER_ENDLESS_TMO,
+	.sysmonRxTriggerTmo     = 500u,
 	.sysmonTxMutexTmo       = 2000u,
 	.sysmonTxTriggerTmo     = 2000u
 };
@@ -78,9 +74,10 @@ drv_uartServiceTimeoutConfig_t uartServiceTmoConfig =
  */
 GOS_CONST drv_uartPeriphInstance_t  uartServiceConfig [] =
 {
-	[DRV_UART_SYSMON_INSTANCE] = DRV_UART_INSTANCE_5,
-	[DRV_UART_TRACE_INSTANCE]  = DRV_UART_INSTANCE_1,
-	[DRV_UART_SHELL_INSTANCE]  = DRV_UART_INSTANCE_INVALID
+	[DRV_UART_SYSMON_WIRED_INSTANCE]    = DRV_UART_INSTANCE_5,
+	[DRV_UART_SYSMON_WIRELESS_INSTANCE] = DRV_UART_INSTANCE_4,
+	[DRV_UART_TRACE_INSTANCE]           = DRV_UART_INSTANCE_1,
+	[DRV_UART_SHELL_INSTANCE]           = DRV_UART_INSTANCE_INVALID
 };
 
 /**

@@ -10,7 +10,6 @@
 #include "iodef.h"
 #include "bld.h"
 #include "drv_rtc.h"
-#include "svl_ipl.h"
 
 /*
  * Static function prototypes
@@ -28,7 +27,7 @@ GOS_STATIC gos_taskDescriptor_t bldTaskDesc =
     .taskFunction       = app_bldTask,
     .taskStackSize      = 0x400,
     .taskPriority       = 0,
-    .taskName           = "app_bld_task",
+    .taskName           = "app_led_task",
     .taskPrivilegeLevel = GOS_TASK_PRIVILEGE_USER
 };
 
@@ -72,7 +71,6 @@ GOS_STATIC void_t app_bldTask (void_t)
 	 * Local variables.
 	 */
 	bld_state_t bldState;
-	bool_t      iplInited = GOS_FALSE;
 	u32_t       sysTicks = gos_kernelGetSysTicks();
 
 	// Initial setting.
@@ -92,16 +90,6 @@ GOS_STATIC void_t app_bldTask (void_t)
     		{
     	        (void_t) drv_gpioTgglePin(IO_USER_LED);
     	        (void_t) gos_taskSleep(500);
-
-    	        if (iplInited == GOS_FALSE)
-    	        {
-    	        	(void_t) svl_iplInit();
-    	        	iplInited = GOS_TRUE;
-    	        }
-    	        else
-    	        {
-    	        	// IPL already initialized.
-    	        }
     			break;
     		}
     		case BLD_STATE_INSTALL:

@@ -5,5 +5,5 @@
 
 USER_OBJS :=
 
-LIBS := -lGOS2022_lib -lGOS2022
+LIBS := -lGOS2022 -lGOS2022_lib
 

@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       svl_cfg.h
 //! @author     Ahmed Gazar
-//! @date       2025-01-30
-//! @version    1.1
+//! @date       2025-07-22
+//! @version    1.2
 //!
 //! @brief      GOS2022 Library / Service Layer Configuration header.
 //! @details    This file contains the configurable parameters of the SVL.
@@ -27,6 +27,8 @@
 // 1.0        2024-06-27    Ahmed Gazar     Initial version created.
 // 1.1        2025-01-29    Ahmed Gazar     +    ERS and MDI parameters added
 //                                          -    FRS parameters removed
+// 1.2        2025-07-22    Ahmed Gazar     -    IPL parameters removed
+//                                          +    Sysmon parameters added
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -82,46 +84,6 @@
 
 //! Start address of ERS entries.
 #define SVL_ERS_ENTRY_START_ADDR             ( SVL_ERS_ENTRY_NUM_ADDR + sizeof(u32_t) )
-
-/*
- * IPL Service Configuration
- */
-
-//! WiFi SSID maximum length.
-#define SVL_IPL_DEVCFG_WIFI_SSID_MAX_LENGTH  ( 32 )
-
-//! WiFi password maximum length.
-#define SVL_IPL_DEVCFG_WIFI_PWD_MAX_LENGTH   ( 32 )
-
-//! IP address element number.
-#define SVL_IPL_DEVCFG_IP_ADDR_ELEMENTS      ( 4 )
-
-//! Gateway address element number.
-#define SVL_IPL_DEVCFG_GATEWAY_ADDR_ELEMENTS ( 4 )
-
-//! Sub-net address element number.
-#define SVL_IPL_DEVCFG_SUBNET_ADDR_ELEMENTS  ( 4 )
-
-//! IPL RX buffer size.
-#define SVL_IPL_RX_BUFF_SIZE                 ( 2560u )
-
-//! Maximum number of user-defined message callbacks.
-#define SVL_IPL_USER_MSG_CALLBACK_MAX_NUM    ( 8 )
-
-/**
- * Trace level for IPL debugging.
- *
- * 0 : Debug messages disabled.
- * 1 : Only state machine state info.
- * 2 : All debug info.
- */
-#define SVL_IPL_TRACE_LEVEL                  ( 0 )
-
-//! IPL daemon task priority.
-#define SVL_IPL_DAEMON_PRIORITY              ( 190 )
-
-//! IPL daemon task stack size.
-#define SVL_IPL_DAEMON_STACK_SIZE            ( 0x800 )
 
 /*
  * SDH Service Configuration

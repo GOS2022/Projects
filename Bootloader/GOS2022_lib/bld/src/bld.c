@@ -151,7 +151,7 @@ GOS_STATIC gos_taskDescriptor_t bldTaskDesc =
     .taskFunction       = bld_task,
     .taskPriority       = 0u,
     .taskStackSize      = 0x1600,
-    .taskName           = "app_bld_task",
+    .taskName           = "svl_bld_task",
     .taskPrivilegeLevel = GOS_TASK_PRIVILEGE_SUPERVISOR
 };
 
@@ -625,8 +625,8 @@ gos_result_t bld_initData (svl_pdhSwVerInfo_t* pBldSwVer)
     if (pBldSwVer != NULL)
     {
         // Get current software info.
-        (void_t) svl_pdhGetSwInfo(&currentSwInfo);
-    	(void_t) svl_pdhGetLibVersion(&libVerInfo);
+    	initDataResult &= svl_pdhGetSwInfo(&currentSwInfo);
+    	initDataResult &= svl_pdhGetLibVersion(&libVerInfo);
 
         // Calculate CRC of current and desired bootloader software info.
         initDataResult &= drv_crcGetCrc32((u8_t*)&currentSwInfo.bldSwVerInfo, sizeof(currentSwInfo.bldSwVerInfo), &currentBldSwVerCrc);
@@ -654,7 +654,7 @@ gos_result_t bld_initData (svl_pdhSwVerInfo_t* pBldSwVer)
             // Fill out library info.
             initDataResult &= svl_pdhGetLibVersion(&currentSwInfo.bldLibVerInfo);
 
-            (void_t) svl_pdhSetSwInfo(&currentSwInfo);
+            initDataResult &= svl_pdhSetSwInfo(&currentSwInfo);
 
             if (initDataResult == GOS_SUCCESS)
             {

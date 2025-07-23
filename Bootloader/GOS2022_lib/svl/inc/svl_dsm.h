@@ -100,8 +100,8 @@ typedef struct
  *
  * @return  Result of
  *
- * @retval  GOS_SUCCESS :
- * @retval  GOS_ERROR   :
+ * @retval  #GOS_SUCCESS
+ * @retval  #GOS_ERROR
  */
 gos_result_t svl_dsmInit (void_t);
 
@@ -111,8 +111,8 @@ gos_result_t svl_dsmInit (void_t);
  *
  * @return  Result of
  *
- * @retval  GOS_SUCCESS :
- * @retval  GOS_ERROR   :
+ * @retval  #GOS_SUCCESS
+ * @retval  #GOS_ERROR
  */
 gos_result_t svl_dsmPrintOSInfo (void_t);
 
@@ -122,8 +122,8 @@ gos_result_t svl_dsmPrintOSInfo (void_t);
  *
  * @return  Result of
  *
- * @retval  GOS_SUCCESS :
- * @retval  GOS_ERROR   :
+ * @retval  #GOS_SUCCESS
+ * @retval  #GOS_ERROR
  */
 gos_result_t svl_dsmPrintLibInfo (void_t);
 
@@ -133,8 +133,8 @@ gos_result_t svl_dsmPrintLibInfo (void_t);
  *
  * @return  Result of
  *
- * @retval  GOS_SUCCESS :
- * @retval  GOS_ERROR   :
+ * @retval  #GOS_SUCCESS
+ * @retval  #GOS_ERROR
  */
 gos_result_t svl_dsmPrintHwInfo (void_t);
 
@@ -146,8 +146,8 @@ gos_result_t svl_dsmPrintHwInfo (void_t);
  *
  * @return  Result of
  *
- * @retval  GOS_SUCCESS :
- * @retval  GOS_ERROR   :
+ * @retval  #GOS_SUCCESS
+ * @retval  #GOS_ERROR
  */
 gos_result_t svl_dsmPrintAppInfo (void_t);
 
@@ -156,7 +156,7 @@ gos_result_t svl_dsmPrintAppInfo (void_t);
  * @details Sends the current task to sleep until the required state
  *          has been set.
  *
- * @param   requiredState : State to wait for.
+ * @param   requiredState State to wait for.
  *
  * @return  -
  */
@@ -166,7 +166,7 @@ void_t svl_dsmWaitForState (svl_dsmState_t requiredState);
  * @brief   Sets the required state.
  * @details Sets the previous and current states.
  *
- * @param   requiredState : State to be set.
+ * @param   requiredState State to be set.
  *
  * @return  -
  */

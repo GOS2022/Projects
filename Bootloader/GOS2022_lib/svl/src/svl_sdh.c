@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       svl_sdh.c
 //! @author     Ahmed Gazar
-//! @date       2025-03-28
-//! @version    1.1
+//! @date       2025-07-22
+//! @version    1.2
 //!
 //! @brief      GOS2022 Library / Software Download Handler
 //! @details    For a more detailed description of this service, please refer to @ref svl_sdh.h
@@ -28,6 +28,9 @@
 // 1.1        2025-03-28    Ahmed Gazar     *    Rework of communication between callbacks and
 //                                               SDH daemon
 //                                          +    Missing documentation added
+// 1.2        2025-07-22    Ahmed Gazar     +    FLASH buffer introduced to make actually FLASH
+//                                               writings in bigger chunks separately from
+//                                               received binary chunk size
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -52,7 +55,6 @@
  * Includes
  */
 #include <svl_cfg.h>
-#include <svl_ipl.h>
 #include <svl_sysmon.h>
 #include <svl_sdh.h>
 #include <drv_crc.h>
@@ -106,7 +108,9 @@
  */
 #define SVL_SDH_BUFFER_SIZE                 ( SVL_SDH_CHUNK_SIZE + sizeof(svl_sdhChunkDesc_t) )
 
-// TODO
+/**
+ * SDH FLASH buffer size (maximum number of bytes programmed at once).
+ */
 #define SVL_SDH_FLASH_BUFFER_SIZE           ( 4096u )
 
 /**
@@ -192,7 +196,9 @@ GOS_STATIC svl_sdhReadWriteFunc_t sdhWriteFunction = NULL;
  */
 GOS_STATIC u8_t sdhBuffer [SVL_SDH_BUFFER_SIZE];
 
-// TODO
+/**
+ * SDH FLASH buffer for collecting bytes before saving in FLASH memory.
+ */
 GOS_STATIC u8_t sdhFlashBuffer [SVL_SDH_FLASH_BUFFER_SIZE];
 
 /**
@@ -208,7 +214,7 @@ GOS_STATIC gos_trigger_t sdhControlFeedbackTrigger;
 /**
  * SDH state-machine variable.
  */
-GOS_STATIC svl_sdhState_t sdhState = SDH_STATE_IDLE;
+GOS_STATIC svl_sdhState_t sdhState          = SDH_STATE_IDLE;
 
 /**
  * SDH requested state.
@@ -731,15 +737,6 @@ GOS_STATIC void_t svl_sdhDaemon (void_t)
                         {
                         	// Wait for buffer to get full or for last chunk to be received.
                         }
-
-#if 0 //TODO
-                        // Save chunk.
-                        (void_t) sdhWriteFunction(
-                                newBinaryDescriptor.binaryLocation + chunkDesc.chunkIdx * SVL_SDH_CHUNK_SIZE,
-                                (u8_t*)(sdhBuffer + sizeof(chunkDesc)),
-                                SVL_SDH_CHUNK_SIZE
-                        );
-#endif
 
                         // Send response.
                         chunkDesc.result = 1;

@@ -89,8 +89,8 @@ typedef struct
  *
  * @return  Result of initialization.
  *
- * @retval  GOS_SUCCESS : Initialization successful.
- * @retval  GOS_ERROR   : Sysmon registration error or mutex initialization error.
+ * @retval  #GOS_SUCCESS Initialization successful.
+ * @retval  #GOS_ERROR   Sysmon registration error or mutex initialization error.
  */
 gos_result_t svl_ersInit (void_t);
 
@@ -98,12 +98,12 @@ gos_result_t svl_ersInit (void_t);
  * @brief   Configures the ERS.
  * @details Saves the desired read and write functions.
  *
- * @param   pCfg : Pointer to the desired configuration variable.
+ * @param   pCfg Pointer to the desired configuration variable.
  *
  * @return  Result of configuration.
  *
- * @retval  GOS_SUCCESS : Configuration successful.
- * @retval  GOS_ERROR   : NULL pointer.
+ * @retval  #GOS_SUCCESS Configuration successful.
+ * @retval  #GOS_ERROR   NULL pointer.
  */
 gos_result_t svl_ersConfigure (svl_ersCfg_t* pCfg);
 
@@ -112,14 +112,14 @@ gos_result_t svl_ersConfigure (svl_ersCfg_t* pCfg);
  * @details Creates a time stamp, copies the event data, and stores the
  *          event in the non-volatile memory.
  *
- * @param   index      : Index of event in the user-defined array.
- * @param   trigger    : Trigger code (optional).
- * @param   pEventData : Event data bytes (optional).
+ * @param   index      Index of event in the user-defined array.
+ * @param   trigger    Trigger code (optional).
+ * @param   pEventData Event data bytes (optional).
  *
  * @return  Result of event creation.
  *
- * @retval  GOS_SUCCESS : Event creation successful.
- * @retval  GOS_ERROR   : Missing write function, mutex, or driver error.
+ * @retval  #GOS_SUCCESS Event creation successful.
+ * @retval  #GOS_ERROR   Missing write function, mutex, or driver error.
  */
 gos_result_t svl_ersCreate (u16_t index, u32_t trigger, u8_t* pEventData);
 
@@ -128,13 +128,13 @@ gos_result_t svl_ersCreate (u16_t index, u32_t trigger, u8_t* pEventData);
  * @details Copies the event with the required index from the non-volatile
  *          memory to the target buffer.
  *
- * @param   index   : Index of event in non-volatile memory.
- * @param   pTarget : Buffer to store the event in.
+ * @param   index   Index of event in non-volatile memory.
+ * @param   pTarget Buffer to store the event in.
  *
  * @return  Result of event reading.
  *
- * @retval  GOS_SUCCESS : Event reading successful.
- * @retval  GOS_ERROR   : Missing read function, mutex, or driver error.
+ * @retval  #GOS_SUCCESS Event reading successful.
+ * @retval  #GOS_ERROR   Missing read function, mutex, or driver error.
  */
 gos_result_t svl_ersRead (u16_t index, u8_t* pTarget);
 
@@ -142,12 +142,12 @@ gos_result_t svl_ersRead (u16_t index, u8_t* pTarget);
  * @brief   Returns the number of entries.
  * @details Reads the number of entries from the non-volatile memory.
  *
- * @param   pNumOfEntries : Pointer to a variable to store the number of entries in.
+ * @param   pNumOfEntries Pointer to a variable to store the number of entries in.
  *
  * @return  Result of entry number getting.
  *
- * @retval  GOS_SUCCESS : Entry number getting successful.
- * @retval  GOS_ERROR   : Missing read function, mutex, or driver error.
+ * @retval  #GOS_SUCCESS Entry number getting successful.
+ * @retval  #GOS_ERROR   Missing read function, mutex, or driver error.
  */
 gos_result_t svl_ersGetNumOfEntries (u32_t* pNumOfEntries);
 
@@ -157,8 +157,8 @@ gos_result_t svl_ersGetNumOfEntries (u32_t* pNumOfEntries);
  *
  * @return  Result of event clearing.
  *
- * @retval  GOS_SUCCESS : Event clearing successful.
- * @retval  GOS_ERROR   : Missing write function or driver error.
+ * @retval  #GOS_SUCCESS Event clearing successful.
+ * @retval  #GOS_ERROR   Missing write function or driver error.
  */
 gos_result_t svl_ersClearEvents (void_t);
 

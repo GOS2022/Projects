@@ -22,6 +22,7 @@ GOS_STATIC app_virtualDeviceDesc_t virtualDeviceDesc = { .dummy = 10 };
 
 GOS_STATIC void_t       app_dhsTestTask       (void_t);
 GOS_STATIC gos_result_t app_dhsTestInitDevice (void_t* pDevice);
+GOS_STATIC gos_result_t app_dhsTestErrorHandler (void_t* pDevice);
 GOS_STATIC gos_result_t app_dhsWriteFunction1 (u8_t params, va_list args);
 GOS_STATIC gos_result_t app_dhsWriteFunction2 (u8_t params, va_list args);
 GOS_STATIC gos_result_t app_dhsReadFunction (u8_t params, va_list args);
@@ -43,6 +44,8 @@ svl_dhsDevice_t testVirtualDevice =
 	.name                                  = "virtual_device",
 	.description                           = "Test virtual device.",
 	.pInitializer                          = app_dhsTestInitDevice,
+	.pErrorHandler                         = app_dhsTestErrorHandler,
+	.recoveryType                          = DHS_RECOVERY_ON_LIMIT,
 	.pDeviceDescriptor                     = (void_t*)&virtualDeviceDesc,
 	.writeFunctions[WRITE_FUNCTION_TYPE_1] = app_dhsWriteFunction1,
 	.writeFunctions[WRITE_FUNCTION_TYPE_2] = app_dhsWriteFunction2,
@@ -81,6 +84,11 @@ GOS_STATIC void_t app_dhsTestTask (void_t)
 }
 
 GOS_STATIC gos_result_t app_dhsTestInitDevice (void_t* pDevice)
+{
+	return GOS_SUCCESS;
+}
+
+GOS_STATIC gos_result_t app_dhsTestErrorHandler (void_t* pDevice)
 {
 	return GOS_SUCCESS;
 }

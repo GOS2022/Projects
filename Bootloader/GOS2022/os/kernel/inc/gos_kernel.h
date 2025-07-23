@@ -1282,32 +1282,4 @@ gos_result_t gos_taskYield (
 /**
  * @}
  */
-
-/**
- * @defgroup PlatformInitFunc Platform initializer weak functions
- * @{
- */
-/**
- * @brief   Platform driver initializer. Used for the platform-specific driver initializations.
- * @details This function shall be defined by the user.
- *
- * @return  -
- *
- * @retval  GOS_ERROR -
- */
-GOS_EXTERN gos_result_t gos_platformDriverInit (void_t);
-
-/**
- * @brief   User application initializer. Used for the application-related initializations.
- * @details This function shall be defined by the user.
- *
- * @return  -
- *
- * @retval  GOS_ERROR -
- */
-GOS_EXTERN gos_result_t gos_userApplicationInit (void_t);
-
-/**
- * @}
- */
 #endif

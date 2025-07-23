@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       svl_dhs.c
 //! @author     Ahmed Gazar
-//! @date       2024-04-13
-//! @version    1.0
+//! @date       2025-07-22
+//! @version    1.1
 //!
 //! @brief      GOS2022 Library / Device Handler Service source.
 //! @details    For a more detailed description of this service, please refer to @ref svl_dhs.h
@@ -25,6 +25,7 @@
 // Version    Date          Author          Description
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-04-13    Ahmed Gazar     Initial version created.
+// 1.1        2025-07-22    Ahmed Gazar     +    Error handling introduced
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -350,6 +351,20 @@ gos_result_t svl_dhsWriteDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t le
 			devices[index].errorCode   |= DHS_ERROR_WRITE;
 			devices[index].deviceState = DHS_STATE_WARNING;
 			devices[index].errorCounter++;
+
+			// Check single error recovery.
+			// Call error handler.
+			if ((devices[index].recoveryType == DHS_RECOVERY_ON_SINGLE_ERROR) &&
+				(devices[index].pErrorHandler != NULL) &&
+				(devices[index].pErrorHandler(devices[index].pDeviceDescriptor) == GOS_SUCCESS))
+			{
+				// If recover was successful, reset error.
+				devices[index].errorCounter = 0u;
+			}
+			else
+			{
+				// Single error recover not needed.
+			}
 		}
 		else
 		{
@@ -357,17 +372,30 @@ gos_result_t svl_dhsWriteDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t le
 			writeResult = GOS_SUCCESS;
 		}
 
+		va_end(args);
+
 		// Check error tolerance.
 		if (devices[index].errorCounter > devices[index].errorTolerance)
 		{
-			devices[index].deviceState = DHS_STATE_ERROR;
+			// Check on-limit error recovery.
+			// Call error handler.
+			if ((devices[index].recoveryType == DHS_RECOVERY_ON_LIMIT) &&
+				(devices[index].pErrorHandler != NULL) &&
+				(devices[index].pErrorHandler(devices[index].pDeviceDescriptor) == GOS_SUCCESS))
+			{
+				// If recovery was successful, reset error.
+				devices[index].errorCounter = 0u;
+			}
+			else
+			{
+				// On limit error recover not needed, send device to error.
+				devices[index].deviceState = DHS_STATE_ERROR;
+			}
 		}
 		else
 		{
 			// Within tolerance.
 		}
-
-		va_end(args);
 	}
 	else
 	{
@@ -403,6 +431,20 @@ gos_result_t svl_dhsReadDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t len
 			devices[index].errorCode   |= DHS_ERROR_READ;
 			devices[index].deviceState = DHS_STATE_WARNING;
 			devices[index].errorCounter++;
+
+			// Check single error recovery.
+			// Call error handler.
+			if ((devices[index].recoveryType == DHS_RECOVERY_ON_SINGLE_ERROR) &&
+				(devices[index].pErrorHandler != NULL) &&
+				(devices[index].pErrorHandler(devices[index].pDeviceDescriptor) == GOS_SUCCESS))
+			{
+				// If recover was successful, reset error.
+				devices[index].errorCounter = 0u;
+			}
+			else
+			{
+				// Single error recover not needed.
+			}
 		}
 		else
 		{
@@ -413,7 +455,20 @@ gos_result_t svl_dhsReadDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t len
 		// Check error tolerance.
 		if (devices[index].deviceState > devices[index].errorTolerance)
 		{
-			devices[index].deviceState = DHS_STATE_ERROR;
+			// Check on-limit error recovery.
+			// Call error handler.
+			if ((devices[index].recoveryType == DHS_RECOVERY_ON_LIMIT) &&
+				(devices[index].pErrorHandler != NULL) &&
+				(devices[index].pErrorHandler(devices[index].pDeviceDescriptor) == GOS_SUCCESS))
+			{
+				// If recovery was successful, reset error.
+				devices[index].errorCounter = 0u;
+			}
+			else
+			{
+				// On limit error recover not needed, send device to error.
+				devices[index].deviceState = DHS_STATE_ERROR;
+			}
 		}
 		else
 		{
@@ -522,7 +577,7 @@ gos_result_t svl_dhsEnableDevice (svl_dhsDevId_t devId)
 	/*
 	 * Function code.
 	 */
-	if ((index < numOfDevices) && devices[index].enabled != GOS_TRUE)
+	if ((index < numOfDevices) && (devices[index].enabled != GOS_TRUE))
 	{
 		devices[index].enabled = GOS_TRUE;
 		enableResult = GOS_SUCCESS;
@@ -549,7 +604,7 @@ gos_result_t svl_dhsDisableDevice (svl_dhsDevId_t devId)
 	/*
 	 * Function code.
 	 */
-	if ((index < numOfDevices) && devices[index].enabled != GOS_FALSE)
+	if ((index < numOfDevices) && (devices[index].enabled != GOS_FALSE))
 	{
 		devices[index].enabled = GOS_FALSE;
 		disableResult = GOS_SUCCESS;
@@ -601,9 +656,70 @@ GOS_STATIC void_t svl_dhsDaemon (void_t)
 		}
 	}
 
+	(void_t) gos_taskSleep(100);
+
 	for (;;)
 	{
-		gos_taskSleep(10000);
+        // Monitor devices.
+		for (index = 0u; index < SVL_DHS_MAX_DEVICES; index++)
+		{
+			if ((devices[index].deviceState == DHS_STATE_UNINITIALIZED) &&
+				(devices[index].pInitializer != NULL))
+			{
+				// Try to initialize.
+				if (devices[index].pInitializer(devices[index].pDeviceDescriptor) != GOS_SUCCESS)
+				{
+					// If initialization failed, set device state to not present.
+					devices[index].deviceState = DHS_STATE_NOT_PRESENT;
+				}
+				else
+				{
+					// Initialization successful, set state to healthy, clear errors.
+					devices[index].deviceState = DHS_STATE_HEALTHY;
+					devices[index].errorCounter = 0u;
+					devices[index].errorCode &= ~((u32_t)DHS_ERROR_INIT);
+				}
+			}
+			else if ((devices[index].deviceState == DHS_STATE_NOT_PRESENT) &&
+					 (devices[index].pInitializer != NULL))
+			{
+				// Try to initialize.
+				if (devices[index].pInitializer(devices[index].pDeviceDescriptor) != GOS_SUCCESS)
+				{
+					// If initialization failed, stay in state not present.
+				}
+				else
+				{
+					// Initialization successful, set state to healthy, clear errors.
+					devices[index].deviceState = DHS_STATE_HEALTHY;
+					devices[index].errorCounter = 0u;
+					devices[index].errorCode &= ~((u32_t)DHS_ERROR_INIT);
+				}
+			}
+			else if ((devices[index].deviceState == DHS_STATE_ERROR) &&
+					(devices[index].pInitializer != NULL) &&
+					(devices[index].recoveryType != DHS_RECOVERY_NONE))
+			{
+				// Try to initialize.
+				if (devices[index].pInitializer(devices[index].pDeviceDescriptor) != GOS_SUCCESS)
+				{
+					// If initialization failed, stay in state not present.
+				}
+				else
+				{
+					// Initialization successful, set state to healthy, clear errors.
+					devices[index].deviceState = DHS_STATE_HEALTHY;
+					devices[index].errorCounter = 0u;
+					devices[index].errorCode &= ~((u32_t)DHS_ERROR_INIT);
+				}
+			}
+			else
+			{
+				// Other states not handled periodically.
+			}
+		}
+
+		(void_t) gos_taskSleep(100);
 	}
 }
 

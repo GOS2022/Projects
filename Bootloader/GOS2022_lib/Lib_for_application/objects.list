@@ -25,7 +25,6 @@
 "./svl/src/svl_dhs.o"
 "./svl/src/svl_dsm.o"
 "./svl/src/svl_ers.o"
-"./svl/src/svl_ipl.o"
 "./svl/src/svl_mdi.o"
 "./svl/src/svl_pdh.o"
 "./svl/src/svl_sdh.o"

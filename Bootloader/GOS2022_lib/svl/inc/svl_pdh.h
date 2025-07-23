@@ -65,7 +65,7 @@
 /**
  * Library minor version.
  */
-#define PDH_LIBVER_VERSION_MINOR      ( 24                )
+#define PDH_LIBVER_VERSION_MINOR      ( 25                )
 
 /**
  * Library build number.
@@ -80,12 +80,12 @@
 /**
  * Library version date / month.
  */
-#define PDH_LIBVER_VERSION_DATE_MONTH ( GOS_TIME_JUNE     )
+#define PDH_LIBVER_VERSION_DATE_MONTH ( GOS_TIME_JULY     )
 
 /**
  * Library version date / day.
  */
-#define PDH_LIBVER_VERSION_DATE_DAY   ( 18                )
+#define PDH_LIBVER_VERSION_DATE_DAY   ( 22                )
 /**
  * Library name.
  */
@@ -113,7 +113,7 @@
 
 
 /*
- * Address definitions for individually accessing structures.
+ * Address definitions for individually accessable structures.
  */
 /**
  * Start relative offset.

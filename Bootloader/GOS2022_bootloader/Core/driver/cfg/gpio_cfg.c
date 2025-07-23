@@ -6,6 +6,7 @@
  */
 
 #include <drv_gpio.h>
+#include "stm32f4xx_hal.h"
 #include "iodef.h"
 
 /**
@@ -32,7 +33,7 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.port = GPIOA,
 			.pin = GPIO_PIN_10,
 			.mode = GPIO_MODE_AF_PP,
-			.pull = GPIO_NOPULL,
+			.pull = GPIO_PULLUP,
 			.speed = GPIO_SPEED_FREQ_VERY_HIGH,
 			.alternate = GPIO_AF7_USART1
 		},
@@ -160,7 +161,7 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
 			.mode = GPIO_MODE_OUTPUT_PP,
 			.pull = GPIO_NOPULL,
 			.defaultState = GPIO_STATE_LOW
-		}
+		},
 };
 
 /**
@@ -168,9 +169,6 @@ GOS_CONST drv_gpioDescriptor_t gpioConfig [] =
  */
 u32_t gpioConfigSize = sizeof(gpioConfig);
 
-GOS_CONST drv_gpioItCallbackDescriptor_t gpioItConfig [] =
-{
-
-};
+GOS_CONST drv_gpioItCallbackDescriptor_t gpioItConfig [] = {};
 
 u32_t gpioItConfigSize = sizeof(gpioItConfig);

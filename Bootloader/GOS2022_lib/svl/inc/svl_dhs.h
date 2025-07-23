@@ -14,17 +14,20 @@
 //*************************************************************************************************
 //! @file       svl_dhs.h
 //! @author     Ahmed Gazar
-//! @date       2024-04-13
-//! @version    1.0
+//! @date       2025-07-22
+//! @version    1.1
 //!
 //! @brief      GOS2022 Library / Device Handler Service header.
-//! @details    This component TODO
+//! @details    This component implements the device handler service to manage read/write devices
+//!             at an abstract level. The service provides a unified interface of different device
+//!             types, error detection on read/write operations, recovery, and initializing.
 //*************************************************************************************************
 // History
 // ------------------------------------------------------------------------------------------------
 // Version    Date          Author          Description
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-04-13    Ahmed Gazar     Initial version created.
+// 1.1        2025-07-22    Ahmed Gazar     +    svl_dhsRevovery_t added
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -125,10 +128,11 @@ typedef gos_result_t (*svl_dhsReadWriteFunc_t)(u8_t, va_list args);
  */
 typedef enum
 {
-	DHS_STATE_UNINITIALIZED = 0,  //!< Device uninitialized.
-	DHS_STATE_HEALTHY       = 1,  //!< Device healthy (no errors).
-	DHS_STATE_WARNING       = 2,  //!< Device healthy (errors within tolerance).
-	DHS_STATE_ERROR         = 3   //!< Device in error (errors reached tolerance).
+	DHS_STATE_UNINITIALIZED      = 0,  //!< Device uninitialized.
+	DHS_STATE_HEALTHY            = 1,  //!< Device healthy (no errors).
+	DHS_STATE_WARNING            = 2,  //!< Device healthy (errors within tolerance).
+	DHS_STATE_ERROR              = 3,  //!< Device in error (errors reached tolerance).
+	DHS_STATE_NOT_PRESENT        = 4   //!< Device initialization continuouly failed.
 }svl_dhsState_t;
 
 /**
@@ -136,11 +140,21 @@ typedef enum
  */
 typedef enum
 {
-	DHS_TYPE_READONLY       = 0,  //!< Read only (only read function).
-	DHS_TYPE_WRITEONLY      = 1,  //!< Write only (only write function).
-	DHS_TYPE_READWRITE      = 2,  //!< Read/write (both read and write function).
-	DHS_TYPE_VIRTUAL        = 3,  //!< Virtual (neither read nor write function).
+	DHS_TYPE_READONLY            = 0,  //!< Read only (only read function).
+	DHS_TYPE_WRITEONLY           = 1,  //!< Write only (only write function).
+	DHS_TYPE_READWRITE           = 2,  //!< Read/write (both read and write function).
+	DHS_TYPE_VIRTUAL             = 3,  //!< Virtual (neither read nor write function).
 }svl_dhsType_t;
+
+/**
+ * Recovery types.
+ */
+typedef enum
+{
+	DHS_RECOVERY_NONE            = 0, //!< No recovery.
+	DHS_RECOVERY_ON_SINGLE_ERROR = 1, //!< Recovery after single error.
+	DHS_RECOVERY_ON_LIMIT        = 2  //!< Recovery when error limit reached.
+}svl_dhsRevovery_t;
 
 /**
  * Device ID type.
@@ -159,7 +173,8 @@ typedef struct __attribute__((packed))
 	svl_dhsType_t          deviceType;                                  //!< Device type.
 	bool_t                 enabled;                                     //!< Enabled flag.
 	gos_result_t           (*pInitializer)(void_t*);                    //!< Initializer function pointer.
-	void_t                 (*pErrorHandler)(void_t*);                   //!< Error handler function pointer.
+	gos_result_t           (*pErrorHandler)(void_t*);                   //!< Error handler function pointer.
+	svl_dhsRevovery_t      recoveryType;                                //!< Recovery type.
 	svl_dhsReadWriteFunc_t readFunctions  [SVL_DHS_READ_FUNC_MAX_NUM];  //!< Read function pointer array.
 	svl_dhsReadWriteFunc_t writeFunctions [SVL_DHS_WRITE_FUNC_MAX_NUM]; //!< Write function pointer array.
 	svl_dhsState_t         deviceState;                                 //!< Device state.
@@ -181,9 +196,7 @@ typedef struct __attribute__((packed))
  *                       - Daemon task registration failed
  *                       - Sysmon user message callback registration failed
  */
-gos_result_t svl_dhsInit (
-        void_t
-        );
+gos_result_t svl_dhsInit (void_t);
 
 // TODO
 gos_result_t svl_dhsRegisterDevice (svl_dhsDevice_t* pDevice);

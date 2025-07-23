@@ -81,46 +81,6 @@
 #define SVL_ERS_ENTRY_START_ADDR             ( SVL_ERS_ENTRY_NUM_ADDR + sizeof(u32_t) )
 
 /*
- * IPL Service Configuration
- */
-
-//! WiFi SSID maximum length.
-#define SVL_IPL_DEVCFG_WIFI_SSID_MAX_LENGTH  ( 32 )
-
-//! WiFi password maximum length.
-#define SVL_IPL_DEVCFG_WIFI_PWD_MAX_LENGTH   ( 32 )
-
-//! IP address element number.
-#define SVL_IPL_DEVCFG_IP_ADDR_ELEMENTS      ( 4 )
-
-//! Gateway address element number.
-#define SVL_IPL_DEVCFG_GATEWAY_ADDR_ELEMENTS ( 4 )
-
-//! Sub-net address element number.
-#define SVL_IPL_DEVCFG_SUBNET_ADDR_ELEMENTS  ( 4 )
-
-//! IPL RX buffer size.
-#define SVL_IPL_RX_BUFF_SIZE                 ( 4096u )
-
-//! Maximum number of user-defined message callbacks.
-#define SVL_IPL_USER_MSG_CALLBACK_MAX_NUM    ( 16 )
-
-/**
- * Trace level for IPL debugging.
- *
- * 0 : Debug messages disabled.
- * 1 : Only state machine state info.
- * 2 : All debug info.
- */
-#define SVL_IPL_TRACE_LEVEL                  ( 0 )
-
-//! IPL daemon task priority.
-#define SVL_IPL_DAEMON_PRIORITY              ( 190 )
-
-//! IPL daemon task stack size.
-#define SVL_IPL_DAEMON_STACK_SIZE            ( 0x800 )
-
-/*
  * SDH Service Configuration
  */
 /**
@@ -166,7 +126,36 @@
 #define SVL_MDI_VAR_NAME_LENGTH              ( 16u )
 
 /*
- *
+ * Sysmon Service Configuration
  */
+//! TODO
+#define SVL_SYSMON_WIRED_DAEMON_PRIO         ( 191u )
+
+//! TODO
+#define SVL_SYSMON_WIRED_DAEMON_STACK        ( 0x800 )
+
+//! TODO
+#define SVL_SYSMON_WIRELESS_DAEMON_PRIO      ( 190u )
+
+//! TODO
+#define SVL_SYSMON_WIRELESS_DAEMON_STACK     ( 0x800 )
+
+//! TODO
+#define SVL_SYSMON_MAX_USER_MESSAGES         ( 24u )
+
+//! TODO
+#define SVL_SYSMON_WIRED_RX_BUFF_SIZE        ( 1024u )
+
+//! TODO
+#define SVL_SYSMON_WIRELESS_RX_BUFF_SIZE     ( 1024u )
+
+/**
+ * Trace level for sysmon debugging.
+ *
+ * 0 : Debug messages disabled.
+ * 1 : Only state machine state info.
+ * 2 : All debug info.
+ */
+#define SVL_SYSMON_TRACE_LEVEL               ( 2 )
 
 #endif

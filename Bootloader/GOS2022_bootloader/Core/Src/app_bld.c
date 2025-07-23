@@ -18,8 +18,8 @@ GOS_STATIC svl_pdhSwVerInfo_t bldVerInfo =
 	.name        = "GOS2022_bld_stm32f4",
 	.description = "GOS2022 bootloader for STM32F4 devices.",
 	.major       = 1,
-	.minor       = 0,
-	.build       = 5,
+	.minor       = 1,
+	.build       = 0,
 };
 
 /*
@@ -52,14 +52,14 @@ gos_result_t app_bld_init (void_t)
 			(void_t) svl_pdhSetBldCfg(&bldCfg);
 
 			// IPL shall only be initialized if update is requested.
-			if (bldCfg.updateMode == GOS_TRUE)
+			/*if (bldCfg.updateMode == GOS_TRUE) TODO
 			{
 				(void_t) svl_iplInit();
 			}
 			else
 			{
 				// Nothing to do.
-			}
+			}*/
 		}
 		else
 		{

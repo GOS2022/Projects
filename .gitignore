@@ -9,8 +9,10 @@
 /PortTest/GOS2022/Release
 /PortTest/GOS2022/Debug
 /Bootloader/GOS2022_lib/Debug
-/Bootloader/GOS2022_iplTest/Debug
 /Bootloader/.metadata
 /Bootloader/GOS2022_testApp/Debug
 /Bootloader/GOS2022_testApp/Release
-/Bootloader/Config test
+/Bootloader/GOS2022_bootloader/Debug
+/Bootloader/GOS2022_bootloader/Release
+/Bootloader/GOS2022_lib/Lib_for_bootloader
+/Bootloader/GOS2022_lib/Lib_for_application

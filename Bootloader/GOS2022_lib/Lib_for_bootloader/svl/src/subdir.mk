@@ -8,28 +8,28 @@ C_SRCS += \
 ../svl/src/svl_dhs.c \
 ../svl/src/svl_dsm.c \
 ../svl/src/svl_ers.c \
-../svl/src/svl_ipl.c \
 ../svl/src/svl_mdi.c \
 ../svl/src/svl_pdh.c \
-../svl/src/svl_sdh.c 
+../svl/src/svl_sdh.c \
+../svl/src/svl_sysmon.c 
 
 OBJS += \
 ./svl/src/svl_dhs.o \
 ./svl/src/svl_dsm.o \
 ./svl/src/svl_ers.o \
-./svl/src/svl_ipl.o \
 ./svl/src/svl_mdi.o \
 ./svl/src/svl_pdh.o \
-./svl/src/svl_sdh.o 
+./svl/src/svl_sdh.o \
+./svl/src/svl_sysmon.o 
 
 C_DEPS += \
 ./svl/src/svl_dhs.d \
 ./svl/src/svl_dsm.d \
 ./svl/src/svl_ers.d \
-./svl/src/svl_ipl.d \
 ./svl/src/svl_mdi.d \
 ./svl/src/svl_pdh.d \
-./svl/src/svl_sdh.d 
+./svl/src/svl_sdh.d \
+./svl/src/svl_sysmon.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -39,7 +39,7 @@ svl/src/%.o svl/src/%.su svl/src/%.cyclo: ../svl/src/%.c svl/src/subdir.mk
 clean: clean-svl-2f-src
 
 clean-svl-2f-src:
-	-$(RM) ./svl/src/svl_dhs.cyclo ./svl/src/svl_dhs.d ./svl/src/svl_dhs.o ./svl/src/svl_dhs.su ./svl/src/svl_dsm.cyclo ./svl/src/svl_dsm.d ./svl/src/svl_dsm.o ./svl/src/svl_dsm.su ./svl/src/svl_ers.cyclo ./svl/src/svl_ers.d ./svl/src/svl_ers.o ./svl/src/svl_ers.su ./svl/src/svl_ipl.cyclo ./svl/src/svl_ipl.d ./svl/src/svl_ipl.o ./svl/src/svl_ipl.su ./svl/src/svl_mdi.cyclo ./svl/src/svl_mdi.d ./svl/src/svl_mdi.o ./svl/src/svl_mdi.su ./svl/src/svl_pdh.cyclo ./svl/src/svl_pdh.d ./svl/src/svl_pdh.o ./svl/src/svl_pdh.su ./svl/src/svl_sdh.cyclo ./svl/src/svl_sdh.d ./svl/src/svl_sdh.o ./svl/src/svl_sdh.su
+	-$(RM) ./svl/src/svl_dhs.cyclo ./svl/src/svl_dhs.d ./svl/src/svl_dhs.o ./svl/src/svl_dhs.su ./svl/src/svl_dsm.cyclo ./svl/src/svl_dsm.d ./svl/src/svl_dsm.o ./svl/src/svl_dsm.su ./svl/src/svl_ers.cyclo ./svl/src/svl_ers.d ./svl/src/svl_ers.o ./svl/src/svl_ers.su ./svl/src/svl_mdi.cyclo ./svl/src/svl_mdi.d ./svl/src/svl_mdi.o ./svl/src/svl_mdi.su ./svl/src/svl_pdh.cyclo ./svl/src/svl_pdh.d ./svl/src/svl_pdh.o ./svl/src/svl_pdh.su ./svl/src/svl_sdh.cyclo ./svl/src/svl_sdh.d ./svl/src/svl_sdh.o ./svl/src/svl_sdh.su ./svl/src/svl_sysmon.cyclo ./svl/src/svl_sysmon.d ./svl/src/svl_sysmon.o ./svl/src/svl_sysmon.su
 
 .PHONY: clean-svl-2f-src
 

@@ -52,10 +52,12 @@ GOS_STATIC svl_dhsDevice_t lcdDevice =
 	.name              = "lcd",
 	.description       = "16x2 LCD over I2C. Address: 0x22.",
 	.pInitializer      = drv_lcdInit,
+	.pErrorHandler     = drv_lcdInit,
+	.recoveryType      = DHS_RECOVERY_ON_LIMIT,
 	.pDeviceDescriptor = (void_t*)&lcdDescriptor,
 	.writeFunctions[0] = bsp_lcdHandlerWriteStringWrapper,
 	.enabled           = GOS_TRUE,
-	.errorTolerance    = 100
+	.errorTolerance    = 5
 };
 
 /*
@@ -71,7 +73,6 @@ gos_result_t bsp_lcdHandlerInit (void_t)
 	/*
 	 * Function code.
 	 */
-	//GOS_CONCAT_RESULT(initResult, drv_lcdInit((void_t*)&lcdDescriptor));
 	GOS_CONCAT_RESULT(initResult, svl_dhsRegisterDevice(&lcdDevice));
 	GOS_CONCAT_RESULT(initResult, svl_dhsForceInitialize(lcdDevice.deviceId));
 	GOS_CONCAT_RESULT(initResult, gos_mutexInit(&lcdMutex));

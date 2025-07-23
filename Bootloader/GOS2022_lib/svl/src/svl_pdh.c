@@ -458,7 +458,7 @@ GOS_INLINE gos_result_t svl_pdhSetSwInfo (svl_pdhSwInfo_t* pSwInfo)
 	if ((pSwInfo != NULL) && (pdhWriteFunction != NULL) &&
 		((pdhInited == GOS_FALSE) || (pdhInited == GOS_TRUE && gos_mutexLock(&pdhMutex, 5000) == GOS_SUCCESS)))
 	{
-		setResult = pdhWriteFunction(PDH_ADDR_SW_INFO, (u8_t*)pSwInfo, sizeof(*pSwInfo));
+		setResult = pdhWriteFunction(PDH_ADDR_SW_INFO, (u8_t*)pSwInfo, sizeof(svl_pdhSwInfo_t));
 		(void_t) gos_mutexUnlock(&pdhMutex);
 	}
 	else

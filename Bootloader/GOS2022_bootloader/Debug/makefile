@@ -65,12 +65,12 @@ all: main-build
 main-build: GOS2022_bootloader.elf secondary-outputs
 
 dependents:
-	-cd C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022/GOS2022_bootloader && $(MAKE) clean all
-	-cd C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022_lib/Lib_for_bootloader && $(MAKE) clean all
+	-cd C:/Users/Gabor/Documents/GitHub/GOS2022_root/Projects/Bootloader/GOS2022_lib/Lib_for_bootloader && $(MAKE) clean all
+	-cd C:/Users/Gabor/Documents/GitHub/GOS2022_root/Projects/Bootloader/GOS2022/GOS2022_bootloader && $(MAKE) clean all
 
 # Tool invocations
-GOS2022_bootloader.elf GOS2022_bootloader.map: $(OBJS) $(USER_OBJS) C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022/GOS2022_bootloader/libGOS2022.a C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022_lib/Lib_for_bootloader/libGOS2022_lib.a C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\Bootloader\GOS2022_bootloader\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "GOS2022_bootloader.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\Bootloader\GOS2022_bootloader\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="GOS2022_bootloader.map" -Wl,--gc-sections -static -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\Bootloader\GOS2022_lib\Lib_for_bootloader" -L"C:\Users\Ahmed\Documents\GitHub\GOS2022\Projects\Bootloader\GOS2022\GOS2022_bootloader" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+GOS2022_bootloader.elf GOS2022_bootloader.map: $(OBJS) $(USER_OBJS) C:/Users/Gabor/Documents/GitHub/GOS2022_root/Projects/Bootloader/GOS2022_lib/Lib_for_bootloader/libGOS2022_lib.a C:/Users/Gabor/Documents/GitHub/GOS2022_root/Projects/Bootloader/GOS2022/GOS2022_bootloader/libGOS2022.a C:\Users\Gabor\Documents\GitHub\GOS2022_root\Projects\Bootloader\GOS2022_bootloader\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "GOS2022_bootloader.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Gabor\Documents\GitHub\GOS2022_root\Projects\Bootloader\GOS2022_bootloader\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="GOS2022_bootloader.map" -Wl,--gc-sections -static -L"C:\Users\Gabor\Documents\GitHub\GOS2022_root\Projects\Bootloader\GOS2022\GOS2022_bootloader" -L"C:\Users\Gabor\Documents\GitHub\GOS2022_root\Projects\Bootloader\GOS2022_lib\Lib_for_bootloader" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -104,7 +104,7 @@ warn-no-linker-script-specified:
 	@echo 'Warning: No linker script specified. Check the linker settings in the build configuration.'
 
 .PHONY: all clean dependents main-build fail-specified-linker-script-missing warn-no-linker-script-specified
-C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022/GOS2022_bootloader/libGOS2022.a:
-C:/Users/Ahmed/Documents/GitHub/GOS2022/Projects/Bootloader/GOS2022_lib/Lib_for_bootloader/libGOS2022_lib.a:
+C:/Users/Gabor/Documents/GitHub/GOS2022_root/Projects/Bootloader/GOS2022_lib/Lib_for_bootloader/libGOS2022_lib.a:
+C:/Users/Gabor/Documents/GitHub/GOS2022_root/Projects/Bootloader/GOS2022/GOS2022_bootloader/libGOS2022.a:
 
 -include ../makefile.targets
