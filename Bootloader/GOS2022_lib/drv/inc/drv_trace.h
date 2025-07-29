@@ -62,14 +62,16 @@
  *          transmit the given string in blocking mode without ensuring
  *          safe access to the periphery (no mutex and trigger used).
  *
- * @param   pMessage : String to be transmitted.
+ * @param   pMessage String to be transmitted.
  *
  * @return  Result of transmission.
  *
- * @retval  GOS_SUCCESS : Transmit successful.
- * @retval  GOS_ERROR   : Low-level driver error.
+ * @retval  #GOS_SUCCESS Transmit successful.
+ * @retval  #GOS_ERROR   Low-level driver error.
  */
-gos_result_t drv_traceTransmitUnsafe (char_t* pMessage);
+gos_result_t drv_traceTransmitUnsafe (
+		char_t* pMessage
+		);
 
 /**
  * @brief   Safe trace transmit function.
@@ -77,20 +79,28 @@ gos_result_t drv_traceTransmitUnsafe (char_t* pMessage);
  *          transmit the given string in DMA mode ensuring safe access
  *          to the periphery (mutex and trigger are used).
  *
- * @param   pMessage : String to be transmitted.
+ * @param   pMessage String to be transmitted.
  *
  * @return  Result of transmission.
  *
- * @retval  GOS_SUCCESS : Transmit successful.
- * @retval  GOS_ERROR   : Empty UART service configuration or low-level
- *                        driver error.
+ * @retval  #GOS_SUCCESS Transmit successful.
+ * @retval  #GOS_ERROR   Empty UART service configuration or low-level
+ *                       driver error.
  */
-gos_result_t drv_traceTransmit (char_t* pMessage);
+gos_result_t drv_traceTransmit (
+		char_t* pMessage
+		);
 
 // TODO
-gos_result_t drv_traceEnqueueTraceMessage (const char_t* message, bool_t plainText, gos_result_t result);
+gos_result_t drv_traceEnqueueTraceMessage (
+		GOS_CONST char_t* message,
+		bool_t            plainText,
+		gos_result_t      result
+		);
 
 // TODO
-void_t drv_traceFlushTraceEntries (void_t);
+void_t drv_traceFlushTraceEntries (
+		void_t
+		);
 
 #endif

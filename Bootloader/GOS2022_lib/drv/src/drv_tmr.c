@@ -48,7 +48,9 @@
 /*
  * Includes
  */
+#include <drv_error.h>
 #include <drv_tmr.h>
+#include <string.h>
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_tim.h"
 
@@ -56,7 +58,7 @@
  * Static variables
  */
 /**
- * TIM instance lookup table.
+ * TMR instance lookup table.
  */
 GOS_STATIC TIM_TypeDef* tmrInstanceLut [] =
 {
@@ -77,19 +79,24 @@ GOS_STATIC TIM_TypeDef* tmrInstanceLut [] =
 };
 
 /**
- * TIM handles.
+ * TMR handles.
  */
 GOS_STATIC TIM_HandleTypeDef htims              [DRV_TMR_NUM_OF_INSTANCES];
 
 /**
- * TIM mutexes.
+ * TMR mutexes.
  */
 GOS_STATIC gos_mutex_t       tmrMutexes         [DRV_TMR_NUM_OF_INSTANCES];
 
 /**
- * TIM ready triggers.
+ * TMR ready triggers.
  */
 GOS_STATIC gos_trigger_t     tmrReadyTriggers   [DRV_TMR_NUM_OF_INSTANCES];
+
+/**
+ * TMR diagnostics.
+ */
+GOS_STATIC drv_tmrDiag_t     tmrDiag;
 
 /*
  * External variables
@@ -100,7 +107,7 @@ GOS_STATIC gos_trigger_t     tmrReadyTriggers   [DRV_TMR_NUM_OF_INSTANCES];
 GOS_EXTERN GOS_CONST drv_tmrDescriptor_t     tmrConfig [];
 
 /**
- * TIM configuration array size (shall be defined by user).
+ * TMR configuration array size (shall be defined by user).
  */
 GOS_EXTERN u32_t                             tmrConfigSize;
 
@@ -128,6 +135,7 @@ gos_result_t drv_tmrInit (void_t)
     else
     {
         // Configuration array is NULL pointer.
+        DRV_ERROR_SET(tmrDiag.globalErrorFlags, DRV_ERROR_TMR_CFG_ARRAY_NULL);
         tmrDriverInitResult = GOS_ERROR;
     }
 
@@ -150,7 +158,7 @@ gos_result_t drv_tmrInitInstance (u8_t tmrInstanceIndex)
     /*
      * Function code.
      */
-    if (tmrConfig != NULL && tmrInstanceIndex < (tmrConfigSize / sizeof(drv_tmrDescriptor_t)))
+    if ((tmrConfig != NULL) && (tmrInstanceIndex < (tmrConfigSize / sizeof(drv_tmrDescriptor_t))))
     {
         instance = tmrConfig[tmrInstanceIndex].periphInstance;
 
@@ -178,6 +186,7 @@ gos_result_t drv_tmrInitInstance (u8_t tmrInstanceIndex)
                 if (HAL_TIM_ConfigClockSource(&htims[instance], &sClockSourceConfig) != HAL_OK)
                 {
                     tmrInitResult = GOS_ERROR;
+                    DRV_ERROR_SET(tmrDiag.instanceErrorFlags[instance], DRV_ERROR_TMR_INSTANCE_INIT);
                 }
                 else
                 {
@@ -194,6 +203,7 @@ gos_result_t drv_tmrInitInstance (u8_t tmrInstanceIndex)
                 if (HAL_TIMEx_MasterConfigSynchronization(&htims[instance], &sMasterConfig) != HAL_OK)
                 {
                     tmrInitResult = GOS_ERROR;
+                    DRV_ERROR_SET(tmrDiag.instanceErrorFlags[instance], DRV_ERROR_TMR_INSTANCE_INIT);
                 }
                 else
                 {
@@ -204,18 +214,100 @@ gos_result_t drv_tmrInitInstance (u8_t tmrInstanceIndex)
             {
                 // Not used.
             }
+
+            if (tmrInitResult == GOS_SUCCESS)
+            {
+            	tmrDiag.instanceInitialized[instance] = GOS_TRUE;
+            }
+            else
+            {
+            	// Initialization failed.
+            }
         }
         else
         {
             // Init error.
+        	DRV_ERROR_SET(tmrDiag.instanceErrorFlags[instance], DRV_ERROR_TMR_INSTANCE_INIT);
         }
     }
     else
     {
         // Configuration missing or index is out of array boundary.
+    	DRV_ERROR_SET(tmrDiag.globalErrorFlags, DRV_ERROR_TMR_INDEX_OUT_OF_BOUND);
     }
 
     return tmrInitResult;
+}
+
+/*
+ * Function: drv_tmrDeInitInstance
+ */
+gos_result_t drv_tmrDeInitInstance (u8_t tmrInstanceIndex)
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t            tmrDeInitResult = GOS_ERROR;
+    drv_tmrPeriphInstance_t instance         = 0u;
+
+    /*
+     * Function code.
+     */
+    if (tmrConfig != NULL)
+    {
+        if (tmrInstanceIndex < (tmrConfigSize / sizeof(drv_tmrDescriptor_t)))
+        {
+            instance = tmrConfig[tmrInstanceIndex].periphInstance;
+
+            if (HAL_TIM_Base_DeInit(&htims[instance]) == HAL_OK)
+            {
+            	tmrDeInitResult = GOS_SUCCESS;
+            }
+            else
+            {
+                // De-init error.
+                DRV_ERROR_SET(tmrDiag.instanceErrorFlags[instance], DRV_ERROR_TMR_INSTANCE_DEINIT);
+            }
+        }
+        else
+        {
+            // Index is out of array boundary.
+            DRV_ERROR_SET(tmrDiag.globalErrorFlags, DRV_ERROR_TMR_INDEX_OUT_OF_BOUND);
+        }
+    }
+    else
+    {
+        // Configuration is NULL.
+        DRV_ERROR_SET(tmrDiag.globalErrorFlags, DRV_ERROR_TMR_CFG_ARRAY_NULL);
+    }
+
+    return tmrDeInitResult;
+}
+
+/*
+ * Function: drv_tmrGetDiagData
+ */
+gos_result_t drv_tmrGetDiagData (drv_tmrDiag_t* pDiag)
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t tmrGetDiagResult = GOS_ERROR;
+
+    /*
+     * Function code.
+     */
+    if (pDiag != NULL)
+    {
+    	(void_t) memcpy((void_t*)pDiag, (void_t*)&tmrDiag, sizeof(drv_tmrDiag_t));
+    	tmrGetDiagResult = GOS_SUCCESS;
+    }
+    else
+    {
+        // NULL pointer.
+    }
+
+    return tmrGetDiagResult;
 }
 
 /*
@@ -239,6 +331,7 @@ gos_result_t drv_tmrStart (drv_tmrPeriphInstance_t instance, u32_t mutexTmo)
     else
     {
         // Error.
+    	DRV_ERROR_SET(tmrDiag.instanceErrorFlags[instance], DRV_ERROR_TMR_START);
     }
 
     (void_t) gos_mutexUnlock(&tmrMutexes[instance]);
@@ -267,6 +360,7 @@ gos_result_t drv_tmrStartIT (drv_tmrPeriphInstance_t instance, u32_t mutexTmo)
     else
     {
         // Error.
+    	DRV_ERROR_SET(tmrDiag.instanceErrorFlags[instance], DRV_ERROR_TMR_START_IT);
     }
 
     (void_t) gos_mutexUnlock(&tmrMutexes[instance]);
@@ -295,6 +389,7 @@ gos_result_t drv_tmrStartDMA (drv_tmrPeriphInstance_t instance, u32_t* pData, u1
     else
     {
         // Error.
+    	DRV_ERROR_SET(tmrDiag.instanceErrorFlags[instance], DRV_ERROR_TMR_START_DMA);
     }
 
     (void_t) gos_mutexUnlock(&tmrMutexes[instance]);
@@ -331,7 +426,7 @@ GOS_INLINE gos_result_t drv_tmrGetValue (drv_tmrPeriphInstance_t instance, u32_t
 /*
  * Function: HAL_TIM_PeriodElapsedCallback
  */
-void_t HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef *pHtim)
+void_t HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef* pHtim)
 {
     /*
      * Local variables.
@@ -342,7 +437,7 @@ void_t HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef *pHtim)
     /*
      * Function code.
      */
-    if (pHtim != NULL && tmrConfig != NULL)
+    if ((pHtim != NULL) && (tmrConfig != NULL))
     {
         for (instance = DRV_TMR_INSTANCE_1; instance < DRV_TMR_NUM_OF_INSTANCES; instance++)
         {

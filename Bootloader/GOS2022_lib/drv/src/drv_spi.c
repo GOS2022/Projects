@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_spi.c
 //! @author     Ahmed Gazar
-//! @date       2024-04-02
-//! @version    1.1
+//! @date       2025-07-24
+//! @version    1.2
 //!
 //! @brief      GOS2022 Library / SPI driver source.
 //! @details    For a more detailed description of this driver, please refer to @ref drv_spi.h
@@ -28,6 +28,7 @@
 // 1.1        2024-04-02    Ahmed Gazar     *    Complete callbacks made faster by removing loops
 //                                          *    Trigger usage made optional by 0 timeout
 //                                          *    Inline macros removed from functions
+// 1.2        2025-07-24    Ahmed Gazar     +    Diagnostics implemented
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -51,7 +52,9 @@
 /*
  * Includes
  */
+#include <drv_error.h>
 #include <drv_spi.h>
+#include <string.h>
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_spi.h"
 
@@ -94,6 +97,11 @@ GOS_STATIC gos_trigger_t     spiTxReadyTriggers   [DRV_SPI_NUM_OF_INSTANCES];
  */
 GOS_STATIC gos_trigger_t     spiTxRxReadyTriggers [DRV_SPI_NUM_OF_INSTANCES];
 
+/**
+ * SPI diagnostics.
+ */
+GOS_STATIC drv_spiDiag_t     spiDiag;
+
 /*
  * External variables
  */
@@ -123,7 +131,7 @@ gos_result_t drv_spiInit (void_t)
      */
     if (spiConfig != NULL)
     {
-        for (spiIdx = 0u; spiIdx < spiConfigSize / sizeof(drv_spiDescriptor_t); spiIdx++)
+        for (spiIdx = 0u; spiIdx < (spiConfigSize / sizeof(drv_spiDescriptor_t)); spiIdx++)
         {
             GOS_CONCAT_RESULT(spiDriverInitResult, drv_spiInitInstance(spiIdx));
         }
@@ -131,6 +139,7 @@ gos_result_t drv_spiInit (void_t)
     else
     {
         // Configuration array is NULL pointer.
+    	DRV_ERROR_SET(spiDiag.globalErrorFlags, DRV_ERROR_SPI_CFG_ARRAY_NULL);
         spiDriverInitResult = GOS_ERROR;
     }
 
@@ -151,7 +160,7 @@ gos_result_t drv_spiInitInstance (u8_t spiInstanceIndex)
     /*
      * Function code.
      */
-    if (spiConfig != NULL && spiInstanceIndex < (spiConfigSize / sizeof(drv_spiDescriptor_t)))
+    if ((spiConfig != NULL) && (spiInstanceIndex < (spiConfigSize / sizeof(drv_spiDescriptor_t))))
     {
         instance = spiConfig[spiInstanceIndex].periphInstance;
 
@@ -179,18 +188,94 @@ gos_result_t drv_spiInitInstance (u8_t spiInstanceIndex)
             )
         {
             spiInitResult = GOS_SUCCESS;
+            spiDiag.instanceInitialized[instance] = GOS_TRUE;
         }
         else
         {
             // Init error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_INSTANCE_INIT);
         }
     }
     else
     {
         // Configuration missing or index is out of array boundary.
+    	DRV_ERROR_SET(spiDiag.globalErrorFlags, DRV_ERROR_SPI_INDEX_OUT_OF_BOUND);
     }
 
     return spiInitResult;
+}
+
+/*
+ * Function: drv_spiDeInitInstance
+ */
+gos_result_t drv_spiDeInitInstance (u8_t spiInstanceIndex)
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t            spiDeInitResult = GOS_ERROR;
+    drv_spiPeriphInstance_t instance         = 0u;
+
+    /*
+     * Function code.
+     */
+    if (spiConfig != NULL)
+    {
+        if (spiInstanceIndex < (spiConfigSize / sizeof(drv_spiDescriptor_t)))
+        {
+            instance = spiConfig[spiInstanceIndex].periphInstance;
+
+            if (HAL_SPI_DeInit(&hspis[instance]) == HAL_OK)
+            {
+            	spiDeInitResult = GOS_SUCCESS;
+            }
+            else
+            {
+                // De-init error.
+                DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_INSTANCE_DEINIT);
+            }
+        }
+        else
+        {
+            // Index is out of array boundary.
+            DRV_ERROR_SET(spiDiag.globalErrorFlags, DRV_ERROR_SPI_INDEX_OUT_OF_BOUND);
+        }
+    }
+    else
+    {
+        // Configuration is NULL.
+        DRV_ERROR_SET(spiDiag.globalErrorFlags, DRV_ERROR_SPI_CFG_ARRAY_NULL);
+    }
+
+    return spiDeInitResult;
+}
+
+/*
+ * Function: drv_spiGetDiagData
+ */
+gos_result_t drv_spiGetDiagData (
+		drv_spiDiag_t* pDiag
+		)
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t spiGetDiagResult = GOS_ERROR;
+
+    /*
+     * Function code.
+     */
+    if (pDiag != NULL)
+    {
+    	(void_t) memcpy((void_t*)pDiag, (void_t*)&spiDiag, sizeof(drv_spiDiag_t));
+    	spiGetDiagResult = GOS_SUCCESS;
+    }
+    else
+    {
+        // NULL pointer.
+    }
+
+    return spiGetDiagResult;
 }
 
 /*
@@ -215,15 +300,18 @@ gos_result_t drv_spiTransmitBlocking (
         if (HAL_SPI_Transmit(&hspis[instance], pData, size, transmitTmo) == HAL_OK)
         {
             spiDriverTransmitResult = GOS_SUCCESS;
+            DRV_ERROR_CLEAR(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_BLOCKING_HAL);
         }
         else
         {
             // Transmit error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_BLOCKING_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_BLOCKING_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&spiMutexes[instance]);
@@ -252,15 +340,18 @@ gos_result_t drv_spiReceiveBlocking (
         if (HAL_SPI_Receive(&hspis[instance], pBuffer, size, receiveTmo) == HAL_OK)
         {
             spiDriverReceiveResult = GOS_SUCCESS;
+            DRV_ERROR_CLEAR(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_BLOCKING_HAL);
         }
         else
         {
             // Receive error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_BLOCKING_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_BLOCKING_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&spiMutexes[instance]);
@@ -296,10 +387,12 @@ gos_result_t drv_spiTransmitIT (
                     gos_triggerReset(&spiTxReadyTriggers[instance])                == GOS_SUCCESS)
                 {
                     spiDriverTransmitResult = GOS_SUCCESS;
+                    DRV_ERROR_CLEAR(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_IT_TRIG);
                 }
                 else
                 {
                     // Trigger error.
+                	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_IT_TRIG);
                 }
             }
             else
@@ -310,11 +403,13 @@ gos_result_t drv_spiTransmitIT (
         else
         {
             // Transmit error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_IT_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_IT_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&spiMutexes[instance]);
@@ -350,10 +445,12 @@ gos_result_t drv_spiReceiveIT (
                     gos_triggerReset(&spiRxReadyTriggers[instance])                == GOS_SUCCESS)
                 {
                     spiDriverReceiveResult = GOS_SUCCESS;
+                    DRV_ERROR_CLEAR(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_IT_TRIG);
                 }
                 else
                 {
                     // Trigger error.
+                	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_IT_TRIG);
                 }
             }
             else
@@ -364,11 +461,13 @@ gos_result_t drv_spiReceiveIT (
         else
         {
             // Receive error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_IT_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_IT_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&spiMutexes[instance]);
@@ -402,10 +501,12 @@ gos_result_t drv_spiTransmitDMA (
                     gos_triggerReset(&spiTxReadyTriggers[instance])                == GOS_SUCCESS)
                 {
                     spiDriverTransmitResult = GOS_SUCCESS;
+                    DRV_ERROR_CLEAR(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_DMA_TRIG);
                 }
                 else
                 {
                     // Trigger error.
+                	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_DMA_TRIG);
                 }
             }
             else
@@ -417,11 +518,13 @@ gos_result_t drv_spiTransmitDMA (
         else
         {
             // Transmit error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_DMA_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_DMA_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&spiMutexes[instance]);
@@ -455,10 +558,12 @@ gos_result_t drv_spiReceiveDMA (
                     gos_triggerReset(&spiRxReadyTriggers[instance])                == GOS_SUCCESS)
                 {
                     spiDriverReceiveResult = GOS_SUCCESS;
+                    DRV_ERROR_CLEAR(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_DMA_TRIG);
                 }
                 else
                 {
                     // Trigger error.
+                	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_DMA_TRIG);
                 }
             }
             else
@@ -469,11 +574,13 @@ gos_result_t drv_spiReceiveDMA (
         else
         {
             // Receive error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_DMA_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_RX_DMA_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&spiMutexes[instance]);
@@ -502,15 +609,18 @@ gos_result_t drv_spiTransmitReceiveBlocking (
         if (HAL_SPI_TransmitReceive(&hspis[instance], pTxData, pRxData, size, transmitReceiveTmo) == HAL_OK)
         {
             spiDriverTransmitReceiveResult = GOS_SUCCESS;
+            DRV_ERROR_CLEAR(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_BLOCKING_HAL);
         }
         else
         {
-            // Receive or trigger error.
+            // Transmit receive error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_BLOCKING_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_BLOCKING_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&spiMutexes[instance]);
@@ -544,10 +654,12 @@ gos_result_t drv_spiTransmitReceiveIT (
                     gos_triggerReset(&spiTxRxReadyTriggers[instance])                == GOS_SUCCESS)
                 {
                     spiDriverTransmitReceiveResult = GOS_SUCCESS;
+                	DRV_ERROR_CLEAR(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_IT_TRIG);
                 }
                 else
                 {
                     // Trigger error.
+                	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_IT_TRIG);
                 }
             }
             else
@@ -558,11 +670,13 @@ gos_result_t drv_spiTransmitReceiveIT (
         else
         {
             // Transmit-receive error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_IT_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_IT_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&spiMutexes[instance]);
@@ -596,10 +710,12 @@ gos_result_t drv_spiTransmitReceiveDMA (
                     gos_triggerReset(&spiTxRxReadyTriggers[instance])                == GOS_SUCCESS)
                 {
                     spiDriverTransmitReceiveResult = GOS_SUCCESS;
+                    DRV_ERROR_CLEAR(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_DMA_TRIG);
                 }
                 else
                 {
                     // Trigger error.
+                	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_DMA_TRIG);
                 }
             }
             else
@@ -610,11 +726,13 @@ gos_result_t drv_spiTransmitReceiveDMA (
         else
         {
             // Transmit-receive error.
+        	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_DMA_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(spiDiag.instanceErrorFlags[instance], DRV_ERROR_SPI_TX_RX_DMA_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&spiMutexes[instance]);

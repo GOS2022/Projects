@@ -47,12 +47,8 @@ gos_result_t app_lcdInit (void_t)
 {
 	gos_result_t lcdInitResult = GOS_SUCCESS;
 
-	lcdInitResult &= gos_taskRegister(&appLcdTask, NULL);
-
-	if (lcdInitResult != GOS_SUCCESS)
-	{
-		lcdInitResult = GOS_ERROR;
-	}
+	GOS_CONCAT_RESULT(lcdInitResult, gos_taskRegister(&appLcdTask, NULL));
+	GOS_CONCAT_RESULT(lcdInitResult, bsp_lcdHandlerInit());
 
 	return lcdInitResult;
 }
@@ -96,7 +92,7 @@ GOS_STATIC void_t app_lcdTask (void_t)
 	u16_t temperatureValue = 0u;
 	u16_t cpuUse           = 0u;
 
-	(void_t) bsp_lcdHandlerInit();
+//	(void_t) bsp_lcdHandlerInit();
 
 	(void_t) gos_taskSleep(50);
 

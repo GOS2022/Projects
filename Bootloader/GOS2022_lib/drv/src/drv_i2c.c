@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_i2c.c
 //! @author     Ahmed Gazar
-//! @date       2024-04-13
-//! @version    1.2
+//! @date       2025-07-27
+//! @version    1.3
 //!
 //! @brief      GOS2022 Library / I2C driver source.
 //! @details    For a more detailed description of this driver, please refer to @ref drv_i2c.h
@@ -28,6 +28,7 @@
 // 1.1        2024-04-02    Ahmed Gazar     *    Complete callbacks made faster by removing loops
 //                                          *    Inline macros removed from functions
 // 1.2        2024-04-13    Ahmed Gazar     *    Instance initializer parameter changed
+// 1.3        2025-07-27    Ahmed Gazar     +    Diagnostics implemented
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -51,7 +52,9 @@
 /*
  * Includes
  */
+#include <drv_error.h>
 #include <drv_i2c.h>
+#include <string.h>
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_i2c.h"
 
@@ -98,6 +101,11 @@ GOS_STATIC gos_trigger_t     i2cRxMemReadyTriggers [DRV_I2C_NUM_OF_INSTANCES];
  */
 GOS_STATIC gos_trigger_t     i2cTxMemReadyTriggers [DRV_I2C_NUM_OF_INSTANCES];
 
+/**
+ * I2C diagnostics.
+ */
+GOS_STATIC drv_i2cDiag_t     i2cDiag;
+
 /*
  * External variables
  */
@@ -129,12 +137,13 @@ gos_result_t drv_i2cInit (void_t)
     {
         for (i2cIdx = 0u; i2cIdx < i2cConfigSize / sizeof(drv_i2cDescriptor_t); i2cIdx++)
         {
-            GOS_CONCAT_RESULT(i2cDriverInitResult, drv_i2cInitInstance(&i2cConfig[i2cIdx]));
+            GOS_CONCAT_RESULT(i2cDriverInitResult, drv_i2cInitInstance(i2cIdx));
         }
     }
     else
     {
         // Configuration array is NULL pointer.
+    	DRV_ERROR_SET(i2cDiag.globalErrorFlags, DRV_ERROR_I2C_CFG_ARRAY_NULL);
         i2cDriverInitResult = GOS_ERROR;
     }
 
@@ -144,7 +153,7 @@ gos_result_t drv_i2cInit (void_t)
 /*
  * Function: drv_i2cInitInstance
  */
-gos_result_t drv_i2cInitInstance (GOS_CONST drv_i2cDescriptor_t* pInstance)
+gos_result_t drv_i2cInitInstance (u8_t i2cInstanceIndex)
 {
     /*
      * Local variables.
@@ -155,21 +164,19 @@ gos_result_t drv_i2cInitInstance (GOS_CONST drv_i2cDescriptor_t* pInstance)
     /*
      * Function code.
      */
-    if (pInstance != NULL)
+    if ((i2cConfig != NULL) && (i2cInstanceIndex < (i2cConfigSize / sizeof(drv_i2cDescriptor_t))))
     {
-        instance = pInstance->periphInstance;
+        instance = i2cConfig[i2cInstanceIndex].periphInstance;
 
         hi2cs[instance].Instance             = i2cInstanceLut[instance];
-        hi2cs[instance].Init.ClockSpeed      = pInstance->clockSpeed;
-        hi2cs[instance].Init.DutyCycle       = pInstance->dutyCycle;
-        hi2cs[instance].Init.AddressingMode  = pInstance->addressingMode;
-        hi2cs[instance].Init.OwnAddress1     = pInstance->ownAddress1;
-        hi2cs[instance].Init.OwnAddress2     = pInstance->ownAddress2;
-        hi2cs[instance].Init.DualAddressMode = pInstance->dualAddressMode;
-        hi2cs[instance].Init.GeneralCallMode = pInstance->generalCallMode;
-        hi2cs[instance].Init.NoStretchMode   = pInstance->noStretchMode;
-
-        HAL_I2C_DeInit(&hi2cs[instance]);
+        hi2cs[instance].Init.ClockSpeed      = i2cConfig[i2cInstanceIndex].clockSpeed;
+        hi2cs[instance].Init.DutyCycle       = i2cConfig[i2cInstanceIndex].dutyCycle;
+        hi2cs[instance].Init.AddressingMode  = i2cConfig[i2cInstanceIndex].addressingMode;
+        hi2cs[instance].Init.OwnAddress1     = i2cConfig[i2cInstanceIndex].ownAddress1;
+        hi2cs[instance].Init.OwnAddress2     = i2cConfig[i2cInstanceIndex].ownAddress2;
+        hi2cs[instance].Init.DualAddressMode = i2cConfig[i2cInstanceIndex].dualAddressMode;
+        hi2cs[instance].Init.GeneralCallMode = i2cConfig[i2cInstanceIndex].generalCallMode;
+        hi2cs[instance].Init.NoStretchMode   = i2cConfig[i2cInstanceIndex].noStretchMode;
 
         if (HAL_I2C_Init    (&hi2cs[instance])                 == HAL_OK      &&
             gos_mutexInit   (&i2cMutexes[instance])            == GOS_SUCCESS &&
@@ -184,18 +191,94 @@ gos_result_t drv_i2cInitInstance (GOS_CONST drv_i2cDescriptor_t* pInstance)
             )
         {
             i2cInitResult = GOS_SUCCESS;
+            i2cDiag.instanceInitialized[instance] = GOS_TRUE;
         }
         else
         {
             // Init error.
+        	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_INSTANCE_INIT);
         }
     }
     else
     {
         // Configuration missing or index is out of array boundary.
+    	DRV_ERROR_SET(i2cDiag.globalErrorFlags, DRV_ERROR_I2C_INDEX_OUT_OF_BOUND);
     }
 
     return i2cInitResult;
+}
+
+/*
+ * Function: drv_i2cDeInitInstance
+ */
+gos_result_t drv_i2cDeInitInstance (u8_t i2cInstanceIndex)
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t            i2cDeInitResult = GOS_ERROR;
+    drv_i2cPeriphInstance_t instance         = 0u;
+
+    /*
+     * Function code.
+     */
+    if (i2cConfig != NULL)
+    {
+        if (i2cInstanceIndex < (i2cConfigSize / sizeof(drv_i2cDescriptor_t)))
+        {
+            instance = i2cConfig[i2cInstanceIndex].periphInstance;
+
+            if (HAL_I2C_DeInit(&hi2cs[instance]) == HAL_OK)
+            {
+            	i2cDeInitResult = GOS_SUCCESS;
+            }
+            else
+            {
+                // De-init error.
+                DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_INSTANCE_DEINIT);
+            }
+        }
+        else
+        {
+            // Index is out of array boundary.
+            DRV_ERROR_SET(i2cDiag.globalErrorFlags, DRV_ERROR_I2C_INDEX_OUT_OF_BOUND);
+        }
+    }
+    else
+    {
+        // Configuration is NULL.
+        DRV_ERROR_SET(i2cDiag.globalErrorFlags, DRV_ERROR_I2C_CFG_ARRAY_NULL);
+    }
+
+    return i2cDeInitResult;
+}
+
+/*
+ * Function: drv_i2cGetDiagData
+ */
+gos_result_t drv_i2cGetDiagData (
+		drv_i2cDiag_t* pDiag
+		)
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t i2cGetDiagResult = GOS_ERROR;
+
+    /*
+     * Function code.
+     */
+    if (pDiag != NULL)
+    {
+    	(void_t) memcpy((void_t*)pDiag, (void_t*)&i2cDiag, sizeof(drv_i2cDiag_t));
+    	i2cGetDiagResult = GOS_SUCCESS;
+    }
+    else
+    {
+        // NULL pointer.
+    }
+
+    return i2cGetDiagResult;
 }
 
 /*
@@ -226,11 +309,13 @@ GOS_INLINE gos_result_t drv_i2cMemWrite (
         {
             // Transmit or trigger error.
             HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+            DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_MEM_WRITE_TRIG_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_MEM_WRITE_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
@@ -266,11 +351,13 @@ GOS_INLINE gos_result_t drv_i2cMemRead (
         {
             // Receive or trigger error.
             (void_t) HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+            DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_MEM_READ_TRIG_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_MEM_READ_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
@@ -291,7 +378,6 @@ GOS_INLINE gos_result_t drv_i2cTransmitBlocking (
      */
     gos_result_t i2cDriverTransmitResult = GOS_ERROR;
 
-
     /*
      * Function code.
      */
@@ -304,11 +390,13 @@ GOS_INLINE gos_result_t drv_i2cTransmitBlocking (
         else
         {
             // Transmit error.
+        	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_BLOCKING_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_BLOCKING_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
@@ -329,7 +417,6 @@ GOS_INLINE gos_result_t drv_i2cReceiveBlocking (
      */
     gos_result_t i2cDriverReceiveResult = GOS_ERROR;
 
-
     /*
      * Function code.
      */
@@ -342,11 +429,13 @@ GOS_INLINE gos_result_t drv_i2cReceiveBlocking (
         else
         {
             // Receive error.
+        	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_BLOCKING_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_BLOCKING_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
@@ -367,27 +456,42 @@ GOS_INLINE gos_result_t drv_i2cTransmitIT (
      */
     gos_result_t i2cDriverTransmitResult = GOS_ERROR;
 
-
     /*
      * Function code.
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
-        if (HAL_I2C_Master_Transmit_IT(&hi2cs[instance], address, pData, size)       == HAL_OK      &&
-            gos_triggerWait           (&i2cTxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
-            gos_triggerReset          (&i2cTxReadyTriggers[instance])                == GOS_SUCCESS)
+        if (HAL_I2C_Master_Transmit_IT(&hi2cs[instance], address, pData, size) == HAL_OK)
         {
-            i2cDriverTransmitResult = GOS_SUCCESS;
+            if (triggerTmo > 0u)
+            {
+                if ((gos_triggerWait  (&i2cTxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS) &&
+                    (gos_triggerReset (&i2cTxReadyTriggers[instance])                == GOS_SUCCESS))
+                {
+                	i2cDriverTransmitResult = GOS_SUCCESS;
+                }
+                else
+                {
+                    // Trigger error.
+                	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_IT_TRIG);
+                }
+            }
+            else
+            {
+            	i2cDriverTransmitResult = GOS_SUCCESS;
+            }
         }
         else
         {
-            // Transmit or trigger error.
-            HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+            // Transmit error.
+        	HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+        	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_IT_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_IT_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
@@ -413,21 +517,37 @@ GOS_INLINE gos_result_t drv_i2cReceiveIT (
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
-        if (HAL_I2C_Master_Receive_IT(&hi2cs[instance], address, pBuffer, size)     == HAL_OK      &&
-            gos_triggerWait          (&i2cRxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
-            gos_triggerReset         (&i2cRxReadyTriggers[instance])                == GOS_SUCCESS)
+        if (HAL_I2C_Master_Receive_IT(&hi2cs[instance], address, pBuffer, size) == HAL_OK)
         {
-            i2cDriverReceiveResult = GOS_SUCCESS;
+            if (triggerTmo > 0u)
+            {
+                if ((gos_triggerWait  (&i2cRxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS) &&
+                    (gos_triggerReset (&i2cRxReadyTriggers[instance])                == GOS_SUCCESS))
+                {
+                	i2cDriverReceiveResult = GOS_SUCCESS;
+                }
+                else
+                {
+                    // Trigger error.
+                	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_IT_TRIG);
+                }
+            }
+            else
+            {
+            	i2cDriverReceiveResult = GOS_SUCCESS;
+            }
         }
         else
         {
-            // Receive or trigger error.
-            HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+            // Receive error.
+        	HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+        	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_IT_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_IT_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
@@ -448,27 +568,42 @@ GOS_INLINE gos_result_t drv_i2cTransmitDMA (
      */
     gos_result_t i2cDriverTransmitResult = GOS_ERROR;
 
-
     /*
      * Function code.
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
-        if (HAL_I2C_Master_Transmit_DMA(&hi2cs[instance], address, pData, size)       == HAL_OK      &&
-            gos_triggerWait            (&i2cTxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
-            gos_triggerReset           (&i2cTxReadyTriggers[instance])                == GOS_SUCCESS)
+        if (HAL_I2C_Master_Transmit_DMA(&hi2cs[instance], address, pData, size) == HAL_OK)
         {
-            i2cDriverTransmitResult = GOS_SUCCESS;
+            if (triggerTmo > 0u)
+            {
+                if ((gos_triggerWait  (&i2cTxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS) &&
+                    (gos_triggerReset (&i2cTxReadyTriggers[instance])                == GOS_SUCCESS))
+                {
+                	i2cDriverTransmitResult = GOS_SUCCESS;
+                }
+                else
+                {
+                    // Trigger error.
+                	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_DMA_TRIG);
+                }
+            }
+            else
+            {
+            	i2cDriverTransmitResult = GOS_SUCCESS;
+            }
         }
         else
         {
-            // Transmit or trigger error.
-            HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+            // Transmit error.
+        	HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+        	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_DMA_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_DMA_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
@@ -494,21 +629,37 @@ GOS_INLINE gos_result_t drv_i2cReceiveDMA (
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
-        if (HAL_I2C_Master_Receive_DMA(&hi2cs[instance], address, pBuffer, size)     == HAL_OK      &&
-            gos_triggerWait           (&i2cRxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
-            gos_triggerReset          (&i2cRxReadyTriggers[instance])                == GOS_SUCCESS)
+        if (HAL_I2C_Master_Receive_DMA(&hi2cs[instance], address, pBuffer, size) == HAL_OK)
         {
-            i2cDriverReceiveResult = GOS_SUCCESS;
+            if (triggerTmo > 0u)
+            {
+                if ((gos_triggerWait  (&i2cRxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS) &&
+                    (gos_triggerReset (&i2cRxReadyTriggers[instance])                == GOS_SUCCESS))
+                {
+                	i2cDriverReceiveResult = GOS_SUCCESS;
+                }
+                else
+                {
+                    // Trigger error.
+                	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_DMA_TRIG);
+                }
+            }
+            else
+            {
+            	i2cDriverReceiveResult = GOS_SUCCESS;
+            }
         }
         else
         {
-            // Receive or trigger error.
-            HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+            // Receive error.
+        	HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+        	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_DMA_HAL);
         }
     }
     else
     {
         // Mutex error.
+    	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_DMA_MUTEX);
     }
 
     (void_t) gos_mutexUnlock(&i2cMutexes[instance]);

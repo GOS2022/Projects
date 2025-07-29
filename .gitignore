@@ -16,3 +16,7 @@
 /Bootloader/GOS2022_bootloader/Release
 /Bootloader/GOS2022_lib/Lib_for_bootloader
 /Bootloader/GOS2022_lib/Lib_for_application
+/Bootloader/GOS2022/GOS2022_bootloader
+/Bootloader/GOS2022_lib/Lib_for_application
+/Bootloader/GOS2022_lib/Lib_for_bootloader
+Bootloader/GOS2022_testApp/.settings/stm32cubeide.project.prefs

@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_driver.h
 //! @author     Ahmed Gazar
-//! @date       2023-07-25
-//! @version    1.2
+//! @date       2025-07-29
+//! @version    1.3
 //!
 //! @brief      GOS driver header.
 //! @details    This header is used for the inclusion of all driver skeletons.
@@ -27,6 +27,7 @@
 // 1.0        2022-12-09    Ahmed Gazar     Initial version created.
 // 1.1        2022-12-13    Ahmed Gazar     +    Unsafe log driver transmit function added
 // 1.2        2023-07-25    Ahmed Gazar     +    System monitoring drivers added
+// 1.3        2025-07-29    Ahmed Gazar     -    System monitoring drivers removed
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar

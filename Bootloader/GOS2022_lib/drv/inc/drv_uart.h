@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_uart.h
 //! @author     Ahmed Gazar
-//! @date       2025-06-18
-//! @version    1.2
+//! @date       2025-07-23
+//! @version    1.3
 //!
 //! @brief      GOS2022 Library / UART driver header.
 //! @details    This component provides access to the UART peripheries.
@@ -27,6 +27,9 @@
 // 1.0        2024-02-21    Ahmed Gazar     Initial version created.
 // 1.1        2024-04-24    Ahmed Gazar     +    Error reporting added
 // 1.2        2025-06-18    Ahmed Gazar     +    System monitoring separate instances added
+// 1.3        2025-07-23    Ahmed Gazar     +    drv_uartDiag_t and drv_uartGetDiagData added
+//                                          -    drv_uartGetErrorFlags and drv_uartClearErrorFlags
+//                                               removed
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -120,43 +123,84 @@ typedef struct
     u32_t sysmonTxTriggerTmo;                //!< Sysmon transmit trigger wait timeout.
 }drv_uartServiceTimeoutConfig_t;
 
+/**
+ * UART diagnostic data type.
+ */
+typedef struct __attribute__((packed))
+{
+	u32_t  globalErrorFlags;                                //!< Global error flags.
+	bool_t instanceInitialized [DRV_UART_NUM_OF_INSTANCES]; //!< Instance initialized flags.
+	u32_t  instanceErrorFlags  [DRV_UART_NUM_OF_INSTANCES]; //!< Instance error flags.
+	u32_t  parityErrorCntr     [DRV_UART_NUM_OF_INSTANCES]; //!< Parity error counters.
+	u32_t  noiseErrorCntr      [DRV_UART_NUM_OF_INSTANCES]; //!< Noise error counters.
+	u32_t  overrunErrorCntr    [DRV_UART_NUM_OF_INSTANCES]; //!< Overrun error counters.
+	u32_t  framingErrorCntr    [DRV_UART_NUM_OF_INSTANCES]; //!< Framing error counters.
+}drv_uartDiag_t;
+
 /*
  * Function prototypes
  */
 /**
- * @brief   Initializes the registered UART peripheries.
- * @details Loops through the UART configuration array and initializes peripheries
- *          defined by the user (externally).
+ * @brief     Initializes the registered UART peripheries.
+ * @details   Loops through the UART configuration array and initializes peripheries
+ *            defined by the user (externally).
  *
- * @return  Result of initialization.
+ * @return    Result of initialization.
  *
- * @retval  GOS_SUCCESS : Initialization successful.
- * @retval  GOS_ERROR   : Configuration array is NULL or some peripheries
- *                        could not be initialized.
+ * @retval    #GOS_SUCCESS Initialization successful.
+ * @retval    #GOS_ERROR   Configuration array is NULL or some peripheries
+ *                         could not be initialized.
  */
 gos_result_t drv_uartInit (
         void_t
         );
 
-// TODO
+/**
+ * @brief     Initializes the requested UART instance.
+ * @details   Calls the HAL level initializer, initializes the RX and TX
+ *            mutexes and triggers.
+ *
+ * @param[in] uartInstanceIndex Instance index of UART periphery.
+ *
+ * @return    Result of initialization.
+ *
+ * @retval    #GOS_SUCCESS Initialization successful.
+ * @retval    #GOS_ERROR   One of the initialization steps failed.
+ */
 gos_result_t drv_uartInitInstance (
         u8_t uartInstanceIndex
         );
 
-// TODO
+/**
+ * @brief     De-initializes the requested UART instance.
+ * @details   Calls the HAL level de-initializer.
+ *
+ * @param[in] uartInstanceIndex Instance index of UART periphery.
+ *
+ * @return    Result of de-initialization.
+ *
+ * @retval    #GOS_SUCCESS De-initialization successful.
+ * @retval    #GOS_ERROR   Wrong instance or HAL error.
+ */
 gos_result_t drv_uartDeInitInstance (
         u8_t uartInstanceIndex
         );
 
-// TODO
-gos_result_t drv_uartGetErrorFlags (
-        u32_t* pErrorFlags
-        );
-
-// TODO
-gos_result_t drv_uartClearErrorFlags (
-        u32_t errorFlags
-        );
+/**
+ * @brief      Retrieves the diagnostic data of the driver.
+ * @details    Copies the diagnostic data to the target structure.
+ *
+ * @param[out] pDiag Pointer to a diagnostic data structure to store the
+ *             diagnostic data in.
+ *
+ * @return     Result of data retrieval.
+ *
+ * @retval     #GOS_SUCCESS Diagnostic data copied successfully.
+ * @retval     #GOS_ERROR   NULL pointer error.
+ */
+gos_result_t drv_uartGetDiagData (
+		drv_uartDiag_t* pDiag
+		);
 
 // TODO
 gos_result_t drv_uartTransmitBlocking (

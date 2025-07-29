@@ -6,6 +6,7 @@
  */
 
 #include "bsp_lcd_handler.h"
+#include "iodef.h"
 #include "gos_lib.h"
 #include <string.h>
 #include <stdio.h>
@@ -26,6 +27,7 @@ GOS_STATIC void_t       bsp_lcdHandlerTask               (void_t);
 GOS_STATIC void_t       bsp_lcdHandlerShiftReset         (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction);
 GOS_STATIC void_t       bsp_lcdHandlerShiftBuffer        (char_t* pBuffer, u16_t* pShiftCounter, lcd_display_mode_t direction);
 GOS_STATIC gos_result_t bsp_lcdHandlerWriteStringWrapper (u8_t params, va_list args);
+GOS_STATIC gos_result_t bsp_lcdHandlerErrorHandler       (void_t* pDevice);
 
 GOS_STATIC gos_taskDescriptor_t lcdHandlerTaskDesc =
 {
@@ -41,7 +43,7 @@ drv_lcdDescriptor_t lcdDescriptor =
 	.deviceAddress   = 0x22,
 	.i2cInstance     = DRV_I2C_INSTANCE_1,
 	.writeMutexTmo   = GOS_MUTEX_ENDLESS_TMO,
-	.writeTriggerTmo = 100
+	.writeTriggerTmo = 100u
 };
 
 /**
@@ -52,7 +54,7 @@ GOS_STATIC svl_dhsDevice_t lcdDevice =
 	.name              = "lcd",
 	.description       = "16x2 LCD over I2C. Address: 0x22.",
 	.pInitializer      = drv_lcdInit,
-	.pErrorHandler     = drv_lcdInit,
+	.pErrorHandler     = bsp_lcdHandlerErrorHandler,
 	.recoveryType      = DHS_RECOVERY_ON_LIMIT,
 	.pDeviceDescriptor = (void_t*)&lcdDescriptor,
 	.writeFunctions[0] = bsp_lcdHandlerWriteStringWrapper,
@@ -74,9 +76,9 @@ gos_result_t bsp_lcdHandlerInit (void_t)
 	 * Function code.
 	 */
 	GOS_CONCAT_RESULT(initResult, svl_dhsRegisterDevice(&lcdDevice));
-	GOS_CONCAT_RESULT(initResult, svl_dhsForceInitialize(lcdDevice.deviceId));
 	GOS_CONCAT_RESULT(initResult, gos_mutexInit(&lcdMutex));
 	GOS_CONCAT_RESULT(initResult, gos_taskRegister(&lcdHandlerTaskDesc, NULL));
+	//GOS_CONCAT_RESULT(initResult, svl_dhsForceInitialize(lcdDevice.deviceId));
 
 	return initResult;
 }
@@ -110,7 +112,6 @@ gos_result_t bsp_lcdHandlerrDisplayText (lcd_display_cfg_t* config,  const char_
 				firstLineShiftCounter = 0u;
 				if (firstLineConfig.displayMode == LCD_DISPLAY_NORMAL)
 				{
-					//drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
 					svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);
 				}
 			}
@@ -121,7 +122,6 @@ gos_result_t bsp_lcdHandlerrDisplayText (lcd_display_cfg_t* config,  const char_
 				secondLineShiftCounter = 0u;
 				if (secondLineConfig.displayMode == LCD_DISPLAY_NORMAL)
 				{
-					//drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
 					svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
 				}
 			}
@@ -227,7 +227,6 @@ GOS_STATIC void_t bsp_lcdHandlerTask (void_t)
 					{
 						firstLineConfig.lastTick = gos_kernelGetSysTicks();
 						bsp_lcdHandlerShiftBuffer(firstLine, &firstLineShiftCounter, firstLineConfig.displayMode);
-						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
 						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
@@ -251,7 +250,6 @@ GOS_STATIC void_t bsp_lcdHandlerTask (void_t)
 						else
 						{
 							bsp_lcdHandlerShiftBuffer(firstLine, &firstLineShiftCounter, firstLineConfig.displayMode);
-							//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
 							(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);
 						}
 						(void_t) gos_mutexUnlock(&lcdMutex);
@@ -267,7 +265,6 @@ GOS_STATIC void_t bsp_lcdHandlerTask (void_t)
 					{
 						firstLineConfig.lastTick = gos_kernelGetSysTicks();
 						bsp_lcdHandlerShiftReset(firstLine, &firstLineShiftCounter, firstLineConfig.originalDisplayMode);
-						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 0, firstLine);
 						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 0, firstLine);
 						firstLineConfig.displayMode = LCD_DISPLAY_SHIFT_WAIT_500;
 						(void_t) gos_mutexUnlock(&lcdMutex);
@@ -318,7 +315,6 @@ GOS_STATIC void_t bsp_lcdHandlerTask (void_t)
 							secondLineConfig.blinkState = !secondLineConfig.blinkState;
 						}
 
-						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
 						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
@@ -334,7 +330,6 @@ GOS_STATIC void_t bsp_lcdHandlerTask (void_t)
 					{
 						secondLineConfig.lastTick = gos_kernelGetSysTicks();
 						bsp_lcdHandlerShiftBuffer(secondLine, &secondLineShiftCounter, secondLineConfig.displayMode);
-						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
 						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
 						(void_t) gos_mutexUnlock(&lcdMutex);
 					}
@@ -358,7 +353,6 @@ GOS_STATIC void_t bsp_lcdHandlerTask (void_t)
 						else
 						{
 							bsp_lcdHandlerShiftBuffer(secondLine, &secondLineShiftCounter, secondLineConfig.displayMode);
-							//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
 							(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
 						}
 						(void_t) gos_mutexUnlock(&lcdMutex);
@@ -374,7 +368,6 @@ GOS_STATIC void_t bsp_lcdHandlerTask (void_t)
 					{
 						secondLineConfig.lastTick = gos_kernelGetSysTicks();
 						bsp_lcdHandlerShiftReset(secondLine, &secondLineShiftCounter, secondLineConfig.originalDisplayMode);
-						//(void_t) drv_lcdWriteString((void_t*)&lcdDescriptor, 1, secondLine);
 						(void_t) svl_dhsWriteDevice(lcdDevice.deviceId, 0, 3, (void_t*)&lcdDescriptor, 1, secondLine);
 						secondLineConfig.displayMode = LCD_DISPLAY_SHIFT_WAIT_500;
 
@@ -483,4 +476,60 @@ GOS_STATIC gos_result_t bsp_lcdHandlerWriteStringWrapper (u8_t params, va_list a
 	str = (const char_t*)va_arg(args, int);
 
 	return drv_lcdWriteString(pDevice, line, str);
+}
+
+GOS_STATIC gos_result_t bsp_lcdHandlerErrorHandler (void_t* pDevice)
+{
+	/*
+	 * Local variables.
+	 */
+	u8_t index;
+	gos_result_t errorHandlerResult = GOS_SUCCESS;
+
+	/*
+	 * Function code.
+	 */
+	GOS_CONCAT_RESULT(errorHandlerResult, drv_i2cDeInitInstance(DRV_I2C_INSTANCE_1));
+	GOS_CONCAT_RESULT(errorHandlerResult, drv_i2cInitInstance(DRV_I2C_INSTANCE_1));
+
+	GOS_DISABLE_SCHED
+
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_HIGH);
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_LOW);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_LOW);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+
+	for (index = 0u; index < 19u; index++)
+	{
+		(void_t) drv_gpioTgglePin(IO_I2C1_SCL);
+		(void_t) gos_kernelDelayUs(100);
+	}
+
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_LOW);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_LOW);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+
+	GOS_CONCAT_RESULT(errorHandlerResult, drv_lcdInit(pDevice));
+
+	GOS_ENABLE_SCHED
+
+	//gos_taskSleep(100);
+
+//	GOS_CONCAT_RESULT(errorHandlerResult, drv_lcdInit(pDevice));
+	//GOS_CONCAT_RESULT(errorHandlerResult, drv_lcdInit(pDevice));
+	//GOS_CONCAT_RESULT(errorHandlerResult, drv_lcdInit(pDevice));
+
+	return errorHandlerResult;
 }

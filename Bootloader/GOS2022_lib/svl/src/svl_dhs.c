@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       svl_dhs.c
 //! @author     Ahmed Gazar
-//! @date       2025-07-22
-//! @version    1.1
+//! @date       2025-07-28
+//! @version    1.2
 //!
 //! @brief      GOS2022 Library / Device Handler Service source.
 //! @details    For a more detailed description of this service, please refer to @ref svl_dhs.h
@@ -26,6 +26,7 @@
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-04-13    Ahmed Gazar     Initial version created.
 // 1.1        2025-07-22    Ahmed Gazar     +    Error handling introduced
+// 1.2        2025-07-28    Ahmed Gazar     +    Driver diagnostics added to sysmon callbacks
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -52,6 +53,8 @@
 #include <string.h>
 #include <svl_dhs.h>
 #include <svl_sysmon.h>
+#include <drv.h>
+#include <drv_error.h>
 
 /*
  * Macros
@@ -64,7 +67,7 @@
 /**
  * DHS binary buffer size.
  */
-#define DHS_BUFFER_SIZE   ( sizeof(svl_dhsDevice_t) + 16u )
+#define DHS_BUFFER_SIZE   ( 512u )
 
 /*
  * Type definitions
@@ -89,6 +92,8 @@ typedef enum
     SVL_DHS_SYSMON_MSG_DEVICE_NUM_RESP       = 0x5A01, //!< DHS sysmon message ID for device number response.
     SVL_DHS_SYSMON_MSG_DEVICE_INFO_REQ       = 0x5002, //!< DHS sysmon message ID for device info request.
     SVL_DHS_SYSMON_MSG_DEVICE_INFO_RESP      = 0x5A02, //!< DHS sysmon message ID for device info response.
+	SVL_DHS_SYSMON_MSG_DRIVER_DIAG_REQ       = 0x5003, //!< TODO
+	SVL_DHS_SYSMON_MSG_DRIVER_DIAG_RESP      = 0x5A03  //!< TODO
 }svl_dhsSysmonMsgId_t;
 
 /*
@@ -115,6 +120,7 @@ GOS_STATIC u8_t            numOfDevices = 0u;
 GOS_STATIC void_t svl_dhsDaemon (void_t);
 GOS_STATIC void_t svl_dhsSysmonDeviceNumReqCallback  (gos_gcpChannelNumber_t gcpChannel);
 GOS_STATIC void_t svl_dhsSysmonDeviceInfoReqCallback (gos_gcpChannelNumber_t gcpChannel);
+GOS_STATIC void_t svl_dhsSysmonDriverDiagReqCallback (gos_gcpChannelNumber_t gcpChannel);
 
 /**
  * DHS daemon task descriptor.
@@ -150,6 +156,17 @@ GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonDeviceInfoReqMsg =
     .payloadSize     = sizeof(u16_t),
 };
 
+/**
+ * Sysmon driver diagnostics request.
+ */
+GOS_STATIC svl_sysmonUserMessageDescriptor_t sysmonDriverDiagReqMsg =
+{
+	.callback        = svl_dhsSysmonDriverDiagReqCallback,
+	.messageId       = SVL_DHS_SYSMON_MSG_DRIVER_DIAG_REQ,
+	.payload         = NULL,
+	.payloadSize     = 0u
+};
+
 /*
  * Function: svl_dhsInit
  */
@@ -166,6 +183,7 @@ gos_result_t svl_dhsInit (void_t)
     GOS_CONCAT_RESULT(initResult, gos_taskRegister(&dhsDaemonDesc, NULL));
     GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonDeviceNumReqMsg));
     GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonDeviceInfoReqMsg));
+    GOS_CONCAT_RESULT(initResult, svl_sysmonRegisterUserMessage(&sysmonDriverDiagReqMsg));
 
     return initResult;
 }
@@ -341,7 +359,9 @@ gos_result_t svl_dhsWriteDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t le
 	 * Function code.
 	 */
 	if ((index < SVL_DHS_MAX_DEVICES) && (devices[index].writeFunctions[functionIdx] != NULL) &&
-		(devices[index].deviceState != DHS_STATE_UNINITIALIZED) && (devices[index].enabled == GOS_TRUE) &&
+		(devices[index].deviceState != DHS_STATE_UNINITIALIZED) &&
+		(devices[index].deviceState != DHS_STATE_NOT_PRESENT) &&
+		(devices[index].enabled == GOS_TRUE) &&
 		(devices[index].errorCounter <= devices[index].errorTolerance))
 	{
 		va_start(args, length);
@@ -421,7 +441,9 @@ gos_result_t svl_dhsReadDevice (svl_dhsDevId_t devId, u8_t functionIdx, u8_t len
 	 * Function code.
 	 */
 	if ((index < SVL_DHS_MAX_DEVICES) && (devices[index].readFunctions[functionIdx] != NULL) &&
-		(devices[index].deviceState != DHS_STATE_UNINITIALIZED) && (devices[index].enabled == GOS_TRUE) &&
+		(devices[index].deviceState != DHS_STATE_UNINITIALIZED) &&
+		(devices[index].deviceState != DHS_STATE_NOT_PRESENT) &&
+		(devices[index].enabled == GOS_TRUE) &&
 		(devices[index].errorCounter <= devices[index].errorTolerance))
 	{
 		va_start(args, length);
@@ -681,10 +703,10 @@ GOS_STATIC void_t svl_dhsDaemon (void_t)
 				}
 			}
 			else if ((devices[index].deviceState == DHS_STATE_NOT_PRESENT) &&
-					 (devices[index].pInitializer != NULL))
+					 (devices[index].pErrorHandler != NULL))
 			{
-				// Try to initialize.
-				if (devices[index].pInitializer(devices[index].pDeviceDescriptor) != GOS_SUCCESS)
+				// Try to handle error.
+				if (devices[index].pErrorHandler(devices[index].pDeviceDescriptor) != GOS_SUCCESS)
 				{
 					// If initialization failed, stay in state not present.
 				}
@@ -703,7 +725,7 @@ GOS_STATIC void_t svl_dhsDaemon (void_t)
 				// Try to initialize.
 				if (devices[index].pInitializer(devices[index].pDeviceDescriptor) != GOS_SUCCESS)
 				{
-					// If initialization failed, stay in state not present.
+					// If initialization failed, stay in state error.
 				}
 				else
 				{
@@ -712,6 +734,11 @@ GOS_STATIC void_t svl_dhsDaemon (void_t)
 					devices[index].errorCounter = 0u;
 					devices[index].errorCode &= ~((u32_t)DHS_ERROR_INIT);
 				}
+			}
+			else if ((devices[index].deviceState == DHS_STATE_WARNING) &&
+					(devices[index].errorCounter > devices[index].errorTolerance))
+			{
+				devices[index].deviceState = DHS_STATE_ERROR;
 			}
 			else
 			{
@@ -774,5 +801,32 @@ GOS_STATIC void_t svl_dhsSysmonDeviceInfoReqCallback (gos_gcpChannelNumber_t gcp
             SVL_DHS_SYSMON_MSG_DEVICE_INFO_RESP,
             (void_t*)dhsBuffer,
             sizeof(svl_dhsDevice_t),
+            0xFFFF);
+}
+
+/**
+ * @brief   Sysmon driver diagnostics request callback.
+ * @details Sends out the driver diagnostics information.
+ *
+ * @return  -
+ */
+GOS_STATIC void_t svl_dhsSysmonDriverDiagReqCallback (gos_gcpChannelNumber_t gcpChannel)
+{
+	/*
+	 * Local variables.
+	 */
+	drv_diagData_t diagData;
+
+	/*
+	 * Function code.
+	 */
+	(void_t) drv_errorGetDiagData(&diagData);
+	(void_t) memcpy((void_t*)dhsBuffer, (void_t*)&diagData, sizeof(drv_diagData_t));
+
+    (void_t) gos_gcpTransmitMessage(
+    		gcpChannel,
+            SVL_DHS_SYSMON_MSG_DRIVER_DIAG_RESP,
+            (void_t*)dhsBuffer,
+            sizeof(drv_diagData_t),
             0xFFFF);
 }

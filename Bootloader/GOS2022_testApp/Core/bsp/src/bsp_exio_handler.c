@@ -8,6 +8,7 @@
  * Includes
  */
 #include "bsp_exio_handler.h"
+#include "iodef.h"
 
 /*
  * Macros
@@ -107,6 +108,7 @@ GOS_STATIC void_t       bsp_exioHandlerTask      (void_t);
 GOS_STATIC gos_result_t bsp_exioReadPinWrapper   (u8_t params, va_list args);
 GOS_STATIC gos_result_t bsp_exioWritePinWrapper  (u8_t params, va_list args);
 GOS_STATIC gos_result_t bsp_exioWritePortWrapper (u8_t params, va_list args);
+GOS_STATIC gos_result_t bsp_exioErrorHandler     (void_t* pDevice);
 
 /**
  * Ex-IO task descriptor.
@@ -128,6 +130,8 @@ GOS_STATIC svl_dhsDevice_t exIoDevice =
 	.name                                      = "ex_io_device",
 	.description                               = "External MCP23017 over I2C. Address: 0x20.",
 	.pInitializer                              = drv_mcp23017Init,
+	.pErrorHandler                             = bsp_exioErrorHandler,
+	.recoveryType                              = DHS_RECOVERY_ON_LIMIT,
 	.pDeviceDescriptor                         = (void_t*)&mcpDeviceDesc,
 	.readFunctions[EX_IO_READ_PIN_FUNC_IDX]    = bsp_exioReadPinWrapper,
 	.writeFunctions[EX_IO_WRITE_PIN_FUNC_IDX]  = bsp_exioWritePinWrapper,
@@ -151,6 +155,7 @@ gos_result_t bsp_exioHandlerInit (void_t)
 	 */
 	GOS_CONCAT_RESULT(initResult, gos_taskRegister(&exIoTaskDesc, NULL));
 	GOS_CONCAT_RESULT(initResult, gos_mutexInit(&exIoMutex));
+	GOS_CONCAT_RESULT(initResult, svl_dhsRegisterDevice(&exIoDevice));
 
 	return initResult;
 }
@@ -308,7 +313,7 @@ GOS_STATIC void_t bsp_exioHandlerTask (void_t)
 	/*
 	 * Function code.
 	 */
-	(void_t) svl_dhsRegisterDevice(&exIoDevice);
+//	(void_t) svl_dhsRegisterDevice(&exIoDevice);
 
 	for (;;)
 	{
@@ -405,4 +410,54 @@ GOS_STATIC gos_result_t bsp_exioWritePortWrapper (u8_t params, va_list args)
 	portState = (u8_t)va_arg(args, int);
 
 	return drv_mcp23017WritePort(device, MCP23017_PORTB, portState);
+}
+
+GOS_STATIC gos_result_t bsp_exioErrorHandler (void_t* pDevice)
+{
+	/*
+	 * Local variables.
+	 */
+	u8_t index;
+	gos_result_t errorHandlerResult = GOS_SUCCESS;
+
+	/*
+	 * Function code.
+	 */
+	GOS_CONCAT_RESULT(errorHandlerResult, drv_i2cDeInitInstance(DRV_I2C_INSTANCE_1));
+	GOS_CONCAT_RESULT(errorHandlerResult, drv_i2cInitInstance(DRV_I2C_INSTANCE_1));
+
+	GOS_DISABLE_SCHED
+
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_HIGH);
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_LOW);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_LOW);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+
+	for (index = 0u; index < 19u; index++)
+	{
+		(void_t) drv_gpioTgglePin(IO_I2C1_SCL);
+		(void_t) gos_kernelDelayUs(100);
+	}
+
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_LOW);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_LOW);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SCL, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+	(void_t) drv_gpioWritePin(IO_I2C1_SDA, GPIO_STATE_HIGH);
+	(void_t) gos_kernelDelayUs(100);
+
+	GOS_CONCAT_RESULT(errorHandlerResult, drv_mcp23017Init(pDevice));
+
+	GOS_ENABLE_SCHED
+
+	return errorHandlerResult;
 }

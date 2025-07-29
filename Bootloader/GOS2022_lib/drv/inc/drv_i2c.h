@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_i2c.h
 //! @author     Ahmed Gazar
-//! @date       2024-03-15
-//! @version    1.0
+//! @date       2025-07-27
+//! @version    1.1
 //!
 //! @brief      GOS2022 Library / I2C driver header.
 //! @details    This component provides access to the I2C peripheries.
@@ -25,6 +25,7 @@
 // Version    Date          Author          Description
 // ------------------------------------------------------------------------------------------------
 // 1.0        2024-03-15    Ahmed Gazar     Initial version created.
+// 1.1        2025-07-27    Ahmed Gazar     +    Diagnostics implemented
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -86,15 +87,80 @@ typedef struct
     drv_dmaDescriptor_t*    dmaConfigTx;     //!< TX DMA configuration.
 }drv_i2cDescriptor_t;
 
-// TODO
+/**
+ * I2C diagnostic data type.
+ */
+typedef struct __attribute__((packed))
+{
+	u32_t  globalErrorFlags;                               //!< Global error flags.
+	bool_t instanceInitialized [DRV_I2C_NUM_OF_INSTANCES]; //!< Instance initialized flags.
+	u32_t  instanceErrorFlags  [DRV_I2C_NUM_OF_INSTANCES]; //!< Instance error flags.
+}drv_i2cDiag_t;
+
+/*
+ * Function prototypes
+ */
+/**
+ * @brief     Initializes the registered I2C peripheries.
+ * @details   Loops through the I2C configuration array and initializes peripheries
+ *            defined by the user (externally).
+ *
+ * @return    Result of initialization.
+ *
+ * @retval    #GOS_SUCCESS Initialization successful.
+ * @retval    #GOS_ERROR   Configuration array is NULL or some peripheries
+ *                         could not be initialized.
+ */
 gos_result_t drv_i2cInit (
         void_t
         );
 
-// TODO
+/**
+ * @brief     Initializes the requested I2C instance.
+ * @details   Calls the HAL level initializer, initializes the
+ *            mutexes and triggers.
+ *
+ * @param[in] i2cInstanceIndex Instance index of I2C periphery.
+ *
+ * @return    Result of initialization.
+ *
+ * @retval    #GOS_SUCCESS Initialization successful.
+ * @retval    #GOS_ERROR   One of the initialization steps failed.
+ */
 gos_result_t drv_i2cInitInstance (
-        GOS_CONST drv_i2cDescriptor_t* pInstance
+		u8_t i2cInstanceIndex
         );
+
+/**
+ * @brief     De-initializes the requested I2C instance.
+ * @details   Calls the HAL level de-initializer.
+ *
+ * @param[in] i2cInstanceIndex Instance index of I2C periphery.
+ *
+ * @return    Result of de-initialization.
+ *
+ * @retval    #GOS_SUCCESS De-initialization successful.
+ * @retval    #GOS_ERROR   Wrong instance or HAL error.
+ */
+gos_result_t drv_i2cDeInitInstance (
+		u8_t i2cInstanceIndex
+		);
+
+/**
+ * @brief      Retrieves the diagnostic data of the driver.
+ * @details    Copies the diagnostic data to the target structure.
+ *
+ * @param[out] pDiag Pointer to a diagnostic data structure to store the
+ *             diagnostic data in.
+ *
+ * @return     Result of data retrieval.
+ *
+ * @retval     #GOS_SUCCESS Diagnostic data copied successfully.
+ * @retval     #GOS_ERROR   NULL pointer error.
+ */
+gos_result_t drv_i2cGetDiagData (
+		drv_i2cDiag_t* pDiag
+		);
 
 // TODO
 gos_result_t drv_i2cMemWrite (

@@ -364,12 +364,12 @@
  */
 #define GOS_CONVERT_RESULT(result)                       {                                     \
                                                               if (result != GOS_SUCCESS)       \
-															  {                                \
-                                                            	  result = GOS_ERROR;          \
-															  }                                \
-															  else                             \
-															  {                                \
-																  /* Nothing to do. */         \
+                                                              {                                \
+                                                                  result = GOS_ERROR;          \
+                                                              }                                \
+                                                              else                             \
+                                                              {                                \
+                                                                  /* Nothing to do. */         \
                                                               }                                \
                                                          }
 
@@ -661,7 +661,7 @@ gos_result_t gos_kernelRegisterPrivilegedHook (
  * @retval  #GOS_ERROR   Registration failed (hook function already exists or parameter is NULL).
  */
 gos_result_t gos_kernelRegisterPreResetHook (
-		gos_preResetHook_t preResetHookFunction
+        gos_preResetHook_t preResetHookFunction
         );
 
 /**

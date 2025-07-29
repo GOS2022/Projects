@@ -7,6 +7,7 @@
 #include "gos_lib.h"
 #include "app.h"
 #include "iodef.h"
+#include "drv_error.h"
 
 SVL_DHS_READ_FUNC_DECL(app_sdhBdSpecRead);
 SVL_DHS_WRITE_FUNC_DECL(app_sdhBdSpecWrite);

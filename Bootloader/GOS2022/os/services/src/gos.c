@@ -43,6 +43,8 @@
 // 1.10       2025-04-06    Ahmed Gazar     *    GOS_CONCAT_RESULT usage added
 //                                          *    Sleep removed from system task dump handling
 // 1.11       2025-06-18    Ahmed Gazar     -    Sysmon removed
+//                                          -    gos_platformDriverInit removed
+//                                          -    gos_userApplicationInit removed
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -291,7 +293,7 @@ GOS_STATIC void_t gos_systemTask (void_t)
     // Loop through the initializers and call them while tracing the results.
     for (initIndex = 0u; initIndex < sizeof(initializers) / sizeof(gos_initStruct_t); initIndex++)
     {
-    	GOS_CONCAT_RESULT(sysInitResult, gos_errorTraceInit(initializers[initIndex].initDesc, initializers[initIndex].initFunc()));
+        GOS_CONCAT_RESULT(sysInitResult, gos_errorTraceInit(initializers[initIndex].initDesc, initializers[initIndex].initFunc()));
     }
 
     // Trace overall result.

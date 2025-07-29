@@ -61,7 +61,6 @@
 #include <drv_crc.h>
 #include <drv_dac.h>
 #include <drv_dma.h>
-#include <drv_error.h>
 #include <drv_flash.h>
 #include <drv_gpio.h>
 #include <drv_i2c.h>
@@ -75,5 +74,19 @@
 #include <drv_tmr.h>
 #include <drv_trace.h>
 #include <drv_uart.h>
+
+/*
+ * Type definitions.
+ */
+/**
+ * Driver diagnostics.
+ */
+typedef struct
+{
+	drv_uartDiag_t uartDiag; //!< UART diagnostic data.
+	drv_tmrDiag_t  tmrDiag;  //!< TMR diagnostic data.
+	drv_spiDiag_t  spiDiag;  //!< SPI diagnostic data.
+	drv_i2cDiag_t  i2cDiag;  //!< I2C diagnostic data.
+}drv_diagData_t;
 
 #endif
