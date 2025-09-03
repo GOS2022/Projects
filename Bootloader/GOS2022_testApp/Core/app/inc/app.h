@@ -12,6 +12,8 @@
 #include <string.h>
 #include "stm32f4xx.h"
 #include "bsp_exio_handler.h"
+#include "mdi_def.h"
+#include "svl_mdi.h"
 
 typedef enum
 {
@@ -38,6 +40,8 @@ gos_result_t app_pdhBdSpecInit (void_t);
 gos_result_t app_sdhBdSpecInit (void_t);
 
 gos_result_t app_mdiBdSpecInit (void_t);
+
+gos_result_t app_mdiGetVariableSafe (mdi_variables_t variable, svl_mdiVariable_t* pTarget);
 
 gos_result_t app_ersBdSpecInit (void_t);
 

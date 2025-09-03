@@ -24,6 +24,7 @@ typedef enum
 	PROGRAM_TEMP_VALUE_DISPLAY,
 	PROGRAM_CPU_USAGE_DISPLAY_INIT,
 	PROGRAM_CPU_USAGE_VALUE_DISPLAY,
+	PROGRAM_MDI_DISPLAY,
 
 	PROGRAM_STATE_MAX_NUM
 }program_state_t;
@@ -88,11 +89,11 @@ GOS_STATIC void_t app_lcdTask (void_t)
 		.periodMs        = 100
 	};
 
-	//u16_t adcValue         = 0u;
 	u16_t temperatureValue = 0u;
 	u16_t cpuUse           = 0u;
 
-//	(void_t) bsp_lcdHandlerInit();
+	svl_mdiVariable_t mdiVar;
+	mdi_variables_t currVar = (mdi_variables_t)0;
 
 	(void_t) gos_taskSleep(50);
 
@@ -177,6 +178,22 @@ GOS_STATIC void_t app_lcdTask (void_t)
 				bsp_lcdHandlerrDisplayText(&shiftConfig, "This is a cyclic shifting text example. The text is rotating continuously. ");
 
 				gos_taskSuspend(appLcdTask.taskId);
+				break;
+			}
+			case PROGRAM_MDI_DISPLAY:
+			{
+				app_mdiGetVariableSafe(currVar, &mdiVar);
+
+				normalConfig.line = 0;
+				bsp_lcdHandlerrDisplayText(&normalConfig, "%s                 ", mdiVar.name);
+
+				normalConfig.line = 1;
+				bsp_lcdHandlerrDisplayText(&normalConfig, "%.2f               ", mdiVar.value.floatValue);
+
+				if (++currVar == MDI_NUM_OF_VARIABLES)
+					currVar = 0;
+
+				gos_taskSleep(2500);
 				break;
 			}
 			/*case PROGRAM_ADC_DISPLAY_INIT:

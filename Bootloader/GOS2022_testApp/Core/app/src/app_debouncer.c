@@ -108,7 +108,7 @@ GOS_STATIC void_t app_debouncerTask (void_t)
 	 * Function code.
 	 */
 	/*
-	 * Suspend task (will be resumed when debouncing is required.
+	 * Suspend task (will be resumed when debouncing is required).
 	 */
 	(void_t) gos_taskSuspend(appDebouncerTaskDesc.taskId);
 

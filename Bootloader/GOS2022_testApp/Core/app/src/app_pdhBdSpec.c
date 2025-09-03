@@ -145,7 +145,17 @@ GOS_STATIC void_t app_pdhBdSpecCheckSoftwareInfo (void_t)
 	(void_t) svl_pdhGetLibVersion(&libVerInfo);
 	(void_t) svl_pdhGetSwInfo(&testSwInfo);
 
-	(void_t) drv_crcGetCrc32((u8_t*)testSwInfo.bldBinaryInfo.startAddress, testSwInfo.bldBinaryInfo.size, &bldCrc);
+	if ((testSwInfo.bldBinaryInfo.startAddress == 0xffffffff) ||
+		(testSwInfo.bldBinaryInfo.size == 0xffffffff))
+	{
+		// Empty bootloader data.
+		// Set CRC to cause mismatch and force reset data.
+		testSwInfo.bldBinaryInfo.crc = 0x1234;
+	}
+	else
+	{
+		(void_t) drv_crcGetCrc32((u8_t*)testSwInfo.bldBinaryInfo.startAddress, testSwInfo.bldBinaryInfo.size, &bldCrc);
+	}
 
 	if (bldCrc != testSwInfo.bldBinaryInfo.crc)
 	{

@@ -23,7 +23,7 @@
 #define TEMPSENSOR_CAL1_TEMP ( (s32_t)  30  )
 #define TEMPSENSOR_CAL2_ADDR ( (u16_t*) (0x1FFF7A2EU) )
 #define TEMPSENSOR_CAL1_ADDR ( (u16_t*) (0x1FFF7A2CU) )
-#define ADC_SAMPLES          ( 8 )
+#define ADC_SAMPLES          ( 64 )
 
 /*
  * Global variables
@@ -34,6 +34,7 @@ gos_mutex_t mdiMutex;
  * Function prototypes
  */
 GOS_STATIC void_t app_mdiTask (void_t);
+GOS_STATIC float_t app_mdiCalculateMainCurrent (float_t rawFiltered);
 
 /**
  * APP MDI task descriptor.
@@ -71,6 +72,34 @@ gos_result_t app_mdiBdSpecInit (void_t)
 	}
 
 	return initResult;
+}
+
+/*
+ * Function: app_mdiGetVariableSafe
+ */
+gos_result_t app_mdiGetVariableSafe (mdi_variables_t variable, svl_mdiVariable_t* pTarget)
+{
+	/*
+	 * Local variables.
+	 */
+	gos_result_t getResult = GOS_ERROR;
+
+	/*
+	 * Function code.
+	 */
+	if ((pTarget != NULL) && (variable < MDI_NUM_OF_VARIABLES) &&
+		(gos_mutexLock(&mdiMutex, 500u) == GOS_SUCCESS))
+	{
+		(void_t) memcpy((void_t*)pTarget, (void_t*)&mdiVariables[variable], sizeof(svl_mdiVariable_t));
+		getResult = GOS_SUCCESS;
+		gos_mutexUnlock(&mdiMutex);
+	}
+	else
+	{
+		// Error.
+	}
+
+	return getResult;
 }
 
 // TODO
@@ -135,7 +164,8 @@ GOS_STATIC void_t app_mdiTask (void_t)
 	                           * (adcResult[0] - *TEMPSENSOR_CAL1_ADDR) + TEMPSENSOR_CAL1_TEMP);
 	    (void_t) bsp_rtcHandlerGetTemperature(&rtcTemp);
 	    u_pwr = 2 * vdda * adcResult[2] / ADC_RESOLUTION;
-	    i_pwr = (-1)*(1000 * ((vdda * adcResult[3] / ADC_RESOLUTION) - 2.5) / 0.185);
+	    //i_pwr = (-1)*(1000 * ((vdda * adcResult[3] / ADC_RESOLUTION) - 2.5) / 0.185);
+	    i_pwr = app_mdiCalculateMainCurrent(adcResult[3]);
 
 	    if (gos_mutexLock(&mdiMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
 	    {
@@ -151,4 +181,15 @@ GOS_STATIC void_t app_mdiTask (void_t)
 
 		(void_t) gos_taskSleep(250);
 	}
+}
+
+GOS_STATIC float_t app_mdiCalculateMainCurrent (float_t rawFiltered)
+{
+	float_t Vref = 3777;
+	float_t sensitivity = 1000.0 / 200.0;
+	float_t unitValue = 5.0 / ADC_RESOLUTION * 1000;
+	float_t voltage = unitValue * rawFiltered;
+	float_t current = (-1) * (voltage - Vref) * sensitivity;
+
+	return current;
 }
