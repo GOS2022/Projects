@@ -1,0 +1,167 @@
+//*************************************************************************************************
+//
+//                            #####             #####             #####
+//                          #########         #########         #########
+//                         ##                ##       ##       ##
+//                        ##                ##         ##        #####
+//                        ##     #####      ##         ##           #####
+//                         ##       ##       ##       ##                ##
+//                          #########         #########         #########
+//                            #####             #####             #####
+//
+//                                      (c) Ahmed Gazar, 2024
+//
+//*************************************************************************************************
+//! @file       svl_cfg.h
+//! @author     Ahmed Gazar
+//! @date       2025-07-22
+//! @version    1.2
+//!
+//! @brief      GOS2022 Library / Service Layer Configuration header.
+//! @details    This file contains the configurable parameters of the SVL.
+//*************************************************************************************************
+// History
+// ------------------------------------------------------------------------------------------------
+// Version    Date          Author          Description
+// ------------------------------------------------------------------------------------------------
+// 1.0        2024-06-27    Ahmed Gazar     Initial version created.
+// 1.1        2025-01-29    Ahmed Gazar     +    ERS and MDI parameters added
+//                                          -    FRS parameters removed
+// 1.2        2025-07-22    Ahmed Gazar     -    IPL parameters removed
+//                                          +    Sysmon parameters added
+//*************************************************************************************************
+//
+// Copyright (c) 2024 Ahmed Gazar
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+//*************************************************************************************************
+#ifndef SVL_CONFIG_H
+#define SVL_CONFIG_H
+
+#if defined(GOS2022_BOOTLOADER)
+#include <svl_cfg_bootloader.h>
+#else
+/*
+ * Macros
+ */
+/*
+ * DHS Service Configuration
+ */
+//! TODO
+#define SVL_DHS_MAX_DEVICES                  ( 10u )
+
+//! TODO
+#define SVL_DHS_DAEMON_PRIO                  ( 200 )
+
+/*
+ * ERS Service Configuration
+ */
+//! Event description length.
+#define SVL_ERS_DESC_LENGTH                  ( 64u )
+
+//! Event data size.
+#define SVL_ERS_DATA_SIZE                    ( 8u )
+
+//! ERS mutex timeout in [ms].
+#define SVL_ERS_MUTEX_TMO_MS                 ( 2000u )
+
+//! Address of ERS entries number.
+#define SVL_ERS_ENTRY_NUM_ADDR               ( 0u  )
+
+//! Start address of ERS entries.
+#define SVL_ERS_ENTRY_START_ADDR             ( SVL_ERS_ENTRY_NUM_ADDR + sizeof(u32_t) )
+
+/*
+ * SDH Service Configuration
+ */
+/**
+ * Trace level for SDH debugging.
+ *
+ * 0 : Debug messages disabled.
+ * 1 : Only state machine state info.
+ * 2 : All debug info.
+ */
+#define SVL_SDH_TRACE_LEVEL                  ( 2 )
+
+//! SDH daemon task priority.
+#define SVL_SDH_DAEMON_PRIORITY              ( 189 )
+
+//! SDH daemon task stack size.
+#define SVL_SDH_DAEMON_STACK_SIZE            ( 0x1600 )
+
+/*
+ * DSM Service Configuration
+ */
+//! TODO
+#define SVL_DSM_MAX_BLOCK_NAME_LENGTH        ( 24u )
+
+//! TODO
+#define SVL_DSM_MAX_PHASE_NAME_LENGTH        ( 64u )
+
+//! TODO
+#define SVL_DSM_MAX_INITIALIZERS             ( 16u )
+
+//! TODO
+#define SVL_DSM_DAEMON_PRIO                  ( 200 )
+
+//! TODO
+#define SVL_DSM_DAEMON_POLL_MS               ( 20u )
+
+//! TODO
+#define SVL_DSM_DAEMON_STACK_SIZE            ( 0x800u )
+
+/*
+ * MDI Service Configuration
+ */
+//! TODO
+#define SVL_MDI_VAR_NAME_LENGTH              ( 16u )
+
+/*
+ * Sysmon Service Configuration
+ */
+//! TODO
+#define SVL_SYSMON_WIRED_DAEMON_PRIO         ( 191u )
+
+//! TODO
+#define SVL_SYSMON_WIRED_DAEMON_STACK        ( 0x800 )
+
+//! TODO
+#define SVL_SYSMON_WIRELESS_DAEMON_PRIO      ( 190u )
+
+//! TODO
+#define SVL_SYSMON_WIRELESS_DAEMON_STACK     ( 0x800 )
+
+//! TODO
+#define SVL_SYSMON_MAX_USER_MESSAGES         ( 24u )
+
+//! TODO
+#define SVL_SYSMON_WIRED_RX_BUFF_SIZE        ( 1024u )
+
+//! TODO
+#define SVL_SYSMON_WIRELESS_RX_BUFF_SIZE     ( 1024u )
+
+/**
+ * Trace level for sysmon debugging.
+ *
+ * 0 : Debug messages disabled.
+ * 1 : Only state machine state info.
+ * 2 : All debug info.
+ */
+#define SVL_SYSMON_TRACE_LEVEL               ( 2 )
+
+#endif
+#endif
