@@ -29,6 +29,18 @@ GOS_CONST drv_uartDescriptor_t uartConfig [] =
 		.overSampling   = UART_OVERSAMPLING_16,
 		.dmaConfigTx    = &dmaConfig[DMA_CFG_USART1]
 	},
+	// USART1 for shell.
+	{
+		.periphInstance = DRV_UART_INSTANCE_2,
+		.baudRate       = 115200,
+		.wordLength     = UART_WORDLENGTH_8B,
+		.stopBits       = UART_STOPBITS_1,
+		.parity         = UART_PARITY_NONE,
+		.mode           = UART_MODE_TX_RX,
+		.hwFlowControl  = UART_HWCONTROL_NONE,
+		.overSampling   = UART_OVERSAMPLING_16,
+		//.dmaConfigTx    = &dmaConfig[DMA_CFG_USART1]
+	},
 	// UART5 for sysmon.
 	{
 		.periphInstance = DRV_UART_INSTANCE_5,
@@ -66,7 +78,11 @@ drv_uartServiceTimeoutConfig_t uartServiceTmoConfig =
 	.sysmonRxMutexTmo       = 2000u,
 	.sysmonRxTriggerTmo     = 500u,
 	.sysmonTxMutexTmo       = 2000u,
-	.sysmonTxTriggerTmo     = 2000u
+	.sysmonTxTriggerTmo     = 2000u,
+	.shellRxMutexTmo        = 10u,
+	.shellRxTriggerTmo      = 10u,
+	.shellTxMutexTmo        = 100u,
+	.shellTxTriggerTmo      = 100u
 };
 
 /**
@@ -74,10 +90,10 @@ drv_uartServiceTimeoutConfig_t uartServiceTmoConfig =
  */
 GOS_CONST drv_uartPeriphInstance_t  uartServiceConfig [] =
 {
-	[DRV_UART_SYSMON_WIRED_INSTANCE]    = DRV_UART_INSTANCE_5,
-	[DRV_UART_SYSMON_WIRELESS_INSTANCE] = DRV_UART_INSTANCE_4,
+	[DRV_UART_SYSMON_WIRED_INSTANCE]    = DRV_UART_INSTANCE_INVALID,//DRV_UART_INSTANCE_5,
+	[DRV_UART_SYSMON_WIRELESS_INSTANCE] = DRV_UART_INSTANCE_INVALID,//DRV_UART_INSTANCE_4
 	[DRV_UART_TRACE_INSTANCE]           = DRV_UART_INSTANCE_1,
-	[DRV_UART_SHELL_INSTANCE]           = DRV_UART_INSTANCE_INVALID
+	[DRV_UART_SHELL_INSTANCE]           = DRV_UART_INSTANCE_2,//DRV_UART_INSTANCE_INVALID
 };
 
 /**

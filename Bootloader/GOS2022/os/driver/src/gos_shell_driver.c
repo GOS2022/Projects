@@ -109,6 +109,7 @@ gos_result_t gos_shellDriverTransmitString (char_t* pString, ...)
      * Function code.
      */
     va_start(args, pString);
+    (void_t) memset(formattedBuffer, 0, sizeof(formattedBuffer));
     (void_t) vsprintf(formattedBuffer, pString, args);
     va_end(args);
 

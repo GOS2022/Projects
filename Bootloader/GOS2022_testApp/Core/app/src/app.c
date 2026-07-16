@@ -16,6 +16,8 @@ GOS_STATIC gos_driver_functions_t driverFunctions =
 	.traceDriverTransmitString       = drv_traceTransmit,
 	.traceDriverTransmitStringUnsafe = drv_traceTransmitUnsafe,
 	.timerDriverSysTimerGetValue     = drv_systimerGetValue,
+	.shellDriverReceiveChar          = drv_shellReceiveChar,
+	.shellDriverTransmitString       = drv_shellTransmitString
 };
 
 /*

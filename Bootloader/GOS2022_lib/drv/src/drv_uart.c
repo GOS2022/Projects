@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_uart.c
 //! @author     Ahmed Gazar
-//! @date       2025-07-23
-//! @version    1.2
+//! @date       2026-07-16
+//! @version    1.4
 //!
 //! @brief      GOS2022 Library / UART driver source.
 //! @details    For a more detailed description of this driver, please refer to @ref drv_uart.h
@@ -27,6 +27,7 @@
 // 1.0        2024-02-01    Ahmed Gazar     Initial version created.
 // 1.1        2024-04-24    Ahmed Gazar     +    Error reporting added
 // 1.3        2025-07-22    Ahmed Gazar     *    Error reporting replaced by diagnostics
+// 1.4        2026-07-16    Ahmed Gazar     *    RX IT rework, major fixes in logic
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -54,6 +55,14 @@
 #include <drv_uart.h>
 #include <string.h>
 #include "stm32f4xx_hal.h"
+
+/*
+ * Macros
+ */
+/**
+ * UART RX buffer size.
+ */
+#define DRV_UART_RX_BUFFER_SIZE (128u)
 
 /*
  * Static variables
@@ -101,6 +110,51 @@ GOS_STATIC gos_trigger_t      uartTxReadyTriggers [DRV_UART_NUM_OF_INSTANCES];
  */
 GOS_STATIC drv_uartDiag_t     uartDiag = {0};
 
+/**
+ * UART RX operation result tracking.
+ */
+GOS_STATIC volatile gos_result_t uartRxOpResult[DRV_UART_NUM_OF_INSTANCES];
+
+/**
+ * UART TX operation result tracking.
+ */
+GOS_STATIC volatile gos_result_t uartTxOpResult[DRV_UART_NUM_OF_INSTANCES];
+
+/**
+ * UART RX active operation flag.
+ */
+GOS_STATIC volatile bool_t uartRxOpActive[DRV_UART_NUM_OF_INSTANCES];
+
+/**
+ * UART TX active operation flag.
+ */
+GOS_STATIC volatile bool_t uartTxOpActive[DRV_UART_NUM_OF_INSTANCES];
+
+/**
+ * UART RX buffer.
+ */
+GOS_STATIC u8_t  uartRxBuffer[DRV_UART_NUM_OF_INSTANCES][DRV_UART_RX_BUFFER_SIZE];
+
+/**
+ * UART RX buffer head array for ring buffer.
+ */
+GOS_STATIC volatile u16_t uartRxBufferHead[DRV_UART_NUM_OF_INSTANCES];
+
+/**
+ * UART RX buffer tail array for ring buffer.
+ */
+GOS_STATIC volatile u16_t uartRxBufferTail[DRV_UART_NUM_OF_INSTANCES];
+
+/**
+ * UART RX buffer counters.
+ */
+GOS_STATIC volatile u16_t uartRxBufferCount[DRV_UART_NUM_OF_INSTANCES];
+
+/**
+ * UART RX byte array.
+ */
+GOS_STATIC u8_t  uartRxOneByte[DRV_UART_NUM_OF_INSTANCES];
+
 /*
  * External variables
  */
@@ -123,6 +177,124 @@ GOS_EXTERN GOS_CONST drv_uartPeriphInstance_t uartServiceConfig [];
  * UART service timeout configuration.
  */
 GOS_EXTERN drv_uartServiceTimeoutConfig_t     uartServiceTmoConfig;
+
+/**
+ * TODO
+ */
+GOS_STATIC GOS_INLINE void_t drv_uartRxBufferInit(drv_uartPeriphInstance_t instance)
+{
+	/*
+	 * Function code.
+	 */
+    uartRxBufferHead[instance]  = 0u;
+    uartRxBufferTail[instance]  = 0u;
+    uartRxBufferCount[instance] = 0u;
+    uartRxOpActive[instance]    = GOS_FALSE;
+}
+
+/**
+ * TODO
+ */
+GOS_STATIC GOS_INLINE bool_t drv_uartRxBufferIsFull (drv_uartPeriphInstance_t instance)
+{
+	/*
+	 * Function code.
+	 */
+    return (uartRxBufferCount[instance] >= DRV_UART_RX_BUFFER_SIZE) ? GOS_TRUE : GOS_FALSE;
+}
+
+/**
+ * TODO
+ */
+GOS_STATIC GOS_INLINE bool_t drv_uartRxBufferIsEmpty (drv_uartPeriphInstance_t instance)
+{
+    return (uartRxBufferCount[instance] == 0u) ? GOS_TRUE : GOS_FALSE;
+}
+
+/**
+ * TODO
+ */
+GOS_STATIC GOS_INLINE void_t drv_uartRxBufferPush (drv_uartPeriphInstance_t instance, u8_t byte)
+{
+	/*
+	 * Function code.
+	 */
+    if (drv_uartRxBufferIsFull(instance) == GOS_FALSE)
+    {
+        uartRxBuffer[instance][uartRxBufferHead[instance]] = byte;
+        uartRxBufferHead[instance] = (uartRxBufferHead[instance] + 1u) % DRV_UART_RX_BUFFER_SIZE;
+        uartRxBufferCount[instance]++;
+    }
+    else
+    {
+        // Receive buffer overflow: new byte dropped.
+    }
+}
+
+/**
+ * TODO
+ */
+GOS_STATIC GOS_INLINE u8_t drv_uartRxBufferPop (drv_uartPeriphInstance_t instance)
+{
+	/*
+	 * Local variables.
+	 */
+    u8_t byte = uartRxBuffer[instance][uartRxBufferTail[instance]];
+
+	/*
+	 * Function code.
+	 */
+    uartRxBufferTail[instance] = (uartRxBufferTail[instance] + 1u) % DRV_UART_RX_BUFFER_SIZE;
+    uartRxBufferCount[instance]--;
+    return byte;
+}
+
+/**
+ * TODO
+ */
+GOS_STATIC GOS_INLINE u16_t drv_uartRxBufferAvailable (drv_uartPeriphInstance_t instance)
+{
+	/*
+	 * Function code.
+	 */
+    return uartRxBufferCount[instance];
+}
+
+/**
+ * TODO
+ */
+GOS_STATIC GOS_INLINE gos_result_t drv_uartStartRxBackground (drv_uartPeriphInstance_t instance)
+{
+	/*
+	 * Function code.
+	 */
+    if (uartRxOpActive[instance] == GOS_FALSE)
+    {
+        if (HAL_UART_Receive_IT(&huarts[instance], &uartRxOneByte[instance], 1) == HAL_OK)
+        {
+            uartRxOpActive[instance] = GOS_TRUE;
+            return GOS_SUCCESS;
+        }
+
+        DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
+        uartRxOpActive[instance] = GOS_FALSE;
+        return GOS_ERROR;
+    }
+
+    return GOS_SUCCESS;
+}
+
+/**
+ * TODO
+ */
+GOS_STATIC GOS_INLINE void_t drv_uartStopRxBackground (drv_uartPeriphInstance_t instance)
+{
+    if (uartRxOpActive[instance] == GOS_TRUE)
+    {
+        (void_t) HAL_UART_Abort_IT(&huarts[instance]);
+        uartRxOpActive[instance] = GOS_FALSE;
+    }
+}
 
 /*
  * Function: drv_uartInit
@@ -184,6 +356,7 @@ gos_result_t drv_uartInitInstance (u8_t uartInstanceIndex)
             huarts[instance].Init.HwFlowCtl    = uartConfig[uartInstanceIndex].hwFlowControl;
             huarts[instance].Init.OverSampling = uartConfig[uartInstanceIndex].overSampling;
 
+            drv_uartRxBufferInit(instance);
             if (HAL_UART_Init   (&huarts[instance])              == HAL_OK      &&
                 gos_mutexInit   (&uartRxMutexes[instance])       == GOS_SUCCESS &&
                 gos_mutexInit   (&uartTxMutexes[instance])       == GOS_SUCCESS &&
@@ -193,8 +366,15 @@ gos_result_t drv_uartInitInstance (u8_t uartInstanceIndex)
                 gos_triggerReset(&uartTxReadyTriggers[instance]) == GOS_SUCCESS
                 )
             {
-                uartInitResult = GOS_SUCCESS;
-                uartDiag.instanceInitialized[instance] = GOS_TRUE;
+                if (drv_uartStartRxBackground(instance) == GOS_SUCCESS)
+                {
+                    uartInitResult = GOS_SUCCESS;
+                    uartDiag.instanceInitialized[instance] = GOS_TRUE;
+                }
+                else
+                {
+                    DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
+                }
             }
             else
             {
@@ -329,27 +509,31 @@ GOS_INLINE gos_result_t drv_uartReceiveBlocking (
         u16_t                    size,     u32_t timeout
         )
 {
-    /*
-     * Local variables.
-     */
     gos_result_t uartReceiveResult = GOS_ERROR;
 
-    /*
-     * Function code.
-     */
-    GOS_DISABLE_SCHED
-
-    if (HAL_UART_Abort  (&huarts[instance])                       == HAL_OK &&
-    	HAL_UART_Receive(&huarts[instance], pData, size, timeout) == HAL_OK)
+    if (gos_mutexLock(&uartRxMutexes[instance], timeout) == GOS_SUCCESS)
     {
-    	uartReceiveResult = GOS_SUCCESS;
+        drv_uartStopRxBackground(instance);
+
+        GOS_DISABLE_SCHED
+
+        if (HAL_UART_Abort  (&huarts[instance])                       == HAL_OK &&
+            HAL_UART_Receive(&huarts[instance], pData, size, timeout) == HAL_OK)
+        {
+            uartReceiveResult = GOS_SUCCESS;
+        }
+        else
+        {
+            DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_BLOCKING);
+        }
+        GOS_ENABLE_SCHED
+
+        (void_t) gos_mutexUnlock(&uartRxMutexes[instance]);
     }
     else
     {
-        // Error.
         DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_BLOCKING);
     }
-    GOS_ENABLE_SCHED
 
     return uartReceiveResult;
 }
@@ -363,53 +547,61 @@ GOS_INLINE gos_result_t drv_uartTransmitDMA (
         u32_t                    triggerTmo
         )
 {
-    /*
-     * Local variables.
-     */
     gos_result_t uartTransmitResult = GOS_ERROR;
+    bool_t       lockTaken          = GOS_FALSE;
 
-    /*
-     * Function code.
-     */
     if (gos_mutexLock(&uartTxMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+        lockTaken = GOS_TRUE;
+
+        if (triggerTmo > 0u)
+        {
+            (void_t) gos_triggerReset(&uartTxReadyTriggers[instance]);
+            uartTxOpResult[instance] = GOS_ERROR;
+            uartTxOpActive[instance] = GOS_TRUE;
+        }
+
         if (HAL_UART_Transmit_DMA(&huarts[instance], message, size) == HAL_OK)
         {
-        	DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_DMA_HAL);
+            DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_DMA_HAL);
 
             if (triggerTmo > 0u)
             {
                 if (gos_triggerWait(&uartTxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
-                    gos_triggerReset(&uartTxReadyTriggers[instance])               == GOS_SUCCESS)
+                    gos_triggerReset(&uartTxReadyTriggers[instance])               == GOS_SUCCESS &&
+                    uartTxOpResult[instance]                                       == GOS_SUCCESS)
                 {
-                	uartTransmitResult = GOS_SUCCESS;
-                	DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_DMA_TRIG);
+                    uartTransmitResult = GOS_SUCCESS;
+                    DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_DMA_TRIG);
                 }
                 else
                 {
-                    // Trigger error.
-                	DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_DMA_TRIG);
+                    (void_t) HAL_UART_Abort_IT(&huarts[instance]);
+                    DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_DMA_TRIG);
                 }
             }
             else
             {
-            	uartTransmitResult = GOS_SUCCESS;
+                uartTransmitResult = GOS_SUCCESS;
             }
         }
         else
         {
-            // Transmit error.
             (void_t) HAL_UART_Abort_IT(&huarts[instance]);
             DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_DMA_HAL);
         }
+
+        uartTxOpActive[instance] = GOS_FALSE;
     }
     else
     {
-        // Mutex error.
         DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_DMA_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&uartTxMutexes[instance]);
+    if (lockTaken)
+    {
+        (void_t) gos_mutexUnlock(&uartTxMutexes[instance]);
+    }
 
     return uartTransmitResult;
 }
@@ -423,53 +615,56 @@ GOS_INLINE gos_result_t drv_uartReceiveDMA (
         u32_t                    triggerTmo
         )
 {
-    /*
-     * Local variables.
-     */
     gos_result_t uartReceiveResult = GOS_ERROR;
+    bool_t       lockTaken         = GOS_FALSE;
 
-    /*
-     * Function code.
-     */
     if (gos_mutexLock(&uartRxMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+        lockTaken = GOS_TRUE;
+
+        drv_uartStopRxBackground(instance);
+
         if (HAL_UART_Receive_DMA(&huarts[instance], message, size) == HAL_OK)
         {
-        	DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_HAL);
+            DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_HAL);
 
             if (triggerTmo > 0u)
             {
                 if (gos_triggerWait(&uartRxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
-                    gos_triggerReset(&uartRxReadyTriggers[instance])               == GOS_SUCCESS)
+                    gos_triggerReset(&uartRxReadyTriggers[instance])               == GOS_SUCCESS &&
+                    uartRxOpResult[instance]                                      == GOS_SUCCESS)
                 {
-                	uartReceiveResult = GOS_SUCCESS;
-                	DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_TRIG);
+                    uartReceiveResult = GOS_SUCCESS;
+                    DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_TRIG);
                 }
                 else
                 {
-                    // Trigger error.
-                	DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_TRIG);
+                    (void_t) HAL_UART_Abort_IT(&huarts[instance]);
+                    DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_TRIG);
                 }
             }
             else
             {
-            	uartReceiveResult = GOS_SUCCESS;
+                uartReceiveResult = GOS_SUCCESS;
             }
         }
         else
         {
-            // Receive error.
             (void_t) HAL_UART_Abort_IT(&huarts[instance]);
             DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_HAL);
         }
+
+        uartRxOpActive[instance] = GOS_FALSE;
     }
     else
     {
-        // Mutex error.
         DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&uartRxMutexes[instance]);
+    if (lockTaken)
+    {
+        (void_t) gos_mutexUnlock(&uartRxMutexes[instance]);
+    }
 
     return uartReceiveResult;
 }
@@ -483,53 +678,61 @@ GOS_INLINE gos_result_t drv_uartTransmitIT (
         u32_t                    triggerTmo
         )
 {
-    /*
-     * Local variables.
-     */
     gos_result_t uartTransmitResult = GOS_ERROR;
+    bool_t       lockTaken          = GOS_FALSE;
 
-    /*
-     * Function code.
-     */
     if (gos_mutexLock(&uartTxMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+        lockTaken = GOS_TRUE;
+
+        if (triggerTmo > 0u)
+        {
+            (void_t) gos_triggerReset(&uartTxReadyTriggers[instance]);
+            uartTxOpResult[instance] = GOS_ERROR;
+            uartTxOpActive[instance] = GOS_TRUE;
+        }
+
         if (HAL_UART_Transmit_IT(&huarts[instance], message, size) == HAL_OK)
         {
-        	DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_IT_HAL);
+            DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_IT_HAL);
 
             if (triggerTmo > 0u)
             {
                 if (gos_triggerWait(&uartTxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
-                    gos_triggerReset(&uartTxReadyTriggers[instance])               == GOS_SUCCESS)
+                    gos_triggerReset(&uartTxReadyTriggers[instance])               == GOS_SUCCESS &&
+                    uartTxOpResult[instance]                                       == GOS_SUCCESS)
                 {
-                	uartTransmitResult = GOS_SUCCESS;
-                	DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_IT_TRIG);
+                    uartTransmitResult = GOS_SUCCESS;
+                    DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_IT_TRIG);
                 }
                 else
                 {
-                    // Trigger error.
-                	DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_IT_TRIG);
+                    (void_t) HAL_UART_Abort_IT(&huarts[instance]);
+                    DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_IT_TRIG);
                 }
             }
             else
             {
-            	uartTransmitResult = GOS_SUCCESS;
+                uartTransmitResult = GOS_SUCCESS;
             }
         }
         else
         {
-            // Transmit error.
             (void_t) HAL_UART_Abort_IT(&huarts[instance]);
             DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_IT_HAL);
         }
+
+        uartTxOpActive[instance] = GOS_FALSE;
     }
     else
     {
-        // Mutex error.
         DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_IT_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&uartTxMutexes[instance]);
+    if (lockTaken)
+    {
+        (void_t) gos_mutexUnlock(&uartTxMutexes[instance]);
+    }
 
     return uartTransmitResult;
 }
@@ -539,53 +742,77 @@ GOS_INLINE gos_result_t drv_uartTransmitIT (
  */
 GOS_INLINE gos_result_t drv_uartReceiveIT (drv_uartPeriphInstance_t instance, u8_t* message, u16_t size, u32_t mutexTmo, u32_t triggerTmo)
 {
-    /*
-     * Local variables.
-     */
-    gos_result_t uartReceiveResult  = GOS_ERROR;
+    gos_result_t uartReceiveResult = GOS_ERROR;
+    bool_t   lockTaken         = GOS_FALSE;
+    u16_t        bytesNeeded       = 0u;
 
-    /*
-     * Function code.
-     */
+    if ((message == NULL) || (size == 0u))
+    {
+        DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
+        return GOS_ERROR;
+    }
+
     if (gos_mutexLock(&uartRxMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
-        if (HAL_UART_Receive_IT(&huarts[instance], message, size) == HAL_OK)
-        {
-        	DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
+        lockTaken = GOS_TRUE;
 
-            if (triggerTmo > 0u)
+        if (drv_uartStartRxBackground(instance) == GOS_SUCCESS)
+        {
+            if (drv_uartRxBufferAvailable(instance) >= size)
             {
-                if (gos_triggerWait(&uartRxReadyTriggers[instance], 1, triggerTmo) == GOS_SUCCESS &&
-                    gos_triggerReset(&uartRxReadyTriggers[instance])               == GOS_SUCCESS)
+                uartReceiveResult = GOS_SUCCESS;
+            }
+            else if (triggerTmo > 0u)
+            {
+                bytesNeeded = size - drv_uartRxBufferAvailable(instance);
+                (void_t) gos_triggerReset(&uartRxReadyTriggers[instance]);
+
+                if (gos_triggerWait(&uartRxReadyTriggers[instance], bytesNeeded, triggerTmo) == GOS_SUCCESS)
                 {
-                	uartReceiveResult = GOS_SUCCESS;
-                	DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_TRIG);
+                    uartReceiveResult = GOS_SUCCESS;
                 }
                 else
                 {
-                    // Trigger error.
-                	DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_TRIG);
+                    DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_TRIG);
                 }
             }
             else
             {
-            	uartReceiveResult = GOS_SUCCESS;
+                uartReceiveResult = GOS_SUCCESS;
+            }
+
+            if (uartReceiveResult == GOS_SUCCESS && drv_uartRxBufferAvailable(instance) >= size)
+            {
+                u16_t idx = 0u;
+                for (idx = 0u; idx < size; idx++)
+                {
+                    message[idx] = drv_uartRxBufferPop(instance);
+                }
+            }
+            else if ((uartReceiveResult == GOS_SUCCESS) && (triggerTmo == 0u))
+            {
+                // Asynchronous start mode: buffer will fill in the background.
+            }
+            else if (uartReceiveResult == GOS_SUCCESS)
+            {
+                uartReceiveResult = GOS_ERROR;
+                DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_TRIG);
             }
         }
         else
         {
-            // Receive error.
-            (void_t) HAL_UART_Abort_IT(&huarts[instance]);
             DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
         }
     }
     else
     {
-        // Mutex error.
         DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&uartRxMutexes[instance]);
+    if (lockTaken)
+    {
+        (void_t) gos_mutexUnlock(&uartRxMutexes[instance]);
+    }
 
     return uartReceiveResult;
 }
@@ -667,18 +894,13 @@ void_t USART6_IRQHandler (void_t)
  */
 void_t HAL_UART_TxCpltCallback (UART_HandleTypeDef *pHuart)
 {
-    /*
-     * Local variables.
-     */
     drv_uartPeriphInstance_t instance = DRV_UART_INSTANCE_1;
 
-    /*
-     * Function code.
-     */
     for (instance = DRV_UART_INSTANCE_1; instance < DRV_UART_NUM_OF_INSTANCES; instance++)
     {
         if (uartInstanceLut[instance] == pHuart->Instance)
         {
+            uartTxOpResult[instance] = GOS_SUCCESS;
             (void_t) gos_triggerIncrement(&uartTxReadyTriggers[instance]);
             break;
         }
@@ -694,19 +916,25 @@ void_t HAL_UART_TxCpltCallback (UART_HandleTypeDef *pHuart)
  */
 void_t HAL_UART_RxCpltCallback (UART_HandleTypeDef *pHuart)
 {
-    /*
-     * Local variables.
-     */
     drv_uartPeriphInstance_t instance = DRV_UART_INSTANCE_1;
 
-    /*
-     * Function code.
-     */
     for (instance = DRV_UART_INSTANCE_1; instance < DRV_UART_NUM_OF_INSTANCES; instance++)
     {
         if (uartInstanceLut[instance] == pHuart->Instance)
         {
+            uartRxOpResult[instance] = GOS_SUCCESS;
+            drv_uartRxBufferPush(instance, uartRxOneByte[instance]);
             (void_t) gos_triggerIncrement(&uartRxReadyTriggers[instance]);
+
+            if (HAL_UART_Receive_IT(&huarts[instance], &uartRxOneByte[instance], 1) == HAL_OK)
+            {
+                uartRxOpActive[instance] = GOS_TRUE;
+            }
+            else
+            {
+                uartRxOpActive[instance] = GOS_FALSE;
+                DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
+            }
             break;
         }
         else
@@ -775,50 +1003,59 @@ void_t HAL_UART_MspInit (UART_HandleTypeDef* pHuart)
  */
 void_t HAL_UART_ErrorCallback (UART_HandleTypeDef* pHuart)
 {
-    /*
-     * Local variables.
-     */
     drv_uartPeriphInstance_t instance = 0u;
 
-    /*
-     * Function code.
-     */
     for (instance = 0u; instance < DRV_UART_NUM_OF_INSTANCES; instance++)
     {
         if (uartInstanceLut[instance] == pHuart->Instance)
         {
-        	if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_PE))
-        	{
-        		uartDiag.parityErrorCntr[instance]++;
-        	}
-        	else if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_FE))
-        	{
-        		uartDiag.framingErrorCntr[instance]++;
-        	}
-        	else if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_ORE))
-        	{
-        		uartDiag.overrunErrorCntr[instance]++;
-        	}
-        	else if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_NE))
-        	{
-        		uartDiag.noiseErrorCntr[instance]++;
-        	}
-        	else
-        	{
-        		// Other.
-        	}
+            if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_PE))
+            {
+                uartDiag.parityErrorCntr[instance]++;
+            }
+            else if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_FE))
+            {
+                uartDiag.framingErrorCntr[instance]++;
+            }
+            else if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_ORE))
+            {
+                uartDiag.overrunErrorCntr[instance]++;
+            }
+            else if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_NE))
+            {
+                uartDiag.noiseErrorCntr[instance]++;
+            }
+            else
+            {
+                // Other.
+            }
 
-        	HAL_UART_Abort_IT(pHuart);
+            if (uartRxOpActive[instance] == GOS_TRUE)
+            {
+                uartRxOpResult[instance] = GOS_ERROR;
+                (void_t) gos_triggerIncrement(&uartRxReadyTriggers[instance]);
+            }
 
-        	__HAL_UART_CLEAR_PEFLAG(pHuart);
-        	__HAL_UART_CLEAR_FEFLAG(pHuart);
-        	__HAL_UART_CLEAR_NEFLAG(pHuart);
-        	__HAL_UART_CLEAR_OREFLAG(pHuart);
-        	break;
+            if (uartTxOpActive[instance] == GOS_TRUE)
+            {
+                uartTxOpResult[instance] = GOS_ERROR;
+                (void_t) gos_triggerIncrement(&uartTxReadyTriggers[instance]);
+            }
+
+            (void_t) HAL_UART_Abort_IT(pHuart);
+            uartRxOpActive[instance] = GOS_FALSE;
+
+            __HAL_UART_CLEAR_PEFLAG(pHuart);
+            __HAL_UART_CLEAR_FEFLAG(pHuart);
+            __HAL_UART_CLEAR_NEFLAG(pHuart);
+            __HAL_UART_CLEAR_OREFLAG(pHuart);
+
+            (void_t) drv_uartStartRxBackground(instance);
+            break;
         }
         else
         {
-        	// Continue.
+            // Continue.
         }
     }
 }

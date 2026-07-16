@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_shell.c
 //! @author     Ahmed Gazar
-//! @date       2025-07-29
-//! @version    1.10
+//! @date       2026-07-16
+//! @version    1.11
 //!
 //! @brief      GOS shell service source.
 //! @details    For a more detailed description of this service, please refer to @ref gos_shell.h
@@ -39,6 +39,8 @@
 //                                          +    Shell CPU and runtime commands added
 // 1.9        2024-06-28    Ahmed Gazar     +    Task unblock commands added
 // 1.10       2025-07-29    Ahmed Gazar     +    CFG_SHELL_STARTUP_DELAY_MS added
+// 1.11       2026-07-16    Ahmed Gazar     *    Backspace handling fix, major rework
+//                                          +    VT100 features introduced
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -81,6 +83,16 @@
  * Shell display text.
  */
 #define GOS_SHELL_DISPLAY_TEXT           ("[\x1B[1m\x1B[33mgos shell\x1B[0m]>> ")
+#define GOS_SHELL_ESCAPE_CHAR            ((char)0x1Bu)
+
+typedef enum
+{
+    SHELL_INPUT_NORMAL,
+    SHELL_INPUT_ESC,
+    SHELL_INPUT_CSI
+} shellInputState_t;
+
+GOS_STATIC shellInputState_t inputState = SHELL_INPUT_NORMAL;
 
 /*
  * Static variables
@@ -106,6 +118,11 @@ GOS_STATIC char_t             commandBuffer        [CFG_SHELL_COMMAND_BUFFER_SIZ
 GOS_STATIC u16_t              commandBufferIndex;
 
 /**
+ * Command buffer length.
+ */
+GOS_STATIC u16_t              commandBufferLength;
+
+/**
  * Shell echo flag.
  */
 GOS_STATIC bool_t             useEcho;
@@ -116,15 +133,98 @@ GOS_STATIC bool_t             useEcho;
 GOS_STATIC char_t             actualCommand        [CFG_SHELL_MAX_COMMAND_LENGTH];
 
 /**
+ * TODO
+ */
+GOS_STATIC char_t             previousCommand      [CFG_SHELL_MAX_COMMAND_LENGTH];
+
+/**
  * Command parameters buffer.
  */
 GOS_STATIC char_t             commandParams        [CFG_SHELL_MAX_PARAMS_LENGTH];
+
+/**
+ * History buffer size configuration.
+ */
+#ifndef CFG_SHELL_HISTORY_SIZE
+#define CFG_SHELL_HISTORY_SIZE (8u)
+#endif
+
+GOS_STATIC char_t historyBuffer[CFG_SHELL_HISTORY_SIZE][CFG_SHELL_COMMAND_BUFFER_SIZE];
+GOS_STATIC u16_t   historyCount;
+GOS_STATIC u16_t   historyCursor;
 
 /*
  * Function prototypes
  */
 GOS_STATIC void_t gos_shellDaemonTask     (void_t);
 GOS_STATIC void_t gos_shellCommandHandler (char_t* params);
+GOS_STATIC void_t gos_shellRefreshCommandLine (void_t);
+
+GOS_STATIC void_t gos_shellRefreshCommandLine (void_t)
+{
+    if (useEcho == GOS_TRUE)
+    {
+        (void_t) gos_shellDriverTransmitString("\r%s%s\x1B[K",
+                                               GOS_SHELL_DISPLAY_TEXT,
+                                               commandBuffer);
+
+        if (commandBufferIndex < commandBufferLength)
+        {
+            (void_t) gos_shellDriverTransmitString("\x1B[%uD",
+                                                   (u32_t)(commandBufferLength - commandBufferIndex));
+        }
+    }
+}
+
+static GOS_INLINE void gos_shellHistoryInit (void)
+{
+    historyCount  = 0u;
+    historyCursor = 0u;
+}
+
+static GOS_INLINE void gos_shellHistoryPush (const char_t* command)
+{
+    if (command == NULL || command[0] == '\0')
+    {
+        return;
+    }
+
+    if (historyCount > 0u &&
+        strcmp(historyBuffer[historyCount - 1u], command) == 0)
+    {
+        historyCursor = 0u;
+        return;
+    }
+
+    if (historyCount < CFG_SHELL_HISTORY_SIZE)
+    {
+        (void_t) strcpy(historyBuffer[historyCount++], command);
+    }
+    else
+    {
+        (void_t) memmove(historyBuffer,
+                        historyBuffer + 1u,
+                        sizeof(historyBuffer[0]) * (CFG_SHELL_HISTORY_SIZE - 1u));
+        (void_t) strcpy(historyBuffer[CFG_SHELL_HISTORY_SIZE - 1u], command);
+    }
+
+    historyCursor = 0u;
+}
+
+static GOS_INLINE const char_t* gos_shellHistoryGet (u16_t cursor)
+{
+    if (cursor == 0u || cursor > historyCount)
+    {
+        return NULL;
+    }
+
+    return historyBuffer[historyCount - cursor];
+}
+
+static GOS_INLINE void gos_shellHistoryResetBrowse (void)
+{
+    historyCursor = 0u;
+}
 
 /**
  * Shell daemon task descriptor.
@@ -164,8 +264,20 @@ gos_result_t gos_shellInit (void_t)
      */
     useEcho = GOS_TRUE;
 
+    /* Initialize entire shellCommands array and all buffers to safe defaults */
+    (void_t) memset(shellCommands, 0, sizeof(shellCommands));
+    (void_t) memset(commandBuffer, 0, sizeof(commandBuffer));
+    (void_t) memset(actualCommand, 0, sizeof(actualCommand));
+    (void_t) memset(previousCommand, 0, sizeof(previousCommand));
+    (void_t) memset(commandParams, 0, sizeof(commandParams));
+    commandBufferIndex = 0u;
+    commandBufferLength = 0u;
+    inputState = SHELL_INPUT_NORMAL;
+    gos_shellHistoryInit();
+
     for (index = 0u; index < CFG_SHELL_MAX_COMMAND_NUMBER; index++)
     {
+        /* already zeroed above, but keep setting handler explicitly for clarity */
         shellCommands[index].commandHandler = NULL;
     }
 
@@ -364,112 +476,275 @@ GOS_STATIC void_t gos_shellDaemonTask (void_t)
 
     for (;;)
     {
-        if (gos_shellDriverReceiveChar(&commandBuffer[commandBufferIndex]) == GOS_SUCCESS)
-        {
-            if (useEcho == GOS_TRUE)
-            {
-                (void_t) gos_shellDriverTransmitString(&commandBuffer[commandBufferIndex]);
-            }
-            else
-            {
-                // Nothing to do.
-            }
+        char_t rx = '\0';
 
-            /*
-             * Backspace character check
-             */
-            if (commandBuffer[commandBufferIndex] == '\177')
+        if (gos_shellDriverReceiveChar(&rx) == GOS_SUCCESS)
+        {
+            switch (inputState)
             {
-                commandBuffer[commandBufferIndex] = '\0';
-                commandBufferIndex--;
-            }
-            /*
-             * Enter character check
-             */
-            else if (commandBuffer[commandBufferIndex] == '\r')
-            {
-                if (useEcho == GOS_TRUE)
+            case SHELL_INPUT_NORMAL:
+
+                if (rx == GOS_SHELL_ESCAPE_CHAR)
                 {
-                    (void_t) gos_shellDriverTransmitString("\n");
+                    inputState = SHELL_INPUT_ESC;
+                    continue;
+                }
+
+                break;
+
+            case SHELL_INPUT_ESC:
+
+                if (rx == '[' || rx == 'O')
+                {
+                    inputState = SHELL_INPUT_CSI;
+                }
+                else if (rx == GOS_SHELL_ESCAPE_CHAR)
+                {
+                    inputState = SHELL_INPUT_ESC;
                 }
                 else
                 {
-                    // Nothing to do.
+                    inputState = SHELL_INPUT_NORMAL;
                 }
 
-                commandBuffer[commandBufferIndex] = '\0';
-                actualCommandIndex = 0u;
+                continue;
+
+            case SHELL_INPUT_CSI:
+
+                if ((u8_t)rx < 0x40u || rx == '[')
+                {
+                    continue;
+                }
+
+                inputState = SHELL_INPUT_NORMAL;
+
+                if (rx == 'A')
+                {
+                    /* Up Arrow */
+                    if (historyCount > 0u && historyCursor < historyCount)
+                    {
+                        historyCursor++;
+                        const char_t* historyLine = gos_shellHistoryGet(historyCursor);
+
+                        if (historyLine != NULL)
+                        {
+                            (void_t) memset(commandBuffer, 0, sizeof(commandBuffer));
+                            (void_t) strncpy(commandBuffer, historyLine, sizeof(commandBuffer) - 1u);
+
+                            commandBufferLength = (u16_t) strlen(commandBuffer);
+                            commandBufferIndex  = commandBufferLength;
+
+                            gos_shellRefreshCommandLine();
+                        }
+                    }
+                }
+                else if (rx == 'C')
+                {
+                    /* Right Arrow */
+                    if (commandBufferIndex < commandBufferLength)
+                    {
+                        commandBufferIndex++;
+
+                        if (useEcho == GOS_TRUE)
+                        {
+                            (void_t) gos_shellDriverTransmitString("\x1B[C");
+                        }
+                    }
+                }
+                else if (rx == 'D')
+                {
+                    /* Left Arrow */
+                    if (commandBufferIndex > 0u)
+                    {
+                        commandBufferIndex--;
+
+                        if (useEcho == GOS_TRUE)
+                        {
+                            (void_t) gos_shellDriverTransmitString("\x1B[D");
+                        }
+                    }
+                }
+                else if (rx == 'B')
+                {
+                    /* Down Arrow */
+                    if (historyCursor > 0u)
+                    {
+                        historyCursor--;
+
+                        if (historyCursor == 0u)
+                        {
+                            (void_t) memset(commandBuffer, 0, sizeof(commandBuffer));
+                            commandBufferLength = 0u;
+                            commandBufferIndex  = 0u;
+                            gos_shellRefreshCommandLine();
+                        }
+                        else
+                        {
+                            const char_t* historyLine = gos_shellHistoryGet(historyCursor);
+
+                            if (historyLine != NULL)
+                            {
+                                (void_t) memset(commandBuffer, 0, sizeof(commandBuffer));
+                                (void_t) strncpy(commandBuffer, historyLine, sizeof(commandBuffer) - 1u);
+
+                                commandBufferLength = (u16_t) strlen(commandBuffer);
+                                commandBufferIndex  = commandBufferLength;
+
+                                gos_shellRefreshCommandLine();
+                            }
+                        }
+                    }
+                }
+
+                continue;
+            }
+
+            if (rx == '\b' || rx == 0x7F)
+            {
+                if (commandBufferIndex > 0u)
+                {
+                    u16_t tailLen = commandBufferLength - commandBufferIndex;
+                    commandBufferIndex--;
+
+                    if (tailLen > 0u)
+                    {
+                        (void_t) memmove(&commandBuffer[commandBufferIndex],
+                                        &commandBuffer[commandBufferIndex + 1u],
+                                        tailLen);
+                        commandBufferLength--;
+                        commandBuffer[commandBufferLength] = '\0';
+
+                        if (useEcho == GOS_TRUE)
+                        {
+                            gos_shellHistoryResetBrowse();
+                            gos_shellRefreshCommandLine();
+                        }
+                    }
+                    else
+                    {
+                        commandBufferLength--;
+                        commandBuffer[commandBufferLength] = '\0';
+
+                        if (useEcho == GOS_TRUE)
+                        {
+                            gos_shellHistoryResetBrowse();
+                            (void_t) gos_shellDriverTransmitString("\b \b");
+                        }
+                    }
+                }
+            }
+            else if (rx == '\r' || rx == '\n')
+            {
+                if (useEcho == GOS_TRUE)
+                {
+                    (void_t) gos_shellDriverTransmitString("\r\n");
+                }
+
+                commandBuffer[commandBufferLength] = '\0';
+
+                /* Save previous command safely */
+                (void_t) memset(previousCommand, 0, sizeof(previousCommand));
+                (void_t) strncpy(previousCommand, commandBuffer, sizeof(previousCommand) - 1u);
+
+                /* Parse command and parameters using a separate buffer index to avoid mixing indices */
+                u16_t bufIdx = 0u;
+                u16_t cmdLen = 0u;
                 paramIndex = 0u;
 
-                // Get command.
-                while (commandBuffer[actualCommandIndex] != ' ' && commandBuffer[actualCommandIndex] != '\0')
+                /* Extract command (bounded) */
+                while (commandBuffer[bufIdx] != ' ' && commandBuffer[bufIdx] != '\0' &&
+                       cmdLen < (CFG_SHELL_MAX_COMMAND_LENGTH - 1u))
                 {
-                    actualCommand[actualCommandIndex] = commandBuffer[actualCommandIndex];
-                    actualCommandIndex++;
+                    actualCommand[cmdLen++] = commandBuffer[bufIdx++];
                 }
-                actualCommand[actualCommandIndex] = '\0';
-                actualCommandIndex++;
+                actualCommand[cmdLen] = '\0';
 
-                // Get parameters.
-                while (commandBuffer[actualCommandIndex] != '\0')
+                /* Skip single space separator if present */
+                if (commandBuffer[bufIdx] == ' ')
                 {
-                    commandParams[paramIndex++] = commandBuffer[actualCommandIndex++];
+                    bufIdx++;
+                }
+
+                /* Extract parameters (bounded) */
+                while (commandBuffer[bufIdx] != '\0' && paramIndex < (CFG_SHELL_MAX_PARAMS_LENGTH - 1u))
+                {
+                    commandParams[paramIndex++] = commandBuffer[bufIdx++];
                 }
                 commandParams[paramIndex] = '\0';
 
-                for (index = 0u; index < CFG_SHELL_MAX_COMMAND_NUMBER; index++)
+                if (actualCommand[0] != '\0')
                 {
-                    if (strcmp(shellCommands[index].command, actualCommand) == 0)
+                    gos_shellHistoryPush(commandBuffer);
+
+                    for (index = 0u; index < CFG_SHELL_MAX_COMMAND_NUMBER; index++)
                     {
-                        if (shellCommands[index].commandHandler != NULL)
+                        if (shellCommands[index].commandHandler != NULL &&
+                            strcmp(shellCommands[index].command, actualCommand) == 0)
                         {
                             (void_t) gos_taskSetPrivileges(shellDaemonTaskId, shellCommands[index].commandHandlerPrivileges);
                             shellCommands[index].commandHandler(commandParams);
                             (void_t) gos_taskSetPrivileges(shellDaemonTaskId, GOS_TASK_PRIVILEGE_KERNEL);
+                            break;
                         }
-                        else
-                        {
-                            // Nothing to do.
-                        }
-                        break;
                     }
-                    else
+
+                    if (index == CFG_SHELL_MAX_COMMAND_NUMBER)
                     {
-                        // Nothing to do.
+                        (void_t) gos_shellDriverTransmitString("Unrecognized command!\r\n");
                     }
                 }
 
-                // If command not found.
-                if (index == CFG_SHELL_MAX_COMMAND_NUMBER)
-                {
-                    (void_t) gos_shellDriverTransmitString("Unrecognized command!\r\n");
-                }
-                else
-                {
-                    // Nothing to do.
-                }
-
-                (void_t) memset((void_t*)commandBuffer, '\0', CFG_SHELL_COMMAND_BUFFER_SIZE);
                 commandBufferIndex = 0u;
+                commandBufferLength = 0u;
+                gos_shellHistoryResetBrowse();
+                (void_t) memset((void_t*)commandBuffer, '\0', CFG_SHELL_COMMAND_BUFFER_SIZE);
 
-                (void_t) gos_shellDriverTransmitString(GOS_SHELL_DISPLAY_TEXT);
+                (void_t) gos_shellDriverTransmitString("\r%s", GOS_SHELL_DISPLAY_TEXT);
             }
             else
             {
-                commandBufferIndex++;
-
-                if (commandBufferIndex >= CFG_SHELL_COMMAND_BUFFER_SIZE)
+                if (commandBufferLength < (CFG_SHELL_COMMAND_BUFFER_SIZE - 1u))
                 {
-                    (void_t) memset((void_t*)commandBuffer, '\0', CFG_SHELL_COMMAND_BUFFER_SIZE);
-                    commandBufferIndex = 0u;
+                    if (commandBufferIndex < commandBufferLength)
+                    {
+                        u16_t tailLen = commandBufferLength - commandBufferIndex;
+
+                        (void_t) memmove(&commandBuffer[commandBufferIndex + 1u],
+                                        &commandBuffer[commandBufferIndex],
+                                        tailLen);
+
+                        commandBuffer[commandBufferIndex] = rx;
+                        commandBufferIndex++;
+                        commandBufferLength++;
+                        commandBuffer[commandBufferLength] = '\0';
+
+                        if (useEcho == GOS_TRUE)
+                        {
+                            gos_shellRefreshCommandLine();
+                        }
+                    }
+                    else
+                    {
+                        commandBuffer[commandBufferIndex++] = rx;
+                        commandBufferLength++;
+                        commandBuffer[commandBufferIndex] = '\0';
+
+                        if (useEcho == GOS_TRUE)
+                        {
+                            (void_t) gos_shellDriverTransmitString("%c", rx);
+                        }
+                    }
                 }
                 else
                 {
-                    // Nothing to do.
+                    (void_t) memset((void_t*)commandBuffer, '\0', CFG_SHELL_COMMAND_BUFFER_SIZE);
+                    commandBufferIndex = 0u;
+                    commandBufferLength = 0u;
+                    gos_shellHistoryResetBrowse();
                 }
             }
         }
-        (void_t) gos_taskSleep(GOS_SHELL_DAEMON_POLL_TIME_MS);
+        //(void_t) gos_taskSleep(GOS_SHELL_DAEMON_POLL_TIME_MS);
     }
 }
 
@@ -505,7 +780,8 @@ GOS_STATIC void_t gos_shellCommandHandler (char_t* params)
         (void_t) gos_shellDriverTransmitString("List of registered shell commands: \r\n");
         for (commandIndex = 0u; commandIndex < CFG_SHELL_MAX_COMMAND_NUMBER; commandIndex++)
         {
-            if (strcmp(shellCommands[commandIndex].command, "") == 0)
+            /* Only print registered commands */
+            if (shellCommands[commandIndex].commandHandler == NULL)
             {
                 break;
             }

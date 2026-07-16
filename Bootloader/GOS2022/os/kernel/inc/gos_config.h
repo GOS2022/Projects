@@ -132,7 +132,7 @@
 /**
  * Shell daemon task stack size.
  */
-#define CFG_TASK_SHELL_DAEMON_STACK     ( 0x300 )
+#define CFG_TASK_SHELL_DAEMON_STACK     ( 0x600 )
 /**
  * Log daemon task stack size.
  */

@@ -37,13 +37,14 @@ GOS_CONST svl_dsmInitPhaseDesc_t appInitPhaseConfig [] =
 			{ "MDI board-specific initialization",  app_mdiBdSpecInit           },
 			{ "ERS board-specific initialization",  app_ersBdSpecInit           },
 			{ "LED initialization",                 app_ledInit                 },
-			{ "LCD initialization",                 app_lcdInit                 },
+			//{ "LCD initialization",                 app_lcdInit                 },
 			{ "Debouncer initialization",           app_debouncerInit           },
 			{ "RTC handler initialization",         bsp_rtcHandlerInit          },
 			{ "Ex-IO handler initialization",       bsp_exioHandlerInit         },
 			{ "TFT initialization",                 app_tftInit                 },
 			{ "Ex-IO initialization",               app_exioInit                },
-			{ "DHS test initialization",            app_dhsTestInit             }
+			{ "DHS test initialization",            app_dhsTestInit             },
+			{ "Shell initialization",               app_shellInit               }
 		}
 	}
 };

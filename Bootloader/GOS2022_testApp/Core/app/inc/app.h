@@ -65,4 +65,6 @@ gos_result_t app_exioInit (void_t);
 
 gos_result_t app_dhsTestInit (void_t);
 
+gos_result_t app_shellInit (void_t);
+
 #endif /* INC_APP_H_ */

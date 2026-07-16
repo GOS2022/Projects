@@ -20,6 +20,9 @@ typedef enum
 	IO_UART_5_RX,
 	IO_UART_5_TX,
 
+	IO_UART_2_RX,
+	IO_UART_2_TX,
+
 	IO_UART_4_RX,
 	IO_UART_4_TX,
 
