@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_shell.c
 //! @author     Ahmed Gazar
-//! @date       2026-07-16
-//! @version    1.11
+//! @date       2026-07-17
+//! @version    1.12
 //!
 //! @brief      GOS shell service source.
 //! @details    For a more detailed description of this service, please refer to @ref gos_shell.h
@@ -41,6 +41,7 @@
 // 1.10       2025-07-29    Ahmed Gazar     +    CFG_SHELL_STARTUP_DELAY_MS added
 // 1.11       2026-07-16    Ahmed Gazar     *    Backspace handling fix, major rework
 //                                          +    VT100 features introduced
+// 1.12       2026-07-17    Ahmed Gazar		*    Major fixes and user handling introduced
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -83,8 +84,38 @@
  * Shell display text.
  */
 #define GOS_SHELL_DISPLAY_TEXT           ("[\x1B[1m\x1B[33mgos shell\x1B[0m]>> ")
+
+/**
+ * TODO
+ */
 #define GOS_SHELL_ESCAPE_CHAR            ((char)0x1Bu)
 
+/**
+ * TODO
+ */
+#define GOS_SHELL_MAX_USERS              (8u)
+
+/**
+ * TODO
+ */
+#define GOS_SHELL_USERNAME_MAX_LEN       (32u)
+
+/**
+ * TODO
+ */
+#define GOS_SHELL_PASSWORD_MAX_LEN       (32u)
+
+/**
+ * History buffer size configuration.
+ */
+#define CFG_SHELL_HISTORY_SIZE           (8u)
+
+/*
+ * Type definitions
+ */
+/**
+ * Input states for processing special characters.
+ */
 typedef enum
 {
     SHELL_INPUT_NORMAL,
@@ -92,7 +123,23 @@ typedef enum
     SHELL_INPUT_CSI
 } shellInputState_t;
 
-GOS_STATIC shellInputState_t inputState = SHELL_INPUT_NORMAL;
+/* Add after SHELL_INPUT_CSI definition */
+typedef enum
+{
+    SHELL_CMD_INPUT_NORMAL,
+    SHELL_CMD_INPUT_PASSWORD
+} shellCmdInputState_t;
+
+/*
+ * User structure.
+ */
+typedef struct
+{
+    char_t username [GOS_SHELL_USERNAME_MAX_LEN];
+    char_t password [GOS_SHELL_PASSWORD_MAX_LEN];
+    gos_shellUserPrivilege_t privilege;
+    bool_t isEnabled;
+} gos_shellUser_t;
 
 /*
  * Static variables
@@ -143,15 +190,58 @@ GOS_STATIC char_t             previousCommand      [CFG_SHELL_MAX_COMMAND_LENGTH
 GOS_STATIC char_t             commandParams        [CFG_SHELL_MAX_PARAMS_LENGTH];
 
 /**
- * History buffer size configuration.
+ * TODO
  */
-#ifndef CFG_SHELL_HISTORY_SIZE
-#define CFG_SHELL_HISTORY_SIZE (8u)
-#endif
+GOS_STATIC shellInputState_t  inputState = SHELL_INPUT_NORMAL;
 
-GOS_STATIC char_t historyBuffer[CFG_SHELL_HISTORY_SIZE][CFG_SHELL_COMMAND_BUFFER_SIZE];
-GOS_STATIC u16_t   historyCount;
-GOS_STATIC u16_t   historyCursor;
+/* Add after inputState declaration */
+GOS_STATIC shellCmdInputState_t cmdInputState = SHELL_CMD_INPUT_NORMAL;
+
+/**
+ * TODO
+ */
+GOS_STATIC char_t             historyBuffer [CFG_SHELL_HISTORY_SIZE][CFG_SHELL_COMMAND_BUFFER_SIZE];
+
+/**
+ * TODO
+ */
+GOS_STATIC u16_t              historyCount;
+
+/**
+ * TODO
+ */
+GOS_STATIC u16_t              historyCursor;
+
+/**
+ * TODO
+ */
+GOS_STATIC gos_shellUser_t    registeredUsers [GOS_SHELL_MAX_USERS];
+
+/**
+ * TODO
+ */
+GOS_STATIC u16_t              registeredUsersCount = 0u;
+
+/**
+ * TODO
+ */
+GOS_STATIC gos_shellUser_t    currentUser;
+
+/**
+ * TODO
+ */
+GOS_STATIC bool_t             isAuthenticated = GOS_FALSE;
+
+GOS_STATIC bool_t             isPasswordInputMode = GOS_FALSE;
+
+/* Root user (always available) */
+GOS_STATIC gos_shellUser_t    rootUser =
+{
+    .username = "root",
+    .password = "root",
+    .privilege = GOS_SHELL_USER_PRIVILEGE_ROOT,
+    .isEnabled = GOS_TRUE
+};
 
 /*
  * Function prototypes
@@ -159,6 +249,12 @@ GOS_STATIC u16_t   historyCursor;
 GOS_STATIC void_t gos_shellDaemonTask     (void_t);
 GOS_STATIC void_t gos_shellCommandHandler (char_t* params);
 GOS_STATIC void_t gos_shellRefreshCommandLine (void_t);
+GOS_STATIC bool_t gos_shellCanExecuteCommand(gos_shellUserPrivilege_t requiredPrivilege);
+GOS_STATIC void_t gos_shellPasswordInputEnd (void_t);
+GOS_STATIC void_t gos_shellPasswordInputStart (bool_t hideInput);
+GOS_STATIC bool_t gos_shellAuthenticateUser (GOS_CONST char_t* username, GOS_CONST char_t* password);
+GOS_STATIC void_t gos_shellLoginCommand (char_t* params);
+GOS_STATIC void_t gos_shellLogoutCommand (char_t* params);
 
 GOS_STATIC void_t gos_shellRefreshCommandLine (void_t)
 {
@@ -239,13 +335,14 @@ GOS_STATIC gos_taskDescriptor_t shellDaemonTaskDesc =
 };
 
 /**
- * Shell info command.
+ * Shell info command (built-in, requires ROOT)
  */
 GOS_STATIC gos_shellCommand_t shellCommand =
 {
     .command        = "shell",
     .commandHandler = gos_shellCommandHandler,
-    .commandHandlerPrivileges = GOS_TASK_PRIVILEGE_KERNEL
+	.commandHandlerPrivileges = GOS_TASK_PRIVILEGE_KERNEL,
+    .commandPrivilege = GOS_SHELL_USER_PRIVILEGE_ROOT
 };
 
 /*
@@ -274,6 +371,7 @@ gos_result_t gos_shellInit (void_t)
     commandBufferLength = 0u;
     inputState = SHELL_INPUT_NORMAL;
     gos_shellHistoryInit();
+    (void_t) memset(&currentUser, 0, sizeof(gos_shellUser_t));
 
     for (index = 0u; index < CFG_SHELL_MAX_COMMAND_NUMBER; index++)
     {
@@ -364,6 +462,7 @@ gos_result_t gos_shellRegisterCommand (gos_shellCommand_t* command)
             {
                 shellCommands[index].commandHandler = command->commandHandler;
                 shellCommands[index].commandHandlerPrivileges = command->commandHandlerPrivileges;
+                shellCommands[index].commandPrivilege = command->commandPrivilege;
                 (void_t) strcpy(shellCommands[index].command, command->command);
                 shellRegisterCommandResult = GOS_SUCCESS;
                 break;
@@ -465,8 +564,8 @@ GOS_STATIC void_t gos_shellDaemonTask (void_t)
      * Local variables.
      */
     gos_shellCommandIndex_t index              = 0u;
-    u16_t                   actualCommandIndex = 0u;
     u16_t                   paramIndex         = 0u;
+    gos_time_t              systime;
 
     /*
      * Function code.
@@ -635,71 +734,149 @@ GOS_STATIC void_t gos_shellDaemonTask (void_t)
             }
             else if (rx == '\r' || rx == '\n')
             {
-                if (useEcho == GOS_TRUE)
+                if (cmdInputState == SHELL_CMD_INPUT_PASSWORD)
                 {
-                    (void_t) gos_shellDriverTransmitString("\r\n");
-                }
-
-                commandBuffer[commandBufferLength] = '\0';
-
-                /* Save previous command safely */
-                (void_t) memset(previousCommand, 0, sizeof(previousCommand));
-                (void_t) strncpy(previousCommand, commandBuffer, sizeof(previousCommand) - 1u);
-
-                /* Parse command and parameters using a separate buffer index to avoid mixing indices */
-                u16_t bufIdx = 0u;
-                u16_t cmdLen = 0u;
-                paramIndex = 0u;
-
-                /* Extract command (bounded) */
-                while (commandBuffer[bufIdx] != ' ' && commandBuffer[bufIdx] != '\0' &&
-                       cmdLen < (CFG_SHELL_MAX_COMMAND_LENGTH - 1u))
-                {
-                    actualCommand[cmdLen++] = commandBuffer[bufIdx++];
-                }
-                actualCommand[cmdLen] = '\0';
-
-                /* Skip single space separator if present */
-                if (commandBuffer[bufIdx] == ' ')
-                {
-                    bufIdx++;
-                }
-
-                /* Extract parameters (bounded) */
-                while (commandBuffer[bufIdx] != '\0' && paramIndex < (CFG_SHELL_MAX_PARAMS_LENGTH - 1u))
-                {
-                    commandParams[paramIndex++] = commandBuffer[bufIdx++];
-                }
-                commandParams[paramIndex] = '\0';
-
-                if (actualCommand[0] != '\0')
-                {
-                    gos_shellHistoryPush(commandBuffer);
-
-                    for (index = 0u; index < CFG_SHELL_MAX_COMMAND_NUMBER; index++)
+                    if (useEcho == GOS_TRUE)
                     {
-                        if (shellCommands[index].commandHandler != NULL &&
-                            strcmp(shellCommands[index].command, actualCommand) == 0)
+                        (void_t) gos_shellDriverTransmitString("\r\n");
+                    }
+
+                    /* First line: username */
+                    if (currentUser.username[0] == '\0')
+                    {
+                        (void_t) strncpy(currentUser.username, commandBuffer, GOS_SHELL_USERNAME_MAX_LEN - 1u);
+                        currentUser.username[GOS_SHELL_USERNAME_MAX_LEN - 1u] = '\0';
+
+                        (void_t) gos_shellDriverTransmitString("Password: ");
+                        gos_shellPasswordInputStart(GOS_TRUE); /* password hidden */
+                    }
+                    /* Second line: password */
+                    else
+                    {
+                        gos_time_t systime;
+
+                        if (gos_shellAuthenticateUser(currentUser.username, commandBuffer) == GOS_TRUE)
                         {
-                            (void_t) gos_taskSetPrivileges(shellDaemonTaskId, shellCommands[index].commandHandlerPrivileges);
-                            shellCommands[index].commandHandler(commandParams);
-                            (void_t) gos_taskSetPrivileges(shellDaemonTaskId, GOS_TASK_PRIVILEGE_KERNEL);
-                            break;
+                            isAuthenticated = GOS_TRUE;
+                            (void_t) gos_timeGet(&systime);
+                            (void_t) gos_shellDriverTransmitString(
+                                "Login successful at %4u-%02u-%02u %02u:%02u:%02u.%03u. Welcome %s!\r\n",
+                                systime.years, systime.months, systime.days,
+                                systime.hours, systime.minutes, systime.seconds,
+                                systime.milliseconds, currentUser.username);
+                        }
+                        else
+                        {
+                            isAuthenticated = GOS_FALSE;
+                            (void_t) gos_shellDriverTransmitString("Login failed. Invalid username or password.\r\n");
+                            (void_t) memset(&currentUser, 0, sizeof(gos_shellUser_t));
+                        }
+
+                        gos_shellPasswordInputEnd();
+                        commandBufferIndex = 0u;
+                        commandBufferLength = 0u;
+                        (void_t) memset(commandBuffer, 0, sizeof(commandBuffer));
+                        (void_t) gos_shellDriverTransmitString("\r%s", GOS_SHELL_DISPLAY_TEXT);
+                    }
+                }
+                else
+                {
+                    /* Normal command input */
+                    if (useEcho == GOS_TRUE)
+                    {
+                        (void_t) gos_shellDriverTransmitString("\r\n");
+                    }
+
+                    commandBuffer[commandBufferLength] = '\0';
+
+                    /* Save previous command safely */
+                    (void_t) memset(previousCommand, 0, sizeof(previousCommand));
+                    (void_t) strncpy(previousCommand, commandBuffer, sizeof(previousCommand) - 1u);
+
+                    /* Parse command and parameters using a separate buffer index */
+                    u16_t bufIdx = 0u;
+                    u16_t cmdLen = 0u;
+                    paramIndex = 0u;
+
+                    /* Extract command (bounded) */
+                    while (commandBuffer[bufIdx] != ' ' && commandBuffer[bufIdx] != '\0' &&
+                       cmdLen < (CFG_SHELL_MAX_COMMAND_LENGTH - 1u))
+                    {
+                        actualCommand[cmdLen++] = commandBuffer[bufIdx++];
+                    }
+                    actualCommand[cmdLen] = '\0';
+
+                    /* Skip single space separator if present */
+                    if (commandBuffer[bufIdx] == ' ')
+                    {
+                        bufIdx++;
+                    }
+
+                    /* Extract parameters (bounded) */
+                    while (commandBuffer[bufIdx] != '\0' && paramIndex < (CFG_SHELL_MAX_PARAMS_LENGTH - 1u))
+                    {
+                        commandParams[paramIndex++] = commandBuffer[bufIdx++];
+                    }
+                    commandParams[paramIndex] = '\0';
+
+                    if (actualCommand[0] != '\0')
+                    {
+                        gos_shellHistoryPush(commandBuffer);
+
+                        /* Check if command is login or logout (always available) */
+                        if (strcmp(actualCommand, "login") == 0)
+                        {
+                            gos_shellLoginCommand(commandParams);
+                        }
+                        else if (strcmp(actualCommand, "logout") == 0)
+                        {
+                            gos_shellLogoutCommand(commandParams);
+                        }
+                        else if (isAuthenticated == GOS_FALSE)
+                        {
+                            (void_t) gos_shellDriverTransmitString("Access denied. Please login first.\r\n");
+                        }
+                        else
+                        {
+                            /* Search for command with auth check */
+                            for (index = 0u; index < CFG_SHELL_MAX_COMMAND_NUMBER; index++)
+                            {
+                                if (shellCommands[index].commandHandler != NULL &&
+                                    strcmp(shellCommands[index].command, actualCommand) == 0)
+                                {
+                                    /* Check if user has required privilege */
+                                    if (currentUser.privilege >= shellCommands[index].commandPrivilege)
+                                    {
+                                        (void_t) gos_taskSetPrivileges(shellDaemonTaskId, shellCommands[index].commandHandlerPrivileges);
+                                        shellCommands[index].commandHandler(commandParams);
+                                        (void_t) gos_taskSetPrivileges(shellDaemonTaskId, GOS_TASK_PRIVILEGE_KERNEL);
+                                    }
+                                    else
+                                    {
+                                        (void_t) gos_shellDriverTransmitString("Permission denied. Insufficient privileges.\r\n");
+                                    }
+                                    break;
+                                }
+                            }
+
+                            if (index == CFG_SHELL_MAX_COMMAND_NUMBER)
+                            {
+                                (void_t) gos_shellDriverTransmitString("Unrecognized command!\r\n");
+                            }
                         }
                     }
 
-                    if (index == CFG_SHELL_MAX_COMMAND_NUMBER)
+                    commandBufferIndex = 0u;
+                    commandBufferLength = 0u;
+                    gos_shellHistoryResetBrowse();
+                    (void_t) memset((void_t*)commandBuffer, '\0', CFG_SHELL_COMMAND_BUFFER_SIZE);
+
+                    // Only print prompt if not entering password mode.
+                    if (cmdInputState == SHELL_CMD_INPUT_NORMAL)
                     {
-                        (void_t) gos_shellDriverTransmitString("Unrecognized command!\r\n");
+                        (void_t) gos_shellDriverTransmitString("\r%s", GOS_SHELL_DISPLAY_TEXT);
                     }
                 }
-
-                commandBufferIndex = 0u;
-                commandBufferLength = 0u;
-                gos_shellHistoryResetBrowse();
-                (void_t) memset((void_t*)commandBuffer, '\0', CFG_SHELL_COMMAND_BUFFER_SIZE);
-
-                (void_t) gos_shellDriverTransmitString("\r%s", GOS_SHELL_DISPLAY_TEXT);
             }
             else
             {
@@ -718,7 +895,7 @@ GOS_STATIC void_t gos_shellDaemonTask (void_t)
                         commandBufferLength++;
                         commandBuffer[commandBufferLength] = '\0';
 
-                        if (useEcho == GOS_TRUE)
+                        if (useEcho == GOS_TRUE && isPasswordInputMode == GOS_FALSE)
                         {
                             gos_shellRefreshCommandLine();
                         }
@@ -729,7 +906,7 @@ GOS_STATIC void_t gos_shellDaemonTask (void_t)
                         commandBufferLength++;
                         commandBuffer[commandBufferIndex] = '\0';
 
-                        if (useEcho == GOS_TRUE)
+                        if (useEcho == GOS_TRUE && isPasswordInputMode == GOS_FALSE)
                         {
                             (void_t) gos_shellDriverTransmitString("%c", rx);
                         }
@@ -756,6 +933,13 @@ GOS_STATIC void_t gos_shellDaemonTask (void_t)
  */
 GOS_STATIC void_t gos_shellCommandHandler (char_t* params)
 {
+    /* Check authentication for shell commands */
+    if (gos_shellCanExecuteCommand(GOS_SHELL_USER_PRIVILEGE_ROOT) == GOS_FALSE)
+    {
+        (void_t) gos_shellDriverTransmitString("Access denied. Please login.\r\n");
+        return;
+    }
+
     /*
      * Local variables.
      */
@@ -961,5 +1145,124 @@ GOS_STATIC void_t gos_shellCommandHandler (char_t* params)
         {
             // Nothing to do.
         }
+    }
+}
+
+/**
+ * Register an application user
+ */
+gos_result_t gos_shellRegisterUser(const char_t* username, const char_t* password, gos_shellUserPrivilege_t privilege)
+{
+    if (registeredUsersCount >= GOS_SHELL_MAX_USERS || username == NULL || password == NULL)
+    {
+        return GOS_ERROR;
+    }
+
+    (void_t) strncpy(registeredUsers[registeredUsersCount].username, username, GOS_SHELL_USERNAME_MAX_LEN - 1u);
+    (void_t) strncpy(registeredUsers[registeredUsersCount].password, password, GOS_SHELL_PASSWORD_MAX_LEN - 1u);
+    registeredUsers[registeredUsersCount].privilege = privilege;
+    registeredUsers[registeredUsersCount].isEnabled = GOS_TRUE;
+    registeredUsersCount++;
+
+    return GOS_SUCCESS;
+}
+
+/**
+ * Authenticate user
+ */
+GOS_STATIC bool_t gos_shellAuthenticateUser (GOS_CONST char_t* username, GOS_CONST char_t* password)
+{
+    u16_t index = 0u;
+
+    /* Try root user first */
+    if (strcmp(username, rootUser.username) == 0 && strcmp(password, rootUser.password) == 0)
+    {
+        (void_t) memcpy(&currentUser, &rootUser, sizeof(gos_shellUser_t));
+        return GOS_TRUE;
+    }
+
+    /* Try registered users */
+    for (index = 0u; index < registeredUsersCount; index++)
+    {
+        if (registeredUsers[index].isEnabled &&
+            strcmp(username, registeredUsers[index].username) == 0 &&
+            strcmp(password, registeredUsers[index].password) == 0)
+        {
+            (void_t) memcpy(&currentUser, &registeredUsers[index], sizeof(gos_shellUser_t));
+            return GOS_TRUE;
+        }
+    }
+
+    return GOS_FALSE;
+}
+
+/**
+ * Check if current user can execute command
+ */
+GOS_STATIC bool_t gos_shellCanExecuteCommand (gos_shellUserPrivilege_t requiredPrivilege)
+{
+    if (isAuthenticated == GOS_FALSE)
+    {
+        return GOS_FALSE;
+    }
+
+    return currentUser.privilege >= requiredPrivilege;
+}
+
+/**
+ * Begin credential input mode.
+ */
+GOS_STATIC void_t gos_shellPasswordInputStart (bool_t hideInput)
+{
+    cmdInputState = SHELL_CMD_INPUT_PASSWORD;
+    isPasswordInputMode = hideInput;
+    (void_t) memset(commandBuffer, 0, sizeof(commandBuffer));
+    commandBufferIndex = 0u;
+    commandBufferLength = 0u;
+}
+
+/**
+ * End credential input mode.
+ */
+GOS_STATIC void_t gos_shellPasswordInputEnd (void_t)
+{
+    isPasswordInputMode = GOS_FALSE;
+    cmdInputState = SHELL_CMD_INPUT_NORMAL;
+}
+
+/**
+ * Updated login command handler
+ */
+GOS_STATIC void_t gos_shellLoginCommand (char_t* params)
+{
+    (void_t) params;
+
+    if (isAuthenticated == GOS_TRUE)
+    {
+        (void_t) gos_shellDriverTransmitString("Already logged in. Please logout first.\r\n");
+        return;
+    }
+
+    (void_t) memset(&currentUser, 0, sizeof(gos_shellUser_t));
+    (void_t) gos_shellDriverTransmitString("Username: ");
+    gos_shellPasswordInputStart(GOS_FALSE); /* username visible */
+}
+
+/**
+ * Updated logout command handler
+ */
+GOS_STATIC void_t gos_shellLogoutCommand (char_t* params)
+{
+    (void_t) params;
+
+    if (isAuthenticated == GOS_TRUE)
+    {
+        (void_t) gos_shellDriverTransmitString("Logged out.\r\n");
+        isAuthenticated = GOS_FALSE;
+        (void_t) memset(&currentUser, 0, sizeof(gos_shellUser_t));
+    }
+    else
+    {
+        (void_t) gos_shellDriverTransmitString("Not logged in.\r\n");
     }
 }

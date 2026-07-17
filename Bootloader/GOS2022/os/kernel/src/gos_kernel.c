@@ -853,7 +853,7 @@ void_t gos_kernelDump (void_t)
         else
         {
             (void_t) gos_shellDriverTransmitString(
-                    "| 0x%04X | %28s | 0x%04X | 0x%-12X | %6u.%02u |%\r\n",
+                    "| 0x%04X | %28s | 0x%04X | 0x%-12X | %6u.%02u |\r\n",
                     taskDescriptors[taskIndex].taskId,
                     taskDescriptors[taskIndex].taskName,
                     taskDescriptors[taskIndex].taskStackSize,
@@ -959,7 +959,12 @@ void_t gos_ported_pendSVHandler (void_t)
     /*
      * Function code.
      */
-    if (privilegedModeSetRequired == GOS_TRUE)
+    if (resetRequired == GOS_TRUE)
+    {
+        resetRequired = GOS_FALSE;
+        gos_kernelProcessorReset();
+    }
+    else if (privilegedModeSetRequired == GOS_TRUE)
     {
         // Set mode to privileged.
         GOS_ASM("MRS R0, CONTROL");
@@ -1004,12 +1009,13 @@ GOS_STATIC void_t gos_kernelCheckTaskStack (void_t)
      * Local variables.
      */
     u32_t sp = 0u;
+    u32_t stackUsage = 0u;
 
     /*
      * Function code.
      */
     __asm volatile ("MRS %0, psp\n\t" : "=r" (sp));
-    if (sp != 0 &&
+    if (sp != 0u &&
         sp < taskDescriptors[currentTaskIndex].taskStackOverflowThreshold)
     {
         gos_errorHandler(
@@ -1026,15 +1032,23 @@ GOS_STATIC void_t gos_kernelCheckTaskStack (void_t)
         // No stack overflow was detected.
     }
 
-    if (sp != 0 &&
-        (taskDescriptors[currentTaskIndex].taskStackOverflowThreshold - 64 + taskDescriptors[currentTaskIndex].taskStackSize - sp) >
-        taskDescriptors[currentTaskIndex].taskStackSizeMaxUsage)
+    if (sp != 0u)
     {
-        taskDescriptors[currentTaskIndex].taskStackSizeMaxUsage = (taskDescriptors[currentTaskIndex].taskStackOverflowThreshold - 64 + 32 + taskDescriptors[currentTaskIndex].taskStackSize - sp);
+        stackUsage = (taskDescriptors[currentTaskIndex].taskStackOverflowThreshold - 64u + 
+                     taskDescriptors[currentTaskIndex].taskStackSize - sp);
+        
+        if (stackUsage > taskDescriptors[currentTaskIndex].taskStackSizeMaxUsage)
+        {
+            taskDescriptors[currentTaskIndex].taskStackSizeMaxUsage = stackUsage;
+        }
+        else
+        {
+            // Max. value has not been exceeded.
+        }
     }
     else
     {
-        // Max. value has not been exceeded.
+        // PSP is invalid.
     }
 }
 

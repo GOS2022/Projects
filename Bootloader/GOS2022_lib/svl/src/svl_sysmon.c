@@ -1246,7 +1246,16 @@ GOS_STATIC void_t svl_sysmonWiredDaemonTask (void_t)
                             // If payload is not NULL, copy it.
                             if (userMessages[userMessageIndex].payload != NULL)
                             {
-                                (void_t) memcpy(userMessages[userMessageIndex].payload, (void_t*)wiredRxBuffer, userMessages[userMessageIndex].payloadSize);
+/*                            	if (userMessages[userMessageIndex].payloadSize > SVL_SYSMON_WIRED_RX_BUFF_SIZE)
+                            	{
+#if SVL_SYSMON_TRACE_LEVEL > 0
+                                (void_t) gos_traceTraceFormatted(GOS_TRUE, "[Wired] Payload overflow.\r\n", messageId);
+#endif
+                            	}
+                            	else*/
+                            	{
+                                    (void_t) memcpy(userMessages[userMessageIndex].payload, (void_t*)wiredRxBuffer, userMessages[userMessageIndex].payloadSize);
+                            	}
                             }
                             else
                             {
@@ -1254,7 +1263,7 @@ GOS_STATIC void_t svl_sysmonWiredDaemonTask (void_t)
                             }
 
                             // Call callback function.
-                            if (userMessages[userMessageIndex].callback != NULL)
+                            if (userMessages[userMessageIndex].callback != NULL /*&& userMessages[userMessageIndex].payloadSize <= SVL_SYSMON_WIRED_RX_BUFF_SIZE*/)
                             {
 #if SVL_SYSMON_TRACE_LEVEL > 0
                                 (void_t) gos_traceTraceFormatted(GOS_TRUE, "[Wired] User message received with ID: 0x%04x\r\n", messageId);

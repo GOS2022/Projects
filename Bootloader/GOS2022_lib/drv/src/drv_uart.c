@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       drv_uart.c
 //! @author     Ahmed Gazar
-//! @date       2026-07-16
-//! @version    1.4
+//! @date       2026-07-17
+//! @version    1.5
 //!
 //! @brief      GOS2022 Library / UART driver source.
 //! @details    For a more detailed description of this driver, please refer to @ref drv_uart.h
@@ -28,6 +28,7 @@
 // 1.1        2024-04-24    Ahmed Gazar     +    Error reporting added
 // 1.3        2025-07-22    Ahmed Gazar     *    Error reporting replaced by diagnostics
 // 1.4        2026-07-16    Ahmed Gazar     *    RX IT rework, major fixes in logic
+// 1.5        2026-07-17    Ahmed Gazar     *    Major fixes in driver logic
 //*************************************************************************************************
 //
 // Copyright (c) 2024 Ahmed Gazar
@@ -62,7 +63,20 @@
 /**
  * UART RX buffer size.
  */
-#define DRV_UART_RX_BUFFER_SIZE (128u)
+#define DRV_UART_RX_BUFFER_SIZE (512u)
+
+/*
+ * Type definitions
+ */
+/**
+ * RX modes.
+ */
+typedef enum
+{
+	DRV_UART_RX_MODE_NONE = 0u,
+	DRV_UART_RX_MODE_IT   = 1u,
+	DRV_UART_RX_MODE_DMA  = 3u
+}drv_uart_rx_mode_t;
 
 /*
  * Static variables
@@ -153,7 +167,10 @@ GOS_STATIC volatile u16_t uartRxBufferCount[DRV_UART_NUM_OF_INSTANCES];
 /**
  * UART RX byte array.
  */
-GOS_STATIC u8_t  uartRxOneByte[DRV_UART_NUM_OF_INSTANCES];
+GOS_STATIC u8_t  uartRxOneByte [DRV_UART_NUM_OF_INSTANCES];
+
+/* Track current RX mode per instance */
+GOS_STATIC volatile drv_uart_rx_mode_t uartRxMode [DRV_UART_NUM_OF_INSTANCES];
 
 /*
  * External variables
@@ -190,6 +207,7 @@ GOS_STATIC GOS_INLINE void_t drv_uartRxBufferInit(drv_uartPeriphInstance_t insta
     uartRxBufferTail[instance]  = 0u;
     uartRxBufferCount[instance] = 0u;
     uartRxOpActive[instance]    = GOS_FALSE;
+    uartRxMode[instance]        = DRV_UART_RX_MODE_NONE;
 }
 
 /**
@@ -227,7 +245,14 @@ GOS_STATIC GOS_INLINE void_t drv_uartRxBufferPush (drv_uartPeriphInstance_t inst
     }
     else
     {
-        // Receive buffer overflow: new byte dropped.
+        /* Buffer full: overwrite oldest byte to keep most recent data and record overflow */
+        uartDiag.overrunErrorCntr[instance]++; /* count receive overflows */
+        /* advance tail to drop oldest byte */
+        uartRxBufferTail[instance] = (uartRxBufferTail[instance] + 1u) % DRV_UART_RX_BUFFER_SIZE;
+        /* store new byte at head and advance head */
+        uartRxBuffer[instance][uartRxBufferHead[instance]] = byte;
+        uartRxBufferHead[instance] = (uartRxBufferHead[instance] + 1u) % DRV_UART_RX_BUFFER_SIZE;
+        /* uartRxBufferCount stays at capacity */
     }
 }
 
@@ -273,11 +298,13 @@ GOS_STATIC GOS_INLINE gos_result_t drv_uartStartRxBackground (drv_uartPeriphInst
         if (HAL_UART_Receive_IT(&huarts[instance], &uartRxOneByte[instance], 1) == HAL_OK)
         {
             uartRxOpActive[instance] = GOS_TRUE;
+            uartRxMode[instance] = DRV_UART_RX_MODE_IT;
             return GOS_SUCCESS;
         }
 
         DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
         uartRxOpActive[instance] = GOS_FALSE;
+        uartRxMode[instance] = DRV_UART_RX_MODE_NONE;
         return GOS_ERROR;
     }
 
@@ -294,6 +321,8 @@ GOS_STATIC GOS_INLINE void_t drv_uartStopRxBackground (drv_uartPeriphInstance_t 
         (void_t) HAL_UART_Abort_IT(&huarts[instance]);
         uartRxOpActive[instance] = GOS_FALSE;
     }
+    /* clear mode when stopping background receive */
+    uartRxMode[instance] = DRV_UART_RX_MODE_NONE;
 }
 
 /*
@@ -529,6 +558,9 @@ GOS_INLINE gos_result_t drv_uartReceiveBlocking (
         GOS_ENABLE_SCHED
 
         (void_t) gos_mutexUnlock(&uartRxMutexes[instance]);
+
+        /* restart background IT RX for continuous reception use-cases */
+        (void_t) drv_uartStartRxBackground(instance);
     }
     else
     {
@@ -624,6 +656,10 @@ GOS_INLINE gos_result_t drv_uartReceiveDMA (
 
         drv_uartStopRxBackground(instance);
 
+        /* mark DMA mode and active - callback will signal completion */
+        uartRxMode[instance]    = DRV_UART_RX_MODE_DMA;
+        uartRxOpActive[instance] = GOS_TRUE;
+
         if (HAL_UART_Receive_DMA(&huarts[instance], message, size) == HAL_OK)
         {
             DRV_ERROR_CLEAR(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_HAL);
@@ -652,9 +688,16 @@ GOS_INLINE gos_result_t drv_uartReceiveDMA (
         {
             (void_t) HAL_UART_Abort_IT(&huarts[instance]);
             DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_DMA_HAL);
+            /* clear DMA mode/active on failure */
+            uartRxMode[instance]    = DRV_UART_RX_MODE_NONE;
+            uartRxOpActive[instance] = GOS_FALSE;
         }
 
-        uartRxOpActive[instance] = GOS_FALSE;
+        /* if DMA was not active (failure), ensure mode cleared */
+        if (uartRxOpActive[instance] == GOS_FALSE)
+        {
+            uartRxMode[instance] = DRV_UART_RX_MODE_NONE;
+        }
     }
     else
     {
@@ -922,18 +965,51 @@ void_t HAL_UART_RxCpltCallback (UART_HandleTypeDef *pHuart)
     {
         if (uartInstanceLut[instance] == pHuart->Instance)
         {
-            uartRxOpResult[instance] = GOS_SUCCESS;
-            drv_uartRxBufferPush(instance, uartRxOneByte[instance]);
-            (void_t) gos_triggerIncrement(&uartRxReadyTriggers[instance]);
-
-            if (HAL_UART_Receive_IT(&huarts[instance], &uartRxOneByte[instance], 1) == HAL_OK)
+            /* Branch behavior depending on RX mode */
+            if (uartRxMode[instance] == DRV_UART_RX_MODE_IT)
             {
-                uartRxOpActive[instance] = GOS_TRUE;
+                /* IT-based single-byte receive: push into ring buffer and signal waiting users, then re-arm IT */
+                uartRxOpResult[instance] = GOS_SUCCESS;
+                drv_uartRxBufferPush(instance, uartRxOneByte[instance]);
+                (void_t) gos_triggerIncrement(&uartRxReadyTriggers[instance]);
+
+                if (HAL_UART_Receive_IT(&huarts[instance], &uartRxOneByte[instance], 1) == HAL_OK)
+                {
+                    uartRxOpActive[instance] = GOS_TRUE;
+                }
+                else
+                {
+                    uartRxOpActive[instance] = GOS_FALSE;
+                    DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
+                    uartRxMode[instance] = DRV_UART_RX_MODE_NONE;
+                }
+            }
+            else if (uartRxMode[instance] == DRV_UART_RX_MODE_DMA)
+            {
+                /* DMA-based reception completed: mark success and wake waiters; do not push uartRxOneByte */
+                uartRxOpResult[instance] = GOS_SUCCESS;
+                (void_t) gos_triggerIncrement(&uartRxReadyTriggers[instance]);
+                uartRxOpActive[instance] = GOS_FALSE;
+                uartRxMode[instance] = DRV_UART_RX_MODE_NONE;
             }
             else
             {
-                uartRxOpActive[instance] = GOS_FALSE;
-                DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
+                /* No background mode set: fallback to treating as IT byte if buffer available */
+                uartRxOpResult[instance] = GOS_SUCCESS;
+                drv_uartRxBufferPush(instance, uartRxOneByte[instance]);
+                (void_t) gos_triggerIncrement(&uartRxReadyTriggers[instance]);
+
+                /* try to re-arm IT to continue receiving */
+                if (HAL_UART_Receive_IT(&huarts[instance], &uartRxOneByte[instance], 1) == HAL_OK)
+                {
+                    uartRxOpActive[instance] = GOS_TRUE;
+                    uartRxMode[instance] = DRV_UART_RX_MODE_IT;
+                }
+                else
+                {
+                    uartRxOpActive[instance] = GOS_FALSE;
+                    DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_RX_IT_HAL);
+                }
             }
             break;
         }
@@ -1044,6 +1120,7 @@ void_t HAL_UART_ErrorCallback (UART_HandleTypeDef* pHuart)
 
             (void_t) HAL_UART_Abort_IT(pHuart);
             uartRxOpActive[instance] = GOS_FALSE;
+            uartRxMode[instance] = DRV_UART_RX_MODE_NONE;
 
             __HAL_UART_CLEAR_PEFLAG(pHuart);
             __HAL_UART_CLEAR_FEFLAG(pHuart);

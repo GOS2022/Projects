@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_shell.h
 //! @author     Ahmed Gazar
-//! @date       2023-07-12
-//! @version    1.3
+//! @date       2026-07-17
+//! @version    1.4
 //!
 //! @brief      GOS shell service header.
 //! @details    The shell service provides an easy interface to receive and process commands in a
@@ -34,6 +34,7 @@
 // 1.2        2022-12-03    Ahmed Gazar     +    gos_shellRegisterCommands added
 // 1.3        2023-07-12    Ahmed Gazar     +    commandHandlerPrivileges added to
 //                                               gos_shellCommand_t
+// 1.4        2026-07-17    Ahmed Gazar     +    User handling and related definitions added
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -60,7 +61,6 @@
  * Includes
  */
 #include <gos_kernel.h>
-
 /*
  * Type definitions
  */
@@ -69,6 +69,17 @@
  */
 typedef void_t (*gos_shellFunction)(char_t* params);
 
+/*
+ * User privilege levels.
+ */
+typedef enum
+{
+    GOS_SHELL_USER_PRIVILEGE_NONE = 0u,
+    GOS_SHELL_USER_PRIVILEGE_USER = 1u,
+    GOS_SHELL_USER_PRIVILEGE_ADMIN = 2u,
+    GOS_SHELL_USER_PRIVILEGE_ROOT = 3u
+} gos_shellUserPrivilege_t;
+
 /**
  * Shell command type.
  */
@@ -76,6 +87,7 @@ typedef struct
 {
     char_t                   command  [CFG_SHELL_MAX_COMMAND_LENGTH]; //!< Command name.
     gos_shellFunction        commandHandler;                          //!< Command handler function.
+    gos_shellUserPrivilege_t commandPrivilege;                        //!< Required user privilege to execute command.
     gos_taskPrivilegeLevel_t commandHandlerPrivileges;                //!< Command handler privileges.
 }gos_shellCommand_t;
 
