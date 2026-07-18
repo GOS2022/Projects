@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_config.h
 //! @author     Ahmed Gazar
-//! @date       2024-04-24
-//! @version    1.10
+//! @date       2026-07-18
+//! @version    1.12
 //!
 //! @brief      GOS configuration header.
 //! @details    This header contains the kernel and service configurations of the operating system.
@@ -43,6 +43,8 @@
 // 1.9        2024-02-13    Ahmed Gazar     +    CFG_SYSMON_MAX_USER_MESSAGES added
 // 1.10       2024-04-24    Ahmed Gazar     -    Process service related definitions removed
 // 1.11       2025-07-29    Ahmed Gazar     -    Sysmon service related definitions removed
+// 1.12       2026-07-18    Ahmed Gazar     +    CFG_SHELL_ROOT_USERNAME added
+//                                          +    CFG_SHELL_ROOT_PASSWORD added
 //*************************************************************************************************
 #ifndef GOS_CONFIG_H
 #define GOS_CONFIG_H
@@ -254,6 +256,14 @@
  * Shell daemon startup delay time [ms].
  */
 #define CFG_SHELL_STARTUP_DELAY_MS      ( 500 )
+/**
+ * Shell root username.
+ */
+#define CFG_SHELL_ROOT_USERNAME         "root"
+/**
+ * Shell root user password.
+ */
+#define CFG_SHELL_ROOT_PASSWORD         "root"
 
 /*
  * GCP service parameters.

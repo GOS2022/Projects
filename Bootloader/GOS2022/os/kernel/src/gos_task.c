@@ -251,8 +251,7 @@ gos_result_t gos_taskRegister (gos_taskDescriptor_t* taskDescriptor, gos_tid_t* 
             }
 
             // Copy task name.
-            if (taskDescriptor->taskName != NULL &&
-                strlen(taskDescriptor->taskName) <= CFG_TASK_MAX_NAME_LENGTH)
+            if (strlen(taskDescriptor->taskName) <= CFG_TASK_MAX_NAME_LENGTH)
             {
                 (void_t) strcpy(taskDescriptors[taskIndex].taskName, taskDescriptor->taskName);
             }

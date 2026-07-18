@@ -67,7 +67,7 @@
 /**
  * Shell function type.
  */
-typedef void_t (*gos_shellFunction)(char_t* params);
+typedef void_t (*gos_shellFunction)(char_t** params);
 
 /*
  * User privilege levels.
@@ -198,4 +198,14 @@ gos_result_t gos_shellEchoOn (
 gos_result_t gos_shellEchoOff (
         void_t
         );
+
+/**
+ * @brief  Force prints the shell prompt.
+ *
+ * @return Result of force printing.
+ *
+ * @retval  #GOS_SUCCESS Prompt printed successfully on shell output.
+ * @retval  #GOS_ERROR   There was a driver issue when printing.
+ */
+gos_result_t gos_shellForcePrintPromt (void_t);
 #endif

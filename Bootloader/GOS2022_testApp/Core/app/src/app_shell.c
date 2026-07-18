@@ -7,6 +7,11 @@
 
 
 #include "app.h"
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_PARAM_LEN ( 16u )
+#define MAX_PARAM_NUM ( 4u )
 
 typedef enum
 {
@@ -16,11 +21,18 @@ typedef enum
 	CMD_HEX_DUMP = 0x2003,
 }app_shellMsgId_t;
 
+typedef struct
+{
+	u8_t paramCount;
+	char_t params [MAX_PARAM_NUM][MAX_PARAM_LEN];
+}app_shellParam_t;
+
 GOS_STATIC void_t app_shellTask       (void_t);
-GOS_STATIC void_t app_shellProjCfgHandler (char_t* params);
-GOS_STATIC void_t app_shellHelpHandler (char_t* params);
-GOS_STATIC void_t app_shellGetAppsHandler (char_t* params);
-GOS_STATIC void_t app_shellHexDumpHandler (char_t* params);
+GOS_STATIC void_t app_shellProjCfgHandler (char_t** params);
+GOS_STATIC void_t app_shellHelpHandler (char_t** params);
+GOS_STATIC void_t app_shellGetAppsHandler (char_t** params);
+GOS_STATIC void_t app_shellHexDumpHandler (char_t** params);
+GOS_STATIC void_t app_shellExtractParameters (char_t** params, app_shellParam_t* pParam);
 
 GOS_STATIC gos_tid_t shellTaskId;
 
@@ -77,6 +89,7 @@ GOS_STATIC void_t app_shellTask (void_t)
 {
 	gos_messageId_t msgIdArray [] = { CMD_PROJ_CFG, CMD_HELP, CMD_GET_APPS, CMD_HEX_DUMP, 0 };
 	gos_message_t rxMessage;
+	app_shellParam_t param;
 
 	for (;;)
 	{
@@ -85,11 +98,15 @@ GOS_STATIC void_t app_shellTask (void_t)
 			// Process message.
 			switch (rxMessage.messageId)
 			{
+				(void_t) gos_shellDriverTransmitString("\r\n");
+
 				case CMD_PROJ_CFG:
 				{
 					svl_pdhSwInfo_t swInfo;
 					svl_pdhGetSwInfo(&swInfo);
-					if (strcmp(rxMessage.messageBytes, "") == 0)
+					memcpy((void_t*)&param, (void_t*)rxMessage.messageBytes, sizeof(app_shellParam_t));
+
+					if (param.paramCount == 0)
 					{
 						(void_t) gos_shellDriverTransmitString("Software information: \r\n");
 						(void_t) gos_shellDriverTransmitString("Application name: %s\r\n", swInfo.appSwVerInfo.name);
@@ -99,11 +116,11 @@ GOS_STATIC void_t app_shellTask (void_t)
 						(void_t) gos_shellDriverTransmitString("Application date: %04u-%02u-%02u\r\n", swInfo.appSwVerInfo.date.years, swInfo.appSwVerInfo.date.months, swInfo.appSwVerInfo.date.days);
 						(void_t) gos_shellDriverTransmitString("Application description: %s\r\n", swInfo.appSwVerInfo.description);
 					}
-					else if (strcmp(rxMessage.messageBytes, "-app_ver") == 0)
+					else if (strcmp(param.params[0], "-app_ver") == 0)
 					{
 						(void_t) gos_shellDriverTransmitString("Application version: %02u.%02u.%02u\r\n", swInfo.appSwVerInfo.major, swInfo.appSwVerInfo.minor, swInfo.appSwVerInfo.build);
 					}
-					else if (strcmp(rxMessage.messageBytes, "-app_date") == 0)
+					else if (strcmp(param.params[0], "-app_date") == 0)
 					{
 						(void_t) gos_shellDriverTransmitString("Application date: %04u-%02u-%02u\r\n", swInfo.appSwVerInfo.date.years, swInfo.appSwVerInfo.date.months, swInfo.appSwVerInfo.date.days);
 					}
@@ -115,14 +132,16 @@ GOS_STATIC void_t app_shellTask (void_t)
 				}
 				case CMD_HELP:
 				{
-					if (strcmp(rxMessage.messageBytes, "") == 0)
+					memcpy((void_t*)&param, (void_t*)rxMessage.messageBytes, sizeof(app_shellParam_t));
+
+					if (param.paramCount == 0)
 					{
 						(void_t) gos_shellDriverTransmitString("List of available user commands: \r\n");
 				        (void_t) gos_shellDriverTransmitString("\t"
 				                "- help\r\n\t"
 				                "- proj_cfg\r\n");
 					}
-					else if (strcmp(rxMessage.messageBytes, "proj_cfg") == 0)
+					else if (strcmp(param.params[0], "proj_cfg") == 0)
 					{
 						(void_t) gos_shellDriverTransmitString("Prints the project configuration. The applicable parameters are:\r\n\t"
 								"-app_ver\t\tPrints the application software version.\r\n\t"
@@ -136,7 +155,7 @@ GOS_STATIC void_t app_shellTask (void_t)
 					svl_sdhBinaryDesc_t binaryDesc;
 					gos_result_t res = GOS_SUCCESS;
 
-					(void_t) gos_shellDriverTransmitString("\r\n");
+					//memcpy((void_t*)&param, (void_t*)rxMessage.messageBytes, sizeof(app_shellParam_t));
 
 					while (res == GOS_SUCCESS)
 					{
@@ -162,15 +181,39 @@ GOS_STATIC void_t app_shellTask (void_t)
 				}
 				case CMD_HEX_DUMP:
 				{
-					u16_t index = atoi(rxMessage.messageBytes);
+					u16_t index;
 					svl_sdhBinaryDesc_t binaryDesc;
 					svl_sdhGetBinaryData(index, &binaryDesc);
-					u32_t address = binaryDesc.binaryLocation;
-					u32_t size = binaryDesc.binaryInfo.size;
+					u32_t address;
+					u32_t startAddress;
+					u32_t endAddress;
+					u32_t startOffset = 0u;
 #define READ_SIZE ( 32 )
 					u8_t byteBuffer [READ_SIZE];
 
-					for (address = binaryDesc.binaryLocation; address < (binaryDesc.binaryLocation + size); address += READ_SIZE)
+					memcpy((void_t*)&param, (void_t*)rxMessage.messageBytes, sizeof(app_shellParam_t));
+
+					if (param.paramCount == 0)
+					{
+						break;
+					}
+
+					index = atoi(param.params[0]);
+
+					if (param.paramCount == 3)
+					{
+						u32_t reqStart = (u32_t)strtol(param.params[1], NULL, 0);
+						u32_t reqEnd   = (u32_t)strtol(param.params[2], NULL, 0);
+						startAddress = binaryDesc.binaryLocation + reqStart;
+						endAddress = startAddress + (reqEnd - reqStart);
+					}
+					else
+					{
+						startAddress = binaryDesc.binaryLocation;
+						endAddress = binaryDesc.binaryLocation + binaryDesc.binaryInfo.size;
+					}
+
+					for (address = startAddress; address < endAddress; address += READ_SIZE)
 					{
 						svl_sdhReadBytesFromMemory(address, byteBuffer, READ_SIZE);
 
@@ -184,29 +227,37 @@ GOS_STATIC void_t app_shellTask (void_t)
 					break;
 				}
 			}
+
+			gos_shellForcePrintPromt();
 		}
 	}
 }
 
-GOS_STATIC void_t app_shellProjCfgHandler (char_t* params)
+GOS_STATIC void_t app_shellProjCfgHandler (char_t** params)
 {
 	gos_message_t message;
+	app_shellParam_t param;
+	app_shellExtractParameters(params, &param);
+
 	message.messageId = CMD_PROJ_CFG;
-	memcpy(message.messageBytes, params, strlen(params) + 1);
-	message.messageSize = CFG_MESSAGE_MAX_LENGTH - 1;
+	memcpy(message.messageBytes, (void_t*)&param, sizeof(param));
+	message.messageSize = sizeof(param);
 	gos_messageTx(&message);
 }
 
-GOS_STATIC void_t app_shellHelpHandler (char_t* params)
+GOS_STATIC void_t app_shellHelpHandler (char_t** params)
 {
 	gos_message_t message;
+	app_shellParam_t param;
+	app_shellExtractParameters(params, &param);
+
 	message.messageId = CMD_HELP;
-	memcpy(message.messageBytes, params, strlen(params) + 1);
-	message.messageSize = CFG_MESSAGE_MAX_LENGTH - 1;
+	memcpy(message.messageBytes, (void_t*)&param, sizeof(param));
+	message.messageSize = sizeof(param);
 	gos_messageTx(&message);
 }
 
-GOS_STATIC void_t app_shellGetAppsHandler (char_t* params)
+GOS_STATIC void_t app_shellGetAppsHandler (char_t** params)
 {
 	gos_message_t message;
 	message.messageId = CMD_GET_APPS;
@@ -214,11 +265,40 @@ GOS_STATIC void_t app_shellGetAppsHandler (char_t* params)
 	gos_messageTx(&message);
 }
 
-GOS_STATIC void_t app_shellHexDumpHandler (char_t* params)
+GOS_STATIC void_t app_shellHexDumpHandler (char_t** params)
 {
 	gos_message_t message;
+	app_shellParam_t param;
+	app_shellExtractParameters(params, &param);
+
 	message.messageId = CMD_HEX_DUMP;
-	memcpy(message.messageBytes, params, strlen(params) + 1);
-	message.messageSize = CFG_MESSAGE_MAX_LENGTH - 1;
+	memcpy(message.messageBytes, (void_t*)&param, sizeof(param));
+	message.messageSize = sizeof(param);
 	gos_messageTx(&message);
+}
+
+GOS_STATIC void_t app_shellExtractParameters (char_t** params, app_shellParam_t* pParam)
+{
+	u8_t index = 0u;
+
+	if (params == NULL || pParam == NULL)
+	{
+		return;
+	}
+
+	(void_t) memset(pParam, 0, sizeof(*pParam));
+
+	while (params[index] != NULL)
+	{
+		if (strcmp(params[index], "") == 0)
+		{
+			break;
+		}
+		else
+		{
+			strcpy(pParam->params[pParam->paramCount], params[index]);
+			pParam->paramCount++;
+		}
+		index++;
+	}
 }

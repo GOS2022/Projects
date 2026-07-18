@@ -225,6 +225,14 @@
  * Shell daemon startup delay time [ms].
  */
 #define CFG_SHELL_STARTUP_DELAY_MS      ( 500 )
+/**
+ * Shell root username.
+ */
+#define CFG_SHELL_ROOT_USERNAME         "root"
+/**
+ * Shell root user password.
+ */
+#define CFG_SHELL_ROOT_PASSWORD         "root"
 
 /*
  * GCP service parameters.
