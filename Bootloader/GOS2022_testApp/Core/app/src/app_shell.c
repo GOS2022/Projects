@@ -95,11 +95,11 @@ GOS_STATIC void_t app_shellTask (void_t)
 	{
 		if (gos_messageRx(msgIdArray, &rxMessage, GOS_MESSAGE_ENDLESS_TMO) == GOS_SUCCESS)
 		{
+			(void_t) gos_shellDriverTransmitString("\r\n");
+
 			// Process message.
 			switch (rxMessage.messageId)
 			{
-				(void_t) gos_shellDriverTransmitString("\r\n");
-
 				case CMD_PROJ_CFG:
 				{
 					svl_pdhSwInfo_t swInfo;
@@ -281,12 +281,17 @@ GOS_STATIC void_t app_shellExtractParameters (char_t** params, app_shellParam_t*
 {
 	u8_t index = 0u;
 
-	if (params == NULL || pParam == NULL)
+	if (pParam == NULL)
 	{
 		return;
 	}
 
 	(void_t) memset(pParam, 0, sizeof(*pParam));
+
+	if (params == NULL)
+	{
+		return;
+	}
 
 	while (params[index] != NULL)
 	{
