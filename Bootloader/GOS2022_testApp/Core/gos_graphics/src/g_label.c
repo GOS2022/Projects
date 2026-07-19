@@ -57,7 +57,7 @@
 /**
  * Mutex timeout for label drawing.
  */
-#define LABEL_DRAW_MUTEX_TMO_MS ( 3000u )
+#define LABEL_DRAW_MUTEX_TMO_MS ( 0u )
 
 /*
  * External variables
@@ -128,7 +128,7 @@ gos_result_t g_labelSetText (g_label_t* pLabel, char_t* text)
 	/*
 	 * Function code.
 	 */
-	if ((pLabel != NULL) && (text != NULL) && (pLabel->text != NULL))
+	if ((pLabel != NULL) && (text != NULL) && (pLabel->text != NULL) && (pLabel->pOwner != NULL))
 	{
 		if (strcmp(text, pLabel->text) != 0)
 		{
@@ -139,17 +139,16 @@ gos_result_t g_labelSetText (g_label_t* pLabel, char_t* text)
 #include "g_window.h"
 				if (((g_window_t*)(pLabel->pOwner))->zIndex == 0u)
 				{
-					if (gos_mutexLock(&g_mutex, LABEL_DRAW_MUTEX_TMO_MS) == GOS_SUCCESS)
+					if (gos_mutexLock(&g_mutex, 0u) == GOS_SUCCESS)   // non-blocking
 					{
 						g_labelDraw(pLabel);
+						(void_t)gos_mutexUnlock(&g_mutex);
 						setResult = GOS_SUCCESS;
 					}
 					else
 					{
-						// Mutex error.
-						setResult = GOS_ERROR;
+						setResult = GOS_BUSY; // skip this frame; retry next cycle
 					}
-					(void_t) gos_mutexUnlock(&g_mutex);
 				}
 				else
 				{

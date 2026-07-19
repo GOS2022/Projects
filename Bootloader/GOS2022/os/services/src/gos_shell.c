@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_shell.c
 //! @author     Ahmed Gazar
-//! @date       2026-07-17
-//! @version    1.12
+//! @date       2026-07-19
+//! @version    1.13
 //!
 //! @brief      GOS shell service source.
 //! @details    For a more detailed description of this service, please refer to @ref gos_shell.h
@@ -42,6 +42,8 @@
 // 1.11       2026-07-16    Ahmed Gazar     *    Backspace handling fix, major rework
 //                                          +    VT100 features introduced
 // 1.12       2026-07-17    Ahmed Gazar     *    Major fixes and user handling introduced
+// 1.13       2026-07-19    Ahmed Gazar     +    Shell restart task commands added
+//                                               (restart_tid, restart)
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -1160,10 +1162,12 @@ GOS_STATIC void_t gos_shellCommandHandler (char_t** params)
                         "- delete_tid\r\n\t\t"
                         "- suspend_tid\r\n\t\t"
                         "- resume_tid\r\n\t\t"
+                        "- restart_tid\r\n\t\t"
                         "- unblock_tid\r\n\t\t"
                         "- delete\r\n\t\t"
                         "- suspend\r\n\t\t"
                         "- resume\r\n\t\t"
+                        "- restart\r\n\t\t"
                         "- unblock\r\n\t\t"
                         "- runtime\r\n\t\t"
                         "- cpu\r\n");
@@ -1260,6 +1264,37 @@ GOS_STATIC void_t gos_shellCommandHandler (char_t** params)
             else
             {
                 (void_t) gos_shellDriverTransmitString("%s could not be resumed.\r\n", params[1]);
+            }
+        }
+        else
+        {
+            (void_t) gos_shellDriverTransmitString("Task could not be found.\r\n");
+        }
+    }
+    else if (strcmp(params[0], "restart_tid") == 0 && params[1] != NULL)
+    {
+        taskId = (gos_tid_t)strtol(params[1], NULL, 16);
+
+        if (gos_taskRestart(taskId) == GOS_SUCCESS)
+        {
+            (void_t) gos_shellDriverTransmitString("0x%X task has been restarted.\r\n", taskId);
+        }
+        else
+        {
+            (void_t) gos_shellDriverTransmitString("0x%X task could not be restarted.\r\n", taskId);
+        }
+    }
+    else if (strcmp(params[0], "restart") == 0 && params[1] != NULL)
+    {
+        if (gos_taskGetId(params[1], &taskId) == GOS_SUCCESS)
+        {
+            if (gos_taskRestart(taskId) == GOS_SUCCESS)
+            {
+                (void_t) gos_shellDriverTransmitString("%s has been restarted.\r\n", params[1]);
+            }
+            else
+            {
+                (void_t) gos_shellDriverTransmitString("%s could not be restarted.\r\n", params[1]);
             }
         }
         else

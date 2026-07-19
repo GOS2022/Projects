@@ -170,6 +170,8 @@ GOS_STATIC u16_t cpuLoadArray [128];
 GOS_STATIC u16_t cpuLoadIdx = 0u;
 GOS_STATIC app_tftWindowState_t windowState = WINDOW_STATE_MONITORING;
 GOS_STATIC u8_t displayBrightness = 50;
+GOS_STATIC u16_t monitoringRows = 0u;
+GOS_STATIC volatile bool_t stepBtnPending = GOS_FALSE;
 
 /**
  * Labels for tasks.
@@ -207,7 +209,7 @@ GOS_STATIC gos_taskDescriptor_t tftTaskDesc =
 {
 	.taskFunction	    = APP_TFT_Task,
 	.taskName		    = "app_tft_task",
-	.taskStackSize 	    = 0x1000,
+	.taskStackSize 	    = 0x1600,
 	.taskPriority 	    = 80,
 	.taskPrivilegeLevel	= GOS_TASK_PRIVILEGE_USER
 };
@@ -309,14 +311,14 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 	g_registerWindow(&statusWindow);
 
 	svl_pdhGetSwInfo(&swInfo);
-	sprintf(labelText, TEXT_SW_VER"%02d.%02d.%02d",
+	snprintf(labelText, sizeof(labelText), TEXT_SW_VER"%02d.%02d.%02d",
 			swInfo.appSwVerInfo.major,
 			swInfo.appSwVerInfo.minor,
 			swInfo.appSwVerInfo.build
 		);
 	g_labelSetText(&projVerLabel, labelText);
 
-	sprintf(labelText, TEXT_SW_DATE"%04d-%02d-%02d",
+	snprintf(labelText, sizeof(labelText), TEXT_SW_DATE"%04d-%02d-%02d",
 			swInfo.appSwVerInfo.date.years,
 			swInfo.appSwVerInfo.date.months,
 			swInfo.appSwVerInfo.date.days
@@ -356,7 +358,7 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 		taskIdLabels[i].yTop = yOffset;
 		taskIdLabels[i].backColor = ILI9341_WHITE;
 		taskIdLabels[i].foreColor = ILI9341_BLACK;
-		sprintf(taskIdLabels[i].text, "0x%04x", taskData.taskId);
+		snprintf(taskIdLabels[i].text, LABEL_TEXT_MAX_LENGTH, "0x%04x", taskData.taskId);
     	// Add label to window.
     	g_windowAddLabel(&monitoringWindow, &taskIdLabels[i]);
 
@@ -366,7 +368,7 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
         monitoringTaskNameLabels[i].yTop = yOffset;
         monitoringTaskNameLabels[i].backColor = ILI9341_WHITE;
         monitoringTaskNameLabels[i].foreColor = ILI9341_BLACK;
-        strcpy(monitoringTaskNameLabels[i].text, taskData.taskName);
+		snprintf(monitoringTaskNameLabels[i].text, LABEL_TEXT_MAX_LENGTH, "%s", taskData.taskName);
     	// Add label to window.
     	g_windowAddLabel(&monitoringWindow, &monitoringTaskNameLabels[i]);
 
@@ -376,11 +378,12 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
     	cpuUsageLabels[i].yTop = yOffset;
     	cpuUsageLabels[i].backColor = ILI9341_WHITE;
     	cpuUsageLabels[i].foreColor = ILI9341_BLACK;
-		sprintf(cpuUsageLabels[i].text, "%u.%02u %%  ", taskData.taskCpuUsage / 100, taskData.taskCpuUsage % 100);
+		snprintf(cpuUsageLabels[i].text, LABEL_TEXT_MAX_LENGTH, "%u.%02u %%  ", taskData.taskCpuUsage / 100u, taskData.taskCpuUsage % 100u);
     	// Add label to window.
     	g_windowAddLabel(&monitoringWindow, &cpuUsageLabels[i]);
 
         yOffset += 15;
+		monitoringRows++;
 	}
 
 	(void_t) gos_taskRemovePrivilege(currentId, GOS_TASK_PRIVILEGE_KERNEL);
@@ -401,6 +404,24 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 
 	for (;;)
 	{
+		if (stepBtnPending == GOS_TRUE)
+		{
+			stepBtnPending = GOS_FALSE;
+
+			if (statusWindow.isVisible == GOS_TRUE)
+			{
+				g_windowHide(&statusWindow);
+				g_windowShow(&monitoringWindow);
+				windowState = WINDOW_STATE_MONITORING;
+			}
+			else
+			{
+				g_windowHide(&monitoringWindow);
+				g_windowShow(&statusWindow);
+				windowState = WINDOW_STATE_STATUS;
+			}
+		}
+
 		switch(windowState)
 		{
 			case WINDOW_STATE_MONITORING:
@@ -409,11 +430,11 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 				if ((gos_kernelGetSysTicks() - lastMonitoringTick) > 250)
 				{
 					(void_t) gos_taskAddPrivilege(currentId, GOS_TASK_PRIVILEGE_KERNEL);
-					for (u16_t i = 0; i < numOfTasks; i++)
+					for (u16_t i = 0; i < monitoringRows; i++)
 					{
 						(void_t) gos_taskGetDataByIndex(i, &taskData);
 
-						sprintf(labelText, "%u.%02u %%  ",
+						snprintf(labelText, sizeof(labelText), "%u.%02u %%  ",
 								(taskData.taskCpuUsage / 100),
 								(taskData.taskCpuUsage % 100)
 							);
@@ -432,7 +453,7 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 				{
 					// Update time label.
 					gos_timeGet(&actualTime);
-					sprintf(labelText, TEXT_ACT_TIME"%04d-%02d-%02d %02d:%02d:%02d",
+					snprintf(labelText, sizeof(labelText), TEXT_ACT_TIME"%04d-%02d-%02d %02d:%02d:%02d",
 							actualTime.years,
 							actualTime.months,
 							actualTime.days,
@@ -444,7 +465,7 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 
 					// Update uptime label
 					gos_runTimeGet(&runTime);
-					sprintf(labelText, TEXT_RUNTIME"%02d days %02d:%02d:%02d",
+					snprintf(labelText, sizeof(labelText), TEXT_RUNTIME"%02d days %02d:%02d:%02d",
 							runTime.days,
 							runTime.hours,
 							runTime.minutes,
@@ -467,7 +488,7 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 						(void_t) gos_mutexUnlock(&mdiMutex);
 					}
 
-					sprintf(labelText, TEXT_TEMP"%u.%02u C  ",
+					snprintf(labelText, sizeof(labelText), TEXT_TEMP"%u.%02u C  ",
 							(temperatureValue / 10), (temperatureValue % 10)
 						);
 					g_labelSetText(&tempLabel, labelText);
@@ -486,7 +507,7 @@ GOS_STATIC void_t APP_TFT_Task (void_t)
 
 				if ((gos_kernelGetSysTicks() - lastCpuTick) > 500)
 				{
-					sprintf(labelText, TEXT_CPU_LOAD"%u.%02u %%  ",
+					snprintf(labelText, sizeof(labelText), TEXT_CPU_LOAD"%u.%02u %%  ",
 							(cpuLoad / 100), (cpuLoad % 100)
 						);
 					g_labelSetText(&cpuLabel, labelText);
@@ -533,18 +554,7 @@ GOS_STATIC void_t APP_TFT_OkButtonReleased (void_t)
 
 GOS_STATIC void_t app_tftStepButtonPressed (void_t)
 {
-	if (statusWindow.isVisible == GOS_TRUE)
-	{
-		g_windowHide(&statusWindow);
-		g_windowShow(&monitoringWindow);
-		windowState = WINDOW_STATE_MONITORING;
-	}
-	else
-	{
-		g_windowHide(&monitoringWindow);
-		g_windowShow(&statusWindow);
-		windowState = WINDOW_STATE_STATUS;
-	}
+    stepBtnPending = GOS_TRUE;
 }
 
 GOS_STATIC void_t app_tftIncBrightnessPressed (void_t)

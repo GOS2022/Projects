@@ -144,10 +144,61 @@ gos_result_t drv_dmaInit (void_t)
  */
 bool_t drv_dmaIsBusy (drv_dmaDescriptor_t* pDMA)
 {
+    u8_t   idx = 0u;
+    bool_t isStreamInstanceValid = GOS_FALSE;
+
+    if (pDMA == NULL)
+    {
+        return GOS_FALSE;
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
     /*
-     * Function code.
+     * Descriptor must be in RAM (protect against corrupted pointers).
      */
-    return HAL_DMA_STATE_BUSY == HAL_DMA_GetState(&pDMA->hdma) ? GOS_TRUE : GOS_FALSE;
+    if ((((u32_t)pDMA) < RAM_START) || (((u32_t)pDMA) >= MAIN_STACK))
+    {
+        return GOS_FALSE;
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    if (pDMA->hdma.Instance == NULL)
+    {
+        return GOS_FALSE;
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    /* Instance must match one of the configured DMA stream register bases. */
+    for (idx = 0u; idx < DRV_DMA_X_STREAM_NUM; idx++)
+    {
+        if (pDMA->hdma.Instance == dmaStreamLut[idx])
+        {
+            isStreamInstanceValid = GOS_TRUE;
+            break;
+        }
+        else
+        {
+            // Continue.
+        }
+    }
+
+    if (isStreamInstanceValid == GOS_FALSE)
+    {
+        return GOS_FALSE;
+    }
+    else
+    {
+        return ((pDMA->hdma.Instance->CR & DMA_SxCR_EN) != 0u) ? GOS_TRUE : GOS_FALSE;
+    }
 }
 
 /*

@@ -15,7 +15,7 @@
 //! @file       gos_kernel.h
 //! @author     Ahmed Gazar
 //! @date       2026-07-19
-//! @version    1.24
+//! @version    1.25
 //!
 //! @brief      GOS kernel header.
 //! @details    The GOS kernel is the core of the GOS system. It contains the basic type
@@ -94,6 +94,7 @@
 //                                               gos_kernelGetLastFaultSnapshot()
 //                                          +    EXC_RETURN and stack diagnostic macros
 //                                               added for Cortex-M fault handling
+// 1.25       2026-07-19    Ahmed Gazar     +    gos_taskRestart() added
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -1146,6 +1147,25 @@ gos_result_t gos_taskUnblock (
  * @retval  #GOS_ERROR   Task is already a zombie.
  */
 gos_result_t gos_taskDelete (
+        gos_tid_t taskId
+        );
+
+/**
+ * @brief   Restarts the given task from its entry point.
+ * @details Rebuilds the initial stack frame of the target task so it starts
+ *          execution again from the beginning of its task function at next
+ *          scheduling point.
+ *
+ * @param[in] taskId ID of the task to restart.
+ *
+ * @return  Result of task restart.
+ *
+ * @retval  #GOS_SUCCESS Task restart successful.
+ * @retval  #GOS_ERROR   Task ID is invalid, task is not registered, target is idle
+ *                       task, caller has no privilege, or restart cannot be done in
+ *                       current execution context.
+ */
+gos_result_t gos_taskRestart (
         gos_tid_t taskId
         );
 

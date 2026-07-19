@@ -15,7 +15,7 @@
 //! @file       gos_task.c
 //! @author     Ahmed Gazar
 //! @date       2026-07-19
-//! @version    1.5
+//! @version    1.6
 //!
 //! @brief      GOS task source.
 //! @details    For a more detailed description of this module, please refer to @ref gos_kernel.h
@@ -41,6 +41,7 @@
 //                                               reworked to avoid atomic-section exit hazards
 //                                          *    Descriptor/name/data handling hardened
 //                                               (NULL checks, bounded copy, safer snapshot copy)
+// 1.6        2026-07-19    Ahmed Gazar     +    gos_taskRestart() added
 //*************************************************************************************************
 //
 // Copyright (c) 2023 Ahmed Gazar
@@ -782,6 +783,161 @@ GOS_INLINE gos_result_t gos_taskDelete (gos_tid_t taskId)
     }
 
     return taskDeleteResult;
+}
+
+/*
+ * Function: gos_taskRestart
+ */
+gos_result_t gos_taskRestart (gos_tid_t taskId)
+{
+    /*
+     * Local variables.
+     */
+    gos_result_t taskRestartResult = GOS_ERROR;
+    u32_t        taskIndex         = 0u;
+    u32_t        idx               = 0u;
+    u32_t        taskStackOffset   = GLOBAL_STACK;
+    u32_t*       psp               = NULL;
+    bool_t       privilegeError    = GOS_FALSE;
+    bool_t       needReschedule    = GOS_FALSE;
+#if (GOS_STACK_DIAG_ENABLE == 1u)
+    u32_t*       pStackBottom      = NULL;
+    u32_t*       pStackTop         = NULL;
+    u32_t*       pFill             = NULL;
+#endif
+
+    /*
+     * Function code.
+     */
+    GOS_ATOMIC_ENTER
+    if ((taskId > GOS_DEFAULT_TASK_ID) && ((taskId - GOS_DEFAULT_TASK_ID) < CFG_TASK_MAX_NUMBER))
+    {
+        taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
+
+        if (((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_MANIPULATE) ==
+                GOS_PRIV_TASK_MANIPULATE) ||
+            (currentTaskIndex == taskIndex) ||
+            (inIsr > 0u))
+        {
+            if ((taskDescriptors[taskIndex].taskId != GOS_INVALID_TASK_ID) && (taskIndex > 0u))
+            {
+                if ((taskIndex == currentTaskIndex) && (inIsr == 0u))
+                {
+                    /*
+                     * Restarting the currently running task from thread mode would
+                     * overwrite its active stack while this function is executing.
+                     */
+                }
+                else
+                {
+                    for (idx = 0u; idx < taskIndex; idx++)
+                    {
+                        taskStackOffset += taskDescriptors[idx].taskStackSize;
+                    }
+
+                    if ((taskStackOffset + taskDescriptors[taskIndex].taskStackSize) <= RAM_SIZE)
+                    {
+                        psp = (u32_t*)(MAIN_STACK - taskStackOffset);
+
+#if (GOS_STACK_DIAG_ENABLE == 1u)
+                        pStackTop    = (u32_t*)(MAIN_STACK - taskStackOffset);
+                        pStackBottom = (u32_t*)((u32_t)pStackTop - taskDescriptors[taskIndex].taskStackSize);
+                        for (pFill = pStackBottom; pFill < pStackTop; pFill++)
+                        {
+                            *pFill = GOS_STACK_FILL_PATTERN;
+                        }
+#endif
+
+                        *(--psp) = GOS_XPSR_T_BIT;
+                        *(--psp) = ((u32_t)taskDescriptors[taskIndex].taskFunction | 1u);
+                        *(--psp) = ((u32_t)gos_kernelTaskExitError | 1u);
+                        *(--psp) = 0x12121212u;
+                        *(--psp) = 0x03030303u;
+                        *(--psp) = 0x02020202u;
+                        *(--psp) = 0x01010101u;
+                        *(--psp) = 0x00000000u;
+                        *(--psp) = 0x00000000u;
+                        *(--psp) = GOS_EXC_RETURN_THREAD_PSP;
+                        *(--psp) = 0x11111111u;
+                        *(--psp) = 0x10101010u;
+                        *(--psp) = 0x09090909u;
+                        *(--psp) = 0x08080808u;
+                        *(--psp) = 0x07070707u;
+                        *(--psp) = 0x06060606u;
+                        *(--psp) = 0x05050505u;
+                        *(--psp) = 0x04040404u;
+
+                        taskDescriptors[taskIndex].taskPsp              = (u32_t)psp;
+                        taskDescriptors[taskIndex].taskState            = GOS_TASK_READY;
+                        taskDescriptors[taskIndex].taskPreviousState    = GOS_TASK_READY;
+                        taskDescriptors[taskIndex].taskSleepTicks       = 0u;
+                        taskDescriptors[taskIndex].taskSleepTickCounter = 0u;
+                        taskDescriptors[taskIndex].taskBlockTicks       = 0u;
+                        taskDescriptors[taskIndex].taskBlockTickCounter = 0u;
+                        taskDescriptors[taskIndex].taskRunCounter       = 0u;
+                        taskDescriptors[taskIndex].taskCsCounter        = 0u;
+                        taskDescriptors[taskIndex].taskStackSizeMaxUsage = 0u;
+                        taskDescriptors[taskIndex].taskCpuUsageMax      = 0u;
+                        taskDescriptors[taskIndex].taskCpuUsage         = 0u;
+                        taskDescriptors[taskIndex].taskCpuMonitoringUsage = 0u;
+                        (void_t) memset(&taskDescriptors[taskIndex].taskRunTime, 0, sizeof(gos_runtime_t));
+                        (void_t) memset(&taskDescriptors[taskIndex].taskMonitoringRunTime, 0, sizeof(gos_runtime_t));
+
+                        taskDescriptors[taskIndex].taskStackOverflowThreshold =
+                                taskDescriptors[taskIndex].taskPsp -
+                                taskDescriptors[taskIndex].taskStackSize +
+                                GOS_STACK_OVERFLOW_THRESHOLD;
+
+                        taskRestartResult = GOS_SUCCESS;
+                        needReschedule = (currentTaskIndex == taskIndex) ? GOS_TRUE : GOS_FALSE;
+                    }
+                    else
+                    {
+                        // Nothing to do.
+                    }
+                }
+            }
+            else
+            {
+                // Nothing to do.
+            }
+        }
+        else
+        {
+            privilegeError = GOS_TRUE;
+        }
+    }
+    else
+    {
+        // Task ID error.
+    }
+    GOS_ATOMIC_EXIT
+
+    if (privilegeError == GOS_TRUE)
+    {
+        gos_errorHandler(
+                GOS_ERROR_LEVEL_OS_FATAL,
+                __func__,
+                __LINE__,
+                "<%s> has no privilege to restart <%s>!",
+                taskDescriptors[currentTaskIndex].taskName,
+                taskDescriptors[taskIndex].taskName);
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    if (needReschedule == GOS_TRUE)
+    {
+        gos_kernelReschedule(GOS_UNPRIVILEGED);
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    return taskRestartResult;
 }
 
 /*

@@ -62,6 +62,7 @@ static void ili9341_fill_quarter_circle(ili9341_color_t color,
 
 extern ili9341_t lcd;
 extern GOS_CONST drv_spiDescriptor_t spiConfig [];
+extern u32_t spiConfigSize;
 //extern gos_mutex_t ili9341Mutex;
 // ------------------------------------------------------- exported functions --
 
@@ -121,16 +122,33 @@ void ili9341_spi_tft_set_address_rect(
 
 void ili9341_transmit_wait()
 {
-  //if (NULL == lcd)
-  //  { return; }
+  u32_t idx = 0u;
+  drv_dmaDescriptor_t* pTxDma = NULL;
 
-  //while (HAL_DMA_STATE_BUSY == HAL_DMA_GetState(lcd->spi_hal->hdmatx))
-  //while(spi_driver_is_dma_busy() == GOS_TRUE)
-  //  { continue; }
-	while (drv_dmaIsBusy(spiConfig[1].dmaConfigTx) == GOS_TRUE)
-	{
-		continue;
-	}
+  for (idx = 0u; idx < (spiConfigSize / sizeof(drv_spiDescriptor_t)); idx++)
+  {
+    if (spiConfig[idx].periphInstance == DRV_SPI_INSTANCE_3)
+    {
+      pTxDma = spiConfig[idx].dmaConfigTx;
+      break;
+    }
+    else
+    {
+      // Continue.
+    }
+  }
+
+  if (pTxDma != NULL)
+  {
+    while (drv_dmaIsBusy(pTxDma) == GOS_TRUE)
+    {
+      continue;
+    }
+  }
+  else
+  {
+    // SPI3 has no TX DMA configured.
+  }
 }
 
 void ili9341_transmit_color(uint16_t size,

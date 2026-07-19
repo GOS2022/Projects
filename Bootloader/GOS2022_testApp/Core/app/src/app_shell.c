@@ -34,6 +34,8 @@ GOS_STATIC void_t app_shellGetAppsHandler (char_t** params);
 GOS_STATIC void_t app_shellHexDumpHandler (char_t** params);
 GOS_STATIC void_t app_shellExtractParameters (char_t** params, app_shellParam_t* pParam);
 
+GOS_STATIC void_t app_testTask (void_t);
+
 GOS_STATIC gos_tid_t shellTaskId;
 
 GOS_STATIC gos_shellCommand_t commands [] =
@@ -69,6 +71,15 @@ GOS_STATIC gos_taskDescriptor_t app_shellTaskDesc =
 	.taskPrivilegeLevel	= GOS_TASK_PRIVILEGE_KERNEL
 };
 
+GOS_STATIC gos_taskDescriptor_t app_testTaskDesc =
+{
+	.taskFunction       = app_testTask,
+	.taskName 		    = "app_testTask",
+	.taskStackSize 	    = 0x400,
+	.taskPriority 	    = 75,
+	.taskPrivilegeLevel	= GOS_TASK_PRIVILEGE_KERNEL
+};
+
 gos_result_t app_shellInit (void_t)
 {
 	gos_result_t shellInitResult = GOS_SUCCESS;
@@ -76,6 +87,7 @@ gos_result_t app_shellInit (void_t)
 	shellInitResult &= gos_shellRegisterCommands(commands, sizeof(commands));
 	shellInitResult &= gos_shellRegisterUser("admin", "admin123", GOS_SHELL_USER_PRIVILEGE_USER);
 	shellInitResult &= gos_taskRegister(&app_shellTaskDesc, &shellTaskId);
+	shellInitResult &= gos_taskRegister(&app_testTaskDesc, NULL);
 
 	if (shellInitResult != GOS_SUCCESS)
 	{
@@ -83,6 +95,19 @@ gos_result_t app_shellInit (void_t)
 	}
 
 	return shellInitResult;
+}
+
+GOS_STATIC void_t app_testTask (void_t)
+{
+	u16_t counter = 0u;
+
+	gos_traceTrace(GOS_TRUE, "Hello from app_testTask!\r\n");
+
+	for (;;)
+	{
+		counter++;
+		gos_taskSleep(500);
+	}
 }
 
 GOS_STATIC void_t app_shellTask (void_t)
@@ -96,6 +121,7 @@ GOS_STATIC void_t app_shellTask (void_t)
 		if (gos_messageRx(msgIdArray, &rxMessage, GOS_MESSAGE_ENDLESS_TMO) == GOS_SUCCESS)
 		{
 			(void_t) gos_shellDriverTransmitString("\r\n");
+			gos_taskRestart(app_testTaskDesc.taskId);
 
 			// Process message.
 			switch (rxMessage.messageId)

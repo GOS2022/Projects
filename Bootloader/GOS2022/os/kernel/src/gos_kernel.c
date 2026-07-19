@@ -329,7 +329,7 @@ GOS_STATIC void_t  gos_kernelSelectNextTask           (void_t);
 GOS_STATIC char_t* gos_kernelGetTaskStateString       (gos_taskState_t taskState);
 GOS_STATIC void_t  gos_kernelProcessorReset           (void_t);
 GOS_STATIC u32_t   gos_kernelPendSvHandleSpecialCases (void_t);
-GOS_STATIC void_t  gos_kernelTaskExitError            (void_t);
+           void_t  gos_kernelTaskExitError            (void_t);
 GOS_STATIC void_t  gos_kernelFaultCapture             (u32_t* pStackFrame, u32_t excReturn, u32_t faultSource);
 GOS_STATIC u32_t   gos_kernelNormalizeTaskContext     (u32_t taskIndex, u32_t psp);
 GOS_STATIC bool_t  gos_kernelIsTaskPspInRange         (u32_t taskIndex, u32_t psp);
@@ -1305,7 +1305,7 @@ GOS_STATIC void_t gos_kernelCheckTaskStack (void_t)
     __asm volatile ("MRS %0, psp\n\t" : "=r" (sp));
 
     stackTop = taskDescriptors[currentTaskIndex].taskStackOverflowThreshold +
-               taskDescriptors[currentTaskIndex].taskStackSize - GOS_STACK_OVERFLOW_THRESHOLD;
+               taskDescriptors[currentTaskIndex].taskStackSize - 64;
 
     if ((sp == 0u) ||
         (sp < taskDescriptors[currentTaskIndex].taskStackOverflowThreshold) ||
@@ -1813,7 +1813,7 @@ GOS_STATIC void_t gos_kernelProcessorReset (void_t)
  *
  * @return  -
  */
-GOS_STATIC void_t gos_kernelTaskExitError (void_t)
+void_t gos_kernelTaskExitError (void_t)
 {
     /*
      * Function code.

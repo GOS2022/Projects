@@ -106,7 +106,7 @@ GOS_STATIC gos_taskDescriptor_t g_taskDescriptor =
 {
 	.taskFunction       = g_task,
 	.taskName           = "graphics_driver_task",
-	.taskStackSize      = 0x600,
+	.taskStackSize      = 0x1600,
 	.taskPriority       = 200,
 	.taskPrivilegeLevel = GOS_TASK_PRIVILEGE_USER
 };
@@ -387,14 +387,21 @@ GOS_STATIC void_t g_redrawHandler (g_windowEvent_t event, gos_message_t* pEventM
 			{
 				for (windowIndex = 0u; windowIndex < G_DRIVER_WINDOW_MAX_NUM; windowIndex++)
 				{
-					if (pWindows[windowIndex]->zIndex == zIndex &&
-						pWindows[windowIndex]->isVisible == GOS_TRUE)
+					if ((pWindows[windowIndex] != NULL) &&
+						(pWindows[windowIndex]->zIndex == zIndex) &&
+						(pWindows[windowIndex]->isVisible == GOS_TRUE))
 					{
 						g_windowDraw(pWindows[windowIndex]);
 						breakLoop = GOS_TRUE;
 						break;
 					}
+					else
+					{
+						// Nothing to do.
+					}
 				}
+
+				zIndex++;
 			}
 			break;
 		}
