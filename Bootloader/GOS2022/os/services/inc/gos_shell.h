@@ -207,5 +207,5 @@ gos_result_t gos_shellEchoOff (
  * @retval  #GOS_SUCCESS Prompt printed successfully on shell output.
  * @retval  #GOS_ERROR   There was a driver issue when printing.
  */
-gos_result_t gos_shellForcePrintPromt (void_t);
+gos_result_t gos_shellForcePrintPrompt (void_t);
 #endif

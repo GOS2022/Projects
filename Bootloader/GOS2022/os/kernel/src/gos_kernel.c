@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_kernel.c
 //! @author     Ahmed Gazar
-//! @date       2025-03-22
-//! @version    1.21
+//! @date       2026-07-19
+//! @version    1.22
 //!
 //! @brief      GOS kernel source.
 //! @details    For a more detailed description of this module, please refer to @ref gos_kernel.h
@@ -75,6 +75,17 @@
 // 1.19       2024-04-17    Ahmed Gazar     *    Task block timeout check fixed
 // 1.20       2024-04-24    Ahmed Gazar     -    Process service include removed
 // 1.21       2025-03-22    Ahmed Gazar     +    gos_kernelRegisterPreResetHook() added
+// 1.22       2026-07-19    Ahmed Gazar     +    Fault snapshot support added
+//                                               (fault registers, task context,
+//                                               snapshot getter/validity APIs)
+//                                          *    Fault handlers reworked to capture
+//                                               exception stack frame and source
+//                                          *    PendSV/SVC control flow updated
+//                                               (special-case handling and direct
+//                                               SVC #255 behavior)
+//                                          *    Stack/context diagnostics enhanced
+//                                               (bounds helpers, context validation,
+//                                               EXC_RETURN/FPU-aware handling)
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -119,6 +130,31 @@
  * Interrupt Control and State Register.
  */
 #define ICSR                    *( (volatile u32_t*) 0xE000ED04u )
+
+/**
+ * Configurable Fault Status Register.
+ */
+#define CFSR                    *( (volatile u32_t*) 0xE000ED28u )
+
+/**
+ * HardFault Status Register.
+ */
+#define HFSR                    *( (volatile u32_t*) 0xE000ED2Cu )
+
+/**
+ * MemManage Fault Address Register.
+ */
+#define MMFAR                   *( (volatile u32_t*) 0xE000ED34u )
+
+/**
+ * BusFault Address Register.
+ */
+#define BFAR                    *( (volatile u32_t*) 0xE000ED38u )
+
+/**
+ * Auxiliary Fault Status Register.
+ */
+#define AFSR                    *( (volatile u32_t*) 0xE000ED3Cu )
 
 /**
  * Task dump separator line.
@@ -220,7 +256,7 @@ bool_t                              isKernelRunning              = GOS_FALSE;
 /**
  * System tick value.
  */
-GOS_STATIC u32_t                    sysTicks                     = 0u;
+GOS_STATIC volatile u32_t           sysTicks                     = 0u;
 
 /**
  * System timer value for run-time calculations.
@@ -267,6 +303,16 @@ GOS_STATIC bool_t                   privilegedModeSetRequired    = GOS_FALSE;
  */
 GOS_STATIC u32_t                    previousTick                 = 0u;
 
+/**
+ * Last captured fault snapshot.
+ */
+GOS_STATIC volatile gos_faultSnapshot_t kernelLastFaultSnapshot = {0};
+
+/**
+ * Fault snapshot validity.
+ */
+GOS_STATIC volatile bool_t          kernelFaultValid = GOS_FALSE;
+
 /*
  * External variables
  */
@@ -275,17 +321,24 @@ GOS_EXTERN gos_taskDescriptor_t     taskDescriptors [CFG_TASK_MAX_NUMBER];
 /*
  * Function prototypes
  */
-GOS_STATIC void_t  gos_kernelCheckTaskStack     (void_t);
-GOS_STATIC u32_t   gos_kernelGetCurrentPsp      (void_t);
-GOS_STATIC void_t  gos_kernelSaveCurrentPsp     (u32_t psp);
-GOS_STATIC void_t  gos_kernelSelectNextTask     (void_t);
-GOS_STATIC char_t* gos_kernelGetTaskStateString (gos_taskState_t taskState);
-GOS_STATIC void_t  gos_kernelProcessorReset     (void_t);
+GOS_STATIC void_t  gos_kernelCheckTaskStack           (void_t);
+GOS_STATIC void_t  gos_kernelGetTaskStackBounds       (u32_t taskIndex, u32_t* pBottom, u32_t* pTop);
+GOS_STATIC u32_t   gos_kernelGetCurrentPsp            (void_t);
+GOS_STATIC void_t  gos_kernelSaveCurrentPsp           (u32_t psp);
+GOS_STATIC void_t  gos_kernelSelectNextTask           (void_t);
+GOS_STATIC char_t* gos_kernelGetTaskStateString       (gos_taskState_t taskState);
+GOS_STATIC void_t  gos_kernelProcessorReset           (void_t);
+GOS_STATIC u32_t   gos_kernelPendSvHandleSpecialCases (void_t);
+GOS_STATIC void_t  gos_kernelTaskExitError            (void_t);
+GOS_STATIC void_t  gos_kernelFaultCapture             (u32_t* pStackFrame, u32_t excReturn, u32_t faultSource);
+GOS_STATIC u32_t   gos_kernelNormalizeTaskContext     (u32_t taskIndex, u32_t psp);
+GOS_STATIC bool_t  gos_kernelIsTaskPspInRange         (u32_t taskIndex, u32_t psp);
+GOS_STATIC bool_t  gos_kernelIsCodeAddressValid       (u32_t address);
 
 /*
  * External functions
  */
-GOS_EXTERN void_t  gos_idleTask                 (void_t);
+GOS_EXTERN void_t  gos_idleTask                       (void_t);
 
 /*
  * Function: gos_kernelInit
@@ -297,6 +350,12 @@ gos_result_t gos_kernelInit (void_t)
      */
     gos_result_t  initResult = GOS_ERROR;
     u16_t         taskIndex  = 1u;
+    u32_t*        psp;
+#if (GOS_STACK_DIAG_ENABLE == 1u)
+    u32_t*        pStackBottom = NULL;
+    u32_t*        pStackTop    = NULL;
+    u32_t*        pFill        = NULL;
+#endif
 
     /*
      * Function code.
@@ -312,17 +371,29 @@ gos_result_t gos_kernelInit (void_t)
     }
 
     // Register idle task PSP.
-    u32_t* psp = (u32_t*)(MAIN_STACK - GLOBAL_STACK);
+    psp = (u32_t*)(MAIN_STACK - GLOBAL_STACK);
+
+#if (GOS_STACK_DIAG_ENABLE == 1u)
+    // Poison idle task stack region too (idle is not registered via gos_taskRegister).
+    pStackTop    = psp;
+    pStackBottom = (u32_t*)((u32_t)pStackTop - taskDescriptors[0].taskStackSize);
+    for (pFill = pStackBottom; pFill < pStackTop; pFill++)
+    {
+        *pFill = GOS_STACK_FILL_PATTERN;
+    }
+#endif
 
     // Fill dummy stack frame.
-    *(--psp) = 0x01000000u; // Dummy xPSR, just enable Thumb State bit;
-    *(--psp) = (u32_t) gos_idleTask; // PC
-    *(--psp) = 0xFFFFFFFDu; // LR with EXC_RETURN to return to Thread using PSP
+    *(--psp) = GOS_XPSR_T_BIT; // Dummy xPSR, Thumb state.
+    *(--psp) = ((u32_t)gos_idleTask | 1u); // PC
+    *(--psp) = ((u32_t)gos_kernelTaskExitError | 1u); // LR in thread mode
     *(--psp) = 0x12121212u; // Dummy R12
     *(--psp) = 0x03030303u; // Dummy R3
     *(--psp) = 0x02020202u; // Dummy R2
     *(--psp) = 0x01010101u; // Dummy R1
     *(--psp) = 0x00000000u; // Dummy R0
+    *(--psp) = 0x00000000u; // Alignment padding word
+    *(--psp) = GOS_EXC_RETURN_THREAD_PSP; // Initial EXC_RETURN
     *(--psp) = 0x11111111u; // Dummy R11
     *(--psp) = 0x10101010u; // Dummy R10
     *(--psp) = 0x09090909u; // Dummy R9
@@ -336,7 +407,7 @@ gos_result_t gos_kernelInit (void_t)
     taskDescriptors[0].taskPsp = (u32_t)psp;
 
     // Calculate stack overflow threshold.
-    taskDescriptors[0].taskStackOverflowThreshold = taskDescriptors[0].taskPsp - taskDescriptors[0].taskStackSize + 64;
+    taskDescriptors[0].taskStackOverflowThreshold = taskDescriptors[0].taskPsp - taskDescriptors[0].taskStackSize + GOS_STACK_OVERFLOW_THRESHOLD;
 
     // Enable Fault Handlers
     gos_ported_enableFaultHandlers();
@@ -357,6 +428,7 @@ gos_result_t gos_kernelStart (void_t)
      * Local variables.
      */
     gos_result_t kernelStartResult = GOS_ERROR;
+    gos_task_t   firstTask;
 
     /*
      * Function code.
@@ -367,13 +439,13 @@ gos_result_t gos_kernelStart (void_t)
     // Do low-level initialization.
     gos_ported_kernelStartInit();
 
-    // Get the handler of the first task by tracing back from PSP which is at R4 slot.
-    gos_task_t firstTask = taskDescriptors[currentTaskIndex].taskFunction;
+    firstTask = taskDescriptors[currentTaskIndex].taskFunction;
 
     // Initialize system timer value.
     (void_t) gos_timerDriverSysTimerGet(&sysTimerValue);
 
-    // Enable scheduling.
+    previousTick = sysTicks;
+
     GOS_ENABLE_SCHED
 
     // Set kernel running flag.
@@ -578,7 +650,12 @@ u16_t gos_kernelGetCpuUsage (void_t)
     /*
      * Function code.
      */
-    return (10000 - taskDescriptors[0].taskCpuMonitoringUsage);
+    if (taskDescriptors[0].taskCpuMonitoringUsage >= 10000u)
+    {
+        return 0u;
+    }
+
+    return (u16_t)(10000u - taskDescriptors[0].taskCpuMonitoringUsage);
 }
 
 /*
@@ -611,7 +688,15 @@ void_t gos_kernelPrivilegedModeSetRequired (void_t)
      */
     privilegedModeSetRequired = GOS_TRUE;
     gos_kernelReschedule(GOS_UNPRIVILEGED);
-    kernelPrivilegedHookFunction();
+
+    if (kernelPrivilegedHookFunction != NULL)
+    {
+        kernelPrivilegedHookFunction();
+    }
+    else
+    {
+        // Nothing to do.
+    }
 }
 
 /*
@@ -649,7 +734,10 @@ GOS_INLINE void_t gos_kernelDelayMs (u16_t milliseconds)
     /*
      * Function code.
      */
-    while ((u16_t)(sysTicks - sysTickVal) < milliseconds);
+    while ((u32_t)(sysTicks - sysTickVal) < (u32_t)milliseconds)
+    {
+        // Busy wait.
+    }
 }
 
 /*
@@ -660,18 +748,32 @@ GOS_INLINE void_t gos_kernelCalculateTaskCpuUsages (bool_t isResetRequired)
     /*
      * Local variables.
      */
-    u16_t taskIndex           = 0u;
-    u32_t systemConvertedTime = 0u;
-    u32_t taskConvertedTime   = 0u;
+    u16_t  taskIndex                  = 0u;
+    u64_t  systemConvertedTime        = 0u;
+    u64_t  taskConvertedTime          = 0u;
+    u64_t  calculatedCpuUsage         = 0u;
+    bool_t isMeasurementWindowElapsed = GOS_FALSE;
 
     /*
      * Function code.
      */
     // Calculate in microseconds.
-    systemConvertedTime = monitoringTime.minutes * 60 * 1000 * 1000 +
-                          monitoringTime.seconds * 1000 * 1000 +
-                          monitoringTime.milliseconds * 1000 +
-                          monitoringTime.microseconds;
+    systemConvertedTime =
+            ((u64_t)monitoringTime.days         * 24ULL * 60ULL * 60ULL * 1000000ULL) +
+            ((u64_t)monitoringTime.hours        * 60ULL * 60ULL * 1000000ULL) +
+            ((u64_t)monitoringTime.minutes      * 60ULL * 1000000ULL) +
+            ((u64_t)monitoringTime.seconds      * 1000000ULL) +
+            ((u64_t)monitoringTime.milliseconds * 1000ULL) +
+            ((u64_t)monitoringTime.microseconds);
+
+    if ((isResetRequired == GOS_TRUE) || (systemConvertedTime >= 1000000ULL))
+    {
+        isMeasurementWindowElapsed = GOS_TRUE;
+    }
+    else
+    {
+        // Nothing to do.
+    }
 
     for (taskIndex = 0u; taskIndex < CFG_TASK_MAX_NUMBER; taskIndex++)
     {
@@ -684,19 +786,33 @@ GOS_INLINE void_t gos_kernelCalculateTaskCpuUsages (bool_t isResetRequired)
             // Continue.
         }
 
-        taskConvertedTime   = taskDescriptors[taskIndex].taskMonitoringRunTime.minutes * 60 * 1000 * 1000 +
-                              taskDescriptors[taskIndex].taskMonitoringRunTime.seconds * 1000 * 1000 +
-                              taskDescriptors[taskIndex].taskMonitoringRunTime.milliseconds * 1000 +
-                              taskDescriptors[taskIndex].taskMonitoringRunTime.microseconds;
+        taskConvertedTime =
+                ((u64_t)taskDescriptors[taskIndex].taskMonitoringRunTime.days         * 24ULL * 60ULL * 60ULL * 1000000ULL) +
+                ((u64_t)taskDescriptors[taskIndex].taskMonitoringRunTime.hours        * 60ULL * 60ULL * 1000000ULL) +
+                ((u64_t)taskDescriptors[taskIndex].taskMonitoringRunTime.minutes      * 60ULL * 1000000ULL) +
+                ((u64_t)taskDescriptors[taskIndex].taskMonitoringRunTime.seconds      * 1000000ULL) +
+                ((u64_t)taskDescriptors[taskIndex].taskMonitoringRunTime.milliseconds * 1000ULL) +
+                ((u64_t)taskDescriptors[taskIndex].taskMonitoringRunTime.microseconds);
 
-        if (systemConvertedTime > 0)
+        if (systemConvertedTime > 0u)
         {
-            // Calculate CPU usage and then reset runtime counter.
-            taskDescriptors[taskIndex].taskCpuMonitoringUsage = (u16_t)(((u32_t)10000 * taskConvertedTime) / systemConvertedTime);
+            calculatedCpuUsage = (10000ULL * taskConvertedTime) / systemConvertedTime;
 
-            if (isResetRequired == GOS_TRUE || monitoringTime.seconds > 0)
+            if (calculatedCpuUsage > 10000ULL)
             {
-                taskDescriptors[taskIndex].taskCpuUsage = (u16_t)((u32_t)(10000 * taskConvertedTime) / systemConvertedTime);
+                calculatedCpuUsage = 10000ULL;
+            }
+            else
+            {
+                // Nothing to do.
+            }
+
+            // Calculate CPU usage and then reset runtime counter.
+            taskDescriptors[taskIndex].taskCpuMonitoringUsage = (u16_t)calculatedCpuUsage;
+
+            if (isMeasurementWindowElapsed == GOS_TRUE)
+            {
+                taskDescriptors[taskIndex].taskCpuUsage = (u16_t)calculatedCpuUsage;
 
                 // Increase runtime microseconds.
                 (void_t) gos_runTimeAddMicroseconds(
@@ -708,7 +824,7 @@ GOS_INLINE void_t gos_kernelCalculateTaskCpuUsages (bool_t isResetRequired)
                 (void_t) gos_runTimeAddMilliseconds(
                         &taskDescriptors[taskIndex].taskRunTime,
                         (u32_t)(taskDescriptors[taskIndex].taskMonitoringRunTime.milliseconds +
-                        taskDescriptors[taskIndex].taskMonitoringRunTime.seconds * 1000));
+                        taskDescriptors[taskIndex].taskMonitoringRunTime.seconds * 1000u));
 
                 taskDescriptors[taskIndex].taskMonitoringRunTime.days         = 0u;
                 taskDescriptors[taskIndex].taskMonitoringRunTime.hours        = 0u;
@@ -739,7 +855,7 @@ GOS_INLINE void_t gos_kernelCalculateTaskCpuUsages (bool_t isResetRequired)
     }
 
     // Reset monitoring time.
-    if (isResetRequired == GOS_TRUE || monitoringTime.seconds > 0)
+    if (isMeasurementWindowElapsed == GOS_TRUE)
     {
         monitoringTime.days         = 0u;
         monitoringTime.hours        = 0u;
@@ -825,8 +941,8 @@ void_t gos_kernelDump (void_t)
                     "| 0x%04X | %28s | %8u.%02u |\r\n",
                     taskDescriptors[taskIndex].taskId,
                     taskDescriptors[taskIndex].taskName,
-                    taskDescriptors[taskIndex].taskCpuUsageMax / 100,
-                    taskDescriptors[taskIndex].taskCpuUsageMax % 100
+                    ((taskDescriptors[taskIndex].taskCpuUsageMax > 10000u) ? 10000u : taskDescriptors[taskIndex].taskCpuUsageMax) / 100u,
+                    ((taskDescriptors[taskIndex].taskCpuUsageMax > 10000u) ? 10000u : taskDescriptors[taskIndex].taskCpuUsageMax) % 100u
                     );
         }
     }
@@ -858,8 +974,10 @@ void_t gos_kernelDump (void_t)
                     taskDescriptors[taskIndex].taskName,
                     taskDescriptors[taskIndex].taskStackSize,
                     taskDescriptors[taskIndex].taskStackSizeMaxUsage,
-                    ((10000 * taskDescriptors[taskIndex].taskStackSizeMaxUsage) / taskDescriptors[taskIndex].taskStackSize) / 100,
-                    ((10000 * taskDescriptors[taskIndex].taskStackSizeMaxUsage) / taskDescriptors[taskIndex].taskStackSize) % 100
+                    (taskDescriptors[taskIndex].taskStackSize > 0u) ?
+                    (((10000u * taskDescriptors[taskIndex].taskStackSizeMaxUsage) / taskDescriptors[taskIndex].taskStackSize) / 100u) : 0u,
+                    (taskDescriptors[taskIndex].taskStackSize > 0u) ?
+                    (((10000u * taskDescriptors[taskIndex].taskStackSizeMaxUsage) / taskDescriptors[taskIndex].taskStackSize) % 100u) : 0u
                     );
         }
     }
@@ -930,17 +1048,6 @@ bool_t gos_kernelIsCallerIsr (void_t)
 }
 
 /*
- * Function: gos_ported_svcHandler
- */
-void_t gos_ported_svcHandler (void_t)
-{
-    /*
-     * Function code.
-     */
-    gos_ported_handleSVC();
-}
-
-/*
  * Function: gos_ported_svcHandlerMain
  */
 void_t gos_ported_svcHandlerMain (u32_t* sp)
@@ -948,38 +1055,8 @@ void_t gos_ported_svcHandlerMain (u32_t* sp)
     /*
      * Function code.
      */
-    gos_ported_handleSVCMain(sp);
-}
-
-/*
- * Function: gos_ported_pendSVHandler
- */
-void_t gos_ported_pendSVHandler (void_t)
-{
-    /*
-     * Function code.
-     */
-    if (resetRequired == GOS_TRUE)
-    {
-        resetRequired = GOS_FALSE;
-        gos_kernelProcessorReset();
-    }
-    else if (privilegedModeSetRequired == GOS_TRUE)
-    {
-        // Set mode to privileged.
-        GOS_ASM("MRS R0, CONTROL");
-        // Set bit[0] nPRIV to 0.
-        GOS_ASM("BIC R0, R0, #1");
-        GOS_ASM("MSR CONTROL, R0");
-
-        // Reset flag.
-        privilegedModeSetRequired = GOS_FALSE;
-    }
-    else
-    {
-        // Otherwise perform context switch.
-        gos_ported_doContextSwitch();
-    }
+    GOS_UNUSED_PAR(sp);
+    /* SVC #255 is handled directly by the naked handler. */
 }
 
 /*
@@ -991,6 +1068,211 @@ GOS_INLINE void_t gos_kernelReschedule (gos_kernel_privilege_t privilege)
      * Function code.
      */
     gos_ported_reschedule(privilege);
+}
+
+/*
+ * Function: gos_kernelIsFaultSnapshotValid
+ */
+bool_t gos_kernelIsFaultSnapshotValid (void_t)
+{
+    /*
+     * Function code.
+     */
+    return (kernelFaultValid == GOS_TRUE) ? GOS_TRUE : GOS_FALSE;
+}
+
+/*
+ * Function: gos_kernelGetLastFaultSnapshot
+ */
+GOS_CONST volatile gos_faultSnapshot_t* gos_kernelGetLastFaultSnapshot (void_t)
+{
+    /*
+     * Function code.
+     */
+    return &kernelLastFaultSnapshot;
+}
+
+/*
+ * Function: gos_ported_svcHandler
+ */
+void_t gos_ported_svcHandler (void_t)
+{
+    /*
+     * Function code.
+     */
+    /*
+     * Only SVC #255 is generated by gos_ported_reschedule().
+     * Keep this handler entirely in assembly: LR is EXC_RETURN.
+     */
+    GOS_ASM(
+            "LDR R0, =0xE000ED04   \n" /* ICSR */
+            "LDR R1, [R0]          \n"
+            "ORR R1, R1, #0x10000000 \n" /* PENDSVSET */
+            "STR R1, [R0]          \n"
+            "DSB                    \n"
+            "ISB                    \n"
+            "BX LR                  \n"
+    );
+}
+
+/*
+ * Function: gos_ported_pendSVHandler
+ */
+void_t gos_ported_pendSVHandler (void_t)
+{
+    /*
+     * Function code.
+     */
+    gos_ported_handlePendSV();
+}
+
+/*
+ * Fault handlers
+ */
+/*
+ * Function: NMI_Handler
+ */
+GOS_NAKED void_t NMI_Handler (void_t)
+{
+    /*
+     * Function code.
+     */
+    GOS_ASM(
+            "TST LR, #4            \n"
+            "ITE EQ                \n"
+            "MRSEQ R0, MSP         \n"
+            "MRSNE R0, PSP         \n"
+            "MOV R1, LR            \n"
+            "MOVS R2, #1           \n"
+            "B gos_kernelFaultCapture \n"
+    );
+}
+
+/*
+ * Function: HardFault_Handler
+ */
+GOS_NAKED void_t HardFault_Handler (void_t)
+{
+    /*
+     * Function code.
+     */
+    GOS_ASM(
+            "TST LR, #4            \n"
+            "ITE EQ                \n"
+            "MRSEQ R0, MSP         \n"
+            "MRSNE R0, PSP         \n"
+            "MOV R1, LR            \n"
+            "MOVS R2, #2           \n"
+            "B gos_kernelFaultCapture \n"
+    );
+}
+
+/*
+ * Function: MemManage_Handler
+ */
+GOS_NAKED void_t MemManage_Handler (void_t)
+{
+    /*
+     * Function code.
+     */
+    GOS_ASM(
+            "TST LR, #4            \n"
+            "ITE EQ                \n"
+            "MRSEQ R0, MSP         \n"
+            "MRSNE R0, PSP         \n"
+            "MOV R1, LR            \n"
+            "MOVS R2, #3           \n"
+            "B gos_kernelFaultCapture \n"
+    );
+}
+
+/*
+ * Function: BusFault_Handler
+ */
+GOS_NAKED void_t BusFault_Handler (void_t)
+{
+    /*
+     * Function code.
+     */
+    GOS_ASM(
+            "TST LR, #4            \n"
+            "ITE EQ                \n"
+            "MRSEQ R0, MSP         \n"
+            "MRSNE R0, PSP         \n"
+            "MOV R1, LR            \n"
+            "MOVS R2, #4           \n"
+            "B gos_kernelFaultCapture \n"
+    );
+}
+
+/*
+ * Function: UsageFault_Handler
+ */
+GOS_NAKED void_t UsageFault_Handler (void_t)
+{
+    /*
+     * Function code.
+     */
+    GOS_ASM(
+            "TST LR, #4            \n"
+            "ITE EQ                \n"
+            "MRSEQ R0, MSP         \n"
+            "MRSNE R0, PSP         \n"
+            "MOV R1, LR            \n"
+            "MOVS R2, #5           \n"
+            "B gos_kernelFaultCapture \n"
+    );
+}
+
+/**
+ * @brief   Handles PendSV special control flows.
+ * @details Checks pending kernel control requests that must be processed before
+ *          normal context switching. It handles processor reset requests and
+ *          privileged-mode restore requests, and reports whether the request
+ *          was consumed.
+ *
+ * @param   -
+ *
+ * @return  Handling state.
+ *
+ * @retval  1 A special case was handled.
+ * @retval  0 No special handling was required.
+ */
+GOS_UNUSED GOS_STATIC u32_t gos_kernelPendSvHandleSpecialCases (void_t)
+{
+    /*
+     * Local variables.
+     */
+    u32_t isHandled = 0u;
+
+    /*
+     * Function code.
+     */
+    if (resetRequired == GOS_TRUE)
+    {
+        resetRequired = GOS_FALSE;
+        gos_kernelProcessorReset();
+        isHandled = 1u;
+    }
+    else if (privilegedModeSetRequired == GOS_TRUE)
+    {
+        // Set mode to privileged.
+        GOS_ASM("MRS R0, CONTROL");
+        // Set bit[0] nPRIV to 0.
+        GOS_ASM("BIC R0, R0, #1");
+        GOS_ASM("MSR CONTROL, R0");
+        GOS_ASM("ISB");
+
+        // Reset flag.
+        privilegedModeSetRequired = GOS_FALSE;
+        isHandled = 1u;
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    return isHandled;
 }
 
 /**
@@ -1008,35 +1290,53 @@ GOS_STATIC void_t gos_kernelCheckTaskStack (void_t)
     /*
      * Local variables.
      */
-    u32_t sp = 0u;
-    u32_t stackUsage = 0u;
+    u32_t sp          = 0u;
+    u32_t stackUsage  = 0u;
+    u32_t stackTop    = 0u;
+#if (GOS_STACK_DIAG_ENABLE == 1u)
+    u32_t stackBottom = 0u;
+    u32_t guardIdx    = 0u;
+    u32_t* pGuard     = NULL;
+#endif
 
     /*
      * Function code.
      */
     __asm volatile ("MRS %0, psp\n\t" : "=r" (sp));
-    if (sp != 0u &&
-        sp < taskDescriptors[currentTaskIndex].taskStackOverflowThreshold)
+
+    stackTop = taskDescriptors[currentTaskIndex].taskStackOverflowThreshold +
+               taskDescriptors[currentTaskIndex].taskStackSize - GOS_STACK_OVERFLOW_THRESHOLD;
+
+    if ((sp == 0u) ||
+        (sp < taskDescriptors[currentTaskIndex].taskStackOverflowThreshold) ||
+        (sp > stackTop))
     {
         gos_errorHandler(
                 GOS_ERROR_LEVEL_OS_FATAL,
                 NULL,
                 0,
-                "Stack overflow detected in <%s>. \r\nPSP: 0x%x overflown by %d bytes.",
+                "Invalid PSP in <%s>: 0x%x, valid range 0x%x..0x%x.",
                 taskDescriptors[currentTaskIndex].taskName,
                 sp,
-                (taskDescriptors[currentTaskIndex].taskStackOverflowThreshold - sp));
+                taskDescriptors[currentTaskIndex].taskStackOverflowThreshold,
+                stackTop);
     }
     else
     {
-        // No stack overflow was detected.
+        // Nothing to do.
     }
 
     if (sp != 0u)
     {
-        stackUsage = (taskDescriptors[currentTaskIndex].taskStackOverflowThreshold - 64u + 
-                     taskDescriptors[currentTaskIndex].taskStackSize - sp);
-        
+        if (sp <= stackTop)
+        {
+            stackUsage = stackTop - sp;
+        }
+        else
+        {
+            stackUsage = 0u;
+        }
+
         if (stackUsage > taskDescriptors[currentTaskIndex].taskStackSizeMaxUsage)
         {
             taskDescriptors[currentTaskIndex].taskStackSizeMaxUsage = stackUsage;
@@ -1050,25 +1350,256 @@ GOS_STATIC void_t gos_kernelCheckTaskStack (void_t)
     {
         // PSP is invalid.
     }
+
+#if (GOS_STACK_DIAG_ENABLE == 1u)
+    gos_kernelGetTaskStackBounds(currentTaskIndex, &stackBottom, &stackTop);
+
+    pGuard = (u32_t*)stackBottom;
+    for (guardIdx = 0u; guardIdx < GOS_STACK_GUARD_WORDS; guardIdx++)
+    {
+        if (pGuard[guardIdx] != GOS_STACK_FILL_PATTERN)
+        {
+            gos_errorHandler(
+                    GOS_ERROR_LEVEL_OS_FATAL,
+                    NULL,
+                    0,
+                    "Stack guard corrupted in <%s> at 0x%x (word %d).",
+                    taskDescriptors[currentTaskIndex].taskName,
+                    (u32_t)&pGuard[guardIdx],
+                    guardIdx);
+            break;
+        }
+        else
+        {
+            // Nothing to do.
+        }
+    }
+#endif
 }
 
 /**
- * @brief    Returns the current PSP.
- * @details  Returns the current PSP.
+ * @brief   Calculates task stack bounds.
+ * @details Computes the absolute bottom and top addresses of a task stack
+ *          from the configured stack layout.
  *
- * @return   Current PSP value.
+ * @param[in]  taskIndex Task descriptor index.
+ * @param[out] pBottom   Pointer to store computed stack bottom address.
+ * @param[out] pTop      Pointer to store computed stack top address.
+ *
+ * @return  -
+ */
+GOS_STATIC void_t gos_kernelGetTaskStackBounds (u32_t taskIndex, u32_t* pBottom, u32_t* pTop)
+{
+    /*
+     * Local variables.
+     */
+    u32_t idx         = 0u;
+    u32_t stackOffset = GLOBAL_STACK;
+    u32_t stackTop    = 0u;
+    u32_t stackBottom = 0u;
+
+    /*
+     * Function code.
+     */
+    if ((taskIndex >= CFG_TASK_MAX_NUMBER) || (pBottom == NULL) || (pTop == NULL))
+    {
+        return;
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    for (idx = 0u; idx < taskIndex; idx++)
+    {
+        stackOffset += taskDescriptors[idx].taskStackSize;
+    }
+
+    stackTop    = MAIN_STACK - stackOffset;
+    stackBottom = stackTop - taskDescriptors[taskIndex].taskStackSize;
+
+    *pBottom = stackBottom;
+    *pTop    = stackTop;
+}
+
+/**
+ * @brief   Checks whether a PSP value is valid for a task.
+ * @details Validates that the provided PSP falls inside the task stack range
+ *          (with allowed context headroom), and that it is 8-byte aligned.
+ *
+ * @param[in] taskIndex Task descriptor index.
+ * @param[in] psp       PSP value to validate.
+ *
+ * @return  Validation result.
+ *
+ * @retval  #GOS_TRUE  PSP is valid for the given task.
+ * @retval  #GOS_FALSE PSP is out of range, misaligned, or task index is invalid.
+ */
+GOS_STATIC bool_t gos_kernelIsTaskPspInRange (u32_t taskIndex, u32_t psp)
+{
+    /*
+     * Local variables.
+     */
+    u32_t idx         = 0u;
+    u32_t stackOffset = GLOBAL_STACK;
+    u32_t stackTop    = 0u;
+    u32_t stackBottom = 0u;
+    u32_t lowerBound  = RAM_START;
+
+    /*
+     * Function code.
+     */
+    if (taskIndex >= CFG_TASK_MAX_NUMBER)
+    {
+        return GOS_FALSE;
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    for (idx = 0u; idx < taskIndex; idx++)
+    {
+        stackOffset += taskDescriptors[idx].taskStackSize;
+    }
+
+    stackTop    = MAIN_STACK - stackOffset;
+    stackBottom = stackTop - taskDescriptors[taskIndex].taskStackSize;
+
+    /* Allow context-frame headroom below stack bottom to avoid false reject. */
+    lowerBound = (stackBottom > GOS_STACK_CONTEXT_HEADROOM_BYTES) ?
+            (stackBottom - GOS_STACK_CONTEXT_HEADROOM_BYTES) : RAM_START;
+
+    return ((psp >= lowerBound) && (psp <= stackTop) && ((psp & 0x7u) == 0u)) ? GOS_TRUE : GOS_FALSE;
+}
+
+/**
+ * @brief   Checks whether an address is a valid code address.
+ * @details Clears the Thumb-state bit and verifies that the resulting aligned
+ *          address is inside the accepted executable address window.
+ *
+ * @param[in] address Candidate code address (may include Thumb bit in bit 0).
+ *
+ * @return  Validation result.
+ *
+ * @retval  #GOS_TRUE  Address is inside the valid code region.
+ * @retval  #GOS_FALSE Address is outside the valid code region.
+ */
+GOS_STATIC bool_t gos_kernelIsCodeAddressValid (u32_t address)
+{
+    /*
+     * Local variables.
+     */
+    u32_t alignedAddress;
+
+    /*
+     * Function code.
+     */
+    alignedAddress = (address & ~1u);
+    return (alignedAddress <= GOS_CODE_ADDRESS_MAX) ? GOS_TRUE : GOS_FALSE;
+}
+
+/**
+ * @brief   Validates a saved task context frame.
+ * @details Verifies PSP range/alignment and checks the expected software and
+ *          hardware frame layout for non-FPU and FPU exception-return formats.
+ *          Ensures stacked PC/xPSR sanity before accepting the context.
+ *
+ * @param[in] taskIndex Task descriptor index.
+ * @param[in] psp       Candidate PSP that points to saved context frame.
+ *
+ * @return  Normalized context pointer.
+ *
+ * @retval  0   Context is invalid.
+ * @retval  psp Context is valid.
+ */
+GOS_UNUSED GOS_STATIC u32_t gos_kernelNormalizeTaskContext (u32_t taskIndex, u32_t psp)
+{
+    /*
+     * Local variables.
+     */
+    u32_t* pFrame   = (u32_t*)psp;
+    u32_t  hwBase   = 10u;
+    u32_t  wordsReq = 18u;
+
+    /*
+     * Function code.
+     */
+    if (gos_kernelIsTaskPspInRange(taskIndex, psp) == GOS_FALSE)
+    {
+        return 0u;
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    if (pFrame[8] == GOS_EXC_RETURN_THREAD_PSP_FP)
+    {
+        /*
+         * R4-R11, LR, pad, S16-S31, S0-S15, FPSCR, reserved,
+         * then R0-R3, R12, LR, PC, xPSR.
+         */
+        hwBase   = 44u;
+        wordsReq = 52u;
+    }
+    else if (pFrame[8] != GOS_EXC_RETURN_THREAD_PSP)
+    {
+        return 0u;
+    }
+    else
+    {
+        /* Non-FPU: R4-R11, LR, pad, then R0-R3, R12, LR, PC, xPSR. */
+    }
+
+    if (psp > (MAIN_STACK - (wordsReq * sizeof(u32_t))))
+    {
+        return 0u;
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    if (((pFrame[hwBase + 6u] & 1u) == 0u) ||
+        ((pFrame[hwBase + 7u] & GOS_XPSR_T_BIT) == 0u) ||
+        (gos_kernelIsCodeAddressValid(pFrame[hwBase + 6u]) == GOS_FALSE))
+    {
+        return 0u;
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    return psp;
+}
+
+/**
+ * @brief   Returns the saved PSP of the current task.
+ * @details Provides the scheduler with the task-local PSP value associated
+ *          with `currentTaskIndex`.
+ *
+ * @param   -
+ *
+ * @return  Current task PSP value.
  */
 GOS_UNUSED GOS_STATIC u32_t gos_kernelGetCurrentPsp (void_t)
 {
     /*
      * Function code.
      */
+    /*
+     * Never substitute another task's PSP here. Doing so while
+     * currentTaskIndex still refers to the selected task causes the next
+     * PendSV save to overwrite that selected task's saved context.
+     */
     return taskDescriptors[currentTaskIndex].taskPsp;
 }
 
 /**
- * @brief   Saves the current PSP.
- * @details Saves the current PSP.
+ * @brief     Saves the current PSP.
+ * @details   Saves the current PSP.
  *
  * @param[in] psp Current PSP value.
  *
@@ -1273,31 +1804,26 @@ GOS_STATIC void_t gos_kernelProcessorReset (void_t)
     }
 }
 
-/*
- * Fault handlers
- */
-/*
- * Function: NMI_Handler
- */
-void_t NMI_Handler (void_t)
-{
-    /*
-     * Function code.
-     */
-    for (;;)
-    {
-        GOS_NOP;
-    }
-}
 
-/*
- * Function: HardFault_Handler
+
+/**
+ * @brief   Task exit error handler.
+ * @details This function is used as the initial LR value of tasks. If a task
+ *          function returns, execution ends up here and a fatal error is raised.
+ *
+ * @return  -
  */
-void_t HardFault_Handler (void_t)
+GOS_STATIC void_t gos_kernelTaskExitError (void_t)
 {
     /*
      * Function code.
      */
+    gos_errorHandler(
+            GOS_ERROR_LEVEL_OS_FATAL,
+            __func__,
+            __LINE__,
+            "Task <%s> returned unexpectedly.",
+            taskDescriptors[currentTaskIndex].taskName);
 
     for (;;)
     {
@@ -1305,42 +1831,203 @@ void_t HardFault_Handler (void_t)
     }
 }
 
-/*
- * Function: MemManage_Handler
+/**
+ * @brief   Captures fault context and kernel state snapshot.
+ * @details Collects CPU core registers, fault status registers, active task
+ *          metadata, and saved context frames into `kernelLastFaultSnapshot`
+ *          for post-mortem diagnostics, then enters a breakpoint/infinite loop.
+ *
+ * @param[in] pStackFrame  Pointer to the hardware exception stack frame.
+ * @param[in] excReturn    EXC_RETURN value captured on fault entry.
+ * @param[in] faultSource  Fault source identifier (`gos_faultSource_t` value).
+ *
+ * @return  -
  */
-void_t MemManage_Handler (void_t)
+GOS_UNUSED GOS_STATIC void_t gos_kernelFaultCapture (u32_t* pStackFrame, u32_t excReturn, u32_t faultSource)
 {
     /*
-     * Function code.
+     * Local variables.
      */
-    for (;;)
-    {
-        GOS_NOP;
-    }
-}
+    u32_t regVal            = 0u;
+    u16_t i                 = 0u;
+    u32_t hwBase            = 10u;
+    u32_t wordsReq          = 18u;
+    u32_t stackBottom       = 0u;
+    u32_t stackTop          = 0u;
+    u32_t stackFrameAddress = (u32_t)pStackFrame;
 
-/*
- * Function: BusFault_Handler
- */
-void_t BusFault_Handler (void_t)
-{
     /*
      * Function code.
      */
-    for (;;)
-    {
-        GOS_NOP;
-    }
-}
+    kernelLastFaultSnapshot.excReturn   = excReturn;
+    kernelLastFaultSnapshot.faultSource = (gos_faultSource_t)faultSource;
+    kernelLastFaultSnapshot.icsr        = ICSR;
 
-/*
- * Function: UsageFault_Handler
- */
-void_t UsageFault_Handler (void_t)
-{
+    GOS_ASM("MRS %0, MSP" : "=r" (regVal) :: "memory");
+    kernelLastFaultSnapshot.msp = regVal;
+
+    GOS_ASM("MRS %0, PSP" : "=r" (regVal) :: "memory");
+    kernelLastFaultSnapshot.psp = regVal;
+
+    GOS_ASM("MRS %0, CONTROL" : "=r" (regVal) :: "memory");
+    kernelLastFaultSnapshot.control = regVal;
+
+    GOS_ASM("MRS %0, PRIMASK" : "=r" (regVal) :: "memory");
+    kernelLastFaultSnapshot.primask = regVal;
+
+    GOS_ASM("MRS %0, BASEPRI" : "=r" (regVal) :: "memory");
+    kernelLastFaultSnapshot.basepri = regVal;
+
+    GOS_ASM("MRS %0, FAULTMASK" : "=r" (regVal) :: "memory");
+    kernelLastFaultSnapshot.faultmask = regVal;
+
+    kernelLastFaultSnapshot.cfsr  = CFSR;
+    kernelLastFaultSnapshot.hfsr  = HFSR;
+    kernelLastFaultSnapshot.mmfar = MMFAR;
+    kernelLastFaultSnapshot.bfar  = BFAR;
+    kernelLastFaultSnapshot.afsr  = AFSR;
+    kernelLastFaultSnapshot.shcsr = SHCSR;
+
+    if (pStackFrame != NULL)
+    {
+        kernelLastFaultSnapshot.stackedR0   = pStackFrame[0];
+        kernelLastFaultSnapshot.stackedR1   = pStackFrame[1];
+        kernelLastFaultSnapshot.stackedR2   = pStackFrame[2];
+        kernelLastFaultSnapshot.stackedR3   = pStackFrame[3];
+        kernelLastFaultSnapshot.stackedR12  = pStackFrame[4];
+        kernelLastFaultSnapshot.stackedLr   = pStackFrame[5];
+        kernelLastFaultSnapshot.stackedPc   = pStackFrame[6];
+        kernelLastFaultSnapshot.stackedXpsr = pStackFrame[7];
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    kernelLastFaultSnapshot.faultTaskIndex        = currentTaskIndex;
+    kernelLastFaultSnapshot.faultInIsr            = inIsr;
+    kernelLastFaultSnapshot.faultAtomicCntr       = atomicCntr;
+    kernelLastFaultSnapshot.faultSchedDisableCntr = schedDisableCntr;
+
+    kernelLastFaultSnapshot.savedContextValid    = 0u;
+    kernelLastFaultSnapshot.savedContextPadWord  = 0u;
+    kernelLastFaultSnapshot.faultTaskStackBottom = 0u;
+    kernelLastFaultSnapshot.faultTaskStackTop    = 0u;
+    kernelLastFaultSnapshot.faultTaskStackUsed   = 0u;
+    kernelLastFaultSnapshot.faultStackFrame      = stackFrameAddress;
+    kernelLastFaultSnapshot.faultStackFrameValid = 0u;
+
     /*
-     * Function code.
+     * Capture the hardware frame only when it resides in RAM. A corrupted
+     * PSP must not cause a second fault while collecting diagnostics.
      */
+    if ((stackFrameAddress >= RAM_START) &&
+        (stackFrameAddress <= (MAIN_STACK - (8u * sizeof(u32_t)))))
+    {
+        kernelLastFaultSnapshot.stackedR0   = pStackFrame[0];
+        kernelLastFaultSnapshot.stackedR1   = pStackFrame[1];
+        kernelLastFaultSnapshot.stackedR2   = pStackFrame[2];
+        kernelLastFaultSnapshot.stackedR3   = pStackFrame[3];
+        kernelLastFaultSnapshot.stackedR12  = pStackFrame[4];
+        kernelLastFaultSnapshot.stackedLr   = pStackFrame[5];
+        kernelLastFaultSnapshot.stackedPc   = pStackFrame[6];
+        kernelLastFaultSnapshot.stackedXpsr = pStackFrame[7];
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    if (currentTaskIndex < CFG_TASK_MAX_NUMBER)
+    {
+        kernelLastFaultSnapshot.faultTaskId    = taskDescriptors[currentTaskIndex].taskId;
+        kernelLastFaultSnapshot.faultTaskState = taskDescriptors[currentTaskIndex].taskState;
+        kernelLastFaultSnapshot.faultTaskPsp   = taskDescriptors[currentTaskIndex].taskPsp;
+
+        for (i = 0u; i < CFG_TASK_MAX_NAME_LENGTH; i++)
+        {
+            kernelLastFaultSnapshot.faultTaskName[i] = taskDescriptors[currentTaskIndex].taskName[i];
+            if (taskDescriptors[currentTaskIndex].taskName[i] == '\0')
+            {
+                break;
+            }
+            else
+            {
+                // Nothing to do.
+            }
+        }
+        if (i >= CFG_TASK_MAX_NAME_LENGTH)
+        {
+            kernelLastFaultSnapshot.faultTaskName[CFG_TASK_MAX_NAME_LENGTH - 1u] = '\0';
+        }
+        else
+        {
+            // Nothing to do.
+        }
+
+        gos_kernelGetTaskStackBounds(currentTaskIndex, &stackBottom, &stackTop);
+        kernelLastFaultSnapshot.faultTaskStackBottom = stackBottom;
+        kernelLastFaultSnapshot.faultTaskStackTop    = stackTop;
+        kernelLastFaultSnapshot.faultTaskStackUsed   =
+                (stackFrameAddress <= stackTop) ? (stackTop - stackFrameAddress) : 0u;
+
+        if ((stackFrameAddress >= stackBottom) &&
+            (stackFrameAddress <= (stackTop - (8u * sizeof(u32_t)))))
+        {
+            kernelLastFaultSnapshot.faultStackFrameValid = 1u;
+        }
+        else
+        {
+            // Nothing to do.
+        }
+
+        if ((kernelLastFaultSnapshot.faultTaskPsp >= RAM_START) &&
+            (kernelLastFaultSnapshot.faultTaskPsp <= (MAIN_STACK - (18u * sizeof(u32_t)))))
+        {
+            u32_t* pCtx = (u32_t*)kernelLastFaultSnapshot.faultTaskPsp;
+
+            if (pCtx[8] == GOS_EXC_RETURN_THREAD_PSP_FP)
+            {
+                hwBase   = 44u;
+                wordsReq = 52u;
+            }
+            else
+            {
+                // Nothing to do.
+            }
+
+            if (kernelLastFaultSnapshot.faultTaskPsp <= (MAIN_STACK - (wordsReq * sizeof(u32_t))))
+            {
+                for (i = 0u; i < 10u; i++)
+                {
+                    kernelLastFaultSnapshot.savedContextSw[i] = pCtx[i];
+                }
+                for (i = 0u; i < 8u; i++)
+                {
+                    kernelLastFaultSnapshot.savedContextHw[i] = pCtx[hwBase + i];
+                }
+
+                kernelLastFaultSnapshot.savedContextPadWord = pCtx[9];
+                kernelLastFaultSnapshot.savedContextValid   = 1u;
+            }
+            else
+            {
+                // Nothing to do.
+            }
+        }
+        else
+        {
+            // Nothing to do.
+        }
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    kernelFaultValid = GOS_TRUE;
+
+    GOS_ASM("BKPT #0");
 
     for (;;)
     {

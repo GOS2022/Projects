@@ -318,11 +318,12 @@ GOS_STATIC GOS_INLINE void_t drv_uartStopRxBackground (drv_uartPeriphInstance_t 
 {
     if (uartRxOpActive[instance] == GOS_TRUE)
     {
-        (void_t) HAL_UART_Abort_IT(&huarts[instance]);
-        uartRxOpActive[instance] = GOS_FALSE;
+        /* Synchronous stop avoids abort-IT race with immediate next RX mode. */
+        (void_t)HAL_UART_AbortReceive(&huarts[instance]);
     }
-    /* clear mode when stopping background receive */
-    uartRxMode[instance] = DRV_UART_RX_MODE_NONE;
+
+    uartRxOpActive[instance] = GOS_FALSE;
+    uartRxMode[instance]     = DRV_UART_RX_MODE_NONE;
 }
 
 /*
@@ -509,23 +510,37 @@ GOS_INLINE gos_result_t drv_uartTransmitBlocking (
      * Local variables.
      */
     gos_result_t uartTransmitResult = GOS_ERROR;
+    bool_t       lockTaken          = GOS_FALSE;
 
     /*
      * Function code.
      */
-    GOS_DISABLE_SCHED
+    if ((instance >= DRV_UART_NUM_OF_INSTANCES) || (message == NULL) || (size == 0u))
+    {
+        return GOS_ERROR;
+    }
 
-    if (HAL_UART_Abort   (&huarts[instance])                         == HAL_OK &&
-        HAL_UART_Transmit(&huarts[instance], message, size, timeout) == HAL_OK)
+    if (gos_mutexLock(&uartTxMutexes[instance], timeout) == GOS_SUCCESS)
     {
-        uartTransmitResult = GOS_SUCCESS;
+        lockTaken = GOS_TRUE;
+
+        //GOS_DISABLE_SCHED
+        /* Do NOT abort whole UART: it stops background RX. */
+        if (HAL_UART_Transmit(&huarts[instance], message, size, timeout) == HAL_OK)
+        {
+            uartTransmitResult = GOS_SUCCESS;
+        }
+        else
+        {
+            DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_BLOCKING);
+        }
+        //GOS_ENABLE_SCHED
     }
-    else
+
+    if (lockTaken == GOS_TRUE)
     {
-        // Error.
-        DRV_ERROR_SET(uartDiag.instanceErrorFlags[instance], DRV_ERROR_UART_TX_BLOCKING);
+        (void_t)gos_mutexUnlock(&uartTxMutexes[instance]);
     }
-    GOS_ENABLE_SCHED
 
     return uartTransmitResult;
 }
@@ -1080,59 +1095,41 @@ void_t HAL_UART_MspInit (UART_HandleTypeDef* pHuart)
 void_t HAL_UART_ErrorCallback (UART_HandleTypeDef* pHuart)
 {
     drv_uartPeriphInstance_t instance = 0u;
+    u32_t err = pHuart->ErrorCode;
 
     for (instance = 0u; instance < DRV_UART_NUM_OF_INSTANCES; instance++)
     {
         if (uartInstanceLut[instance] == pHuart->Instance)
         {
-            if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_PE))
-            {
-                uartDiag.parityErrorCntr[instance]++;
-            }
-            else if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_FE))
-            {
-                uartDiag.framingErrorCntr[instance]++;
-            }
-            else if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_ORE))
-            {
-                uartDiag.overrunErrorCntr[instance]++;
-            }
-            else if (__HAL_UART_GET_FLAG(pHuart, UART_FLAG_NE))
-            {
-                uartDiag.noiseErrorCntr[instance]++;
-            }
-            else
-            {
-                // Other.
-            }
+            if ((err & HAL_UART_ERROR_PE)  != 0u) { uartDiag.parityErrorCntr[instance]++; }
+            if ((err & HAL_UART_ERROR_FE)  != 0u) { uartDiag.framingErrorCntr[instance]++; }
+            if ((err & HAL_UART_ERROR_ORE) != 0u) { uartDiag.overrunErrorCntr[instance]++; }
+            if ((err & HAL_UART_ERROR_NE)  != 0u) { uartDiag.noiseErrorCntr[instance]++; }
 
             if (uartRxOpActive[instance] == GOS_TRUE)
             {
                 uartRxOpResult[instance] = GOS_ERROR;
-                (void_t) gos_triggerIncrement(&uartRxReadyTriggers[instance]);
+                (void_t)gos_triggerIncrement(&uartRxReadyTriggers[instance]);
             }
 
             if (uartTxOpActive[instance] == GOS_TRUE)
             {
                 uartTxOpResult[instance] = GOS_ERROR;
-                (void_t) gos_triggerIncrement(&uartTxReadyTriggers[instance]);
+                (void_t)gos_triggerIncrement(&uartTxReadyTriggers[instance]);
             }
-
-            (void_t) HAL_UART_Abort_IT(pHuart);
-            uartRxOpActive[instance] = GOS_FALSE;
-            uartRxMode[instance] = DRV_UART_RX_MODE_NONE;
 
             __HAL_UART_CLEAR_PEFLAG(pHuart);
             __HAL_UART_CLEAR_FEFLAG(pHuart);
             __HAL_UART_CLEAR_NEFLAG(pHuart);
             __HAL_UART_CLEAR_OREFLAG(pHuart);
+            pHuart->ErrorCode = HAL_UART_ERROR_NONE;
 
-            (void_t) drv_uartStartRxBackground(instance);
+            uartRxOpActive[instance] = GOS_FALSE;
+            uartRxMode[instance]     = DRV_UART_RX_MODE_NONE;
+
+            /* Rearm continuous single-byte RX directly. */
+            (void_t)drv_uartStartRxBackground(instance);
             break;
-        }
-        else
-        {
-            // Continue.
         }
     }
 }

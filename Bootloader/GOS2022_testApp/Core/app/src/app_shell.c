@@ -64,7 +64,7 @@ GOS_STATIC gos_taskDescriptor_t app_shellTaskDesc =
 {
 	.taskFunction	    = app_shellTask,
 	.taskName 		    = "app_shellTask",
-	.taskStackSize 	    = 0x800,
+	.taskStackSize 	    = 0x1000,
 	.taskPriority 	    = 60,
 	.taskPrivilegeLevel	= GOS_TASK_PRIVILEGE_KERNEL
 };
@@ -228,7 +228,7 @@ GOS_STATIC void_t app_shellTask (void_t)
 				}
 			}
 
-			gos_shellForcePrintPromt();
+			gos_shellForcePrintPrompt();
 		}
 	}
 }

@@ -239,16 +239,18 @@ gos_result_t gos_gcpTransmitMessage (
     /*
      * Function code.
      */
-    if (gos_mutexLock(&gcpTxMutexes[channel], GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+    if ((channel >= CFG_GCP_CHANNELS_MAX_NUMBER) ||
+        ((payloadSize > 0u) && ((pMessagePayload == NULL) || (maxChunkSize == 0u))))
     {
-        transmitMessageResult = gos_gcpTransmitMessageInternal(channel, messageId, pMessagePayload, payloadSize, maxChunkSize);
-    }
-    else
-    {
-        // Mutex error.
+        return GOS_ERROR;
     }
 
-    (void_t) gos_mutexUnlock(&gcpTxMutexes[channel]);
+    if (gos_mutexLock(&gcpTxMutexes[channel], GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+    {
+        transmitMessageResult = gos_gcpTransmitMessageInternal(
+                channel, messageId, pMessagePayload, payloadSize, maxChunkSize);
+        (void_t)gos_mutexUnlock(&gcpTxMutexes[channel]);
+    }
 
     return transmitMessageResult;
 }
@@ -272,16 +274,20 @@ gos_result_t gos_gcpReceiveMessage (
     /*
      * Function code.
      */
-    if (gos_mutexLock(&gcpRxMutexes[channel], GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+    if ((channel >= CFG_GCP_CHANNELS_MAX_NUMBER) ||
+        (pMessageId == NULL) ||
+        (pPayloadTarget == NULL) ||
+        (maxChunkSize == 0u))
     {
-        receiveMessageResult = gos_gcpReceiveMessageInternal(channel, pMessageId, pPayloadTarget, targetSize, maxChunkSize);
-    }
-    else
-    {
-        // Nothing to do.
+        return GOS_ERROR;
     }
 
-    gos_mutexUnlock(&gcpRxMutexes[channel]);
+    if (gos_mutexLock(&gcpRxMutexes[channel], GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
+    {
+        receiveMessageResult = gos_gcpReceiveMessageInternal(
+                channel, pMessageId, pPayloadTarget, targetSize, maxChunkSize);
+        (void_t)gos_mutexUnlock(&gcpRxMutexes[channel]);
+    }
 
     return receiveMessageResult;
 }
@@ -445,8 +451,8 @@ GOS_STATIC GOS_INLINE gos_result_t gos_gcpReceiveMessageInternal (
     gos_gcpHeaderFrame_t requestHeaderFrame    = {0};
     gos_gcpHeaderFrame_t responseHeaderFrame   = {0};
     gos_gcpAck_t         headerAck             = (gos_gcpAck_t)0u;
-    u8_t                 dataChunks            = 0u;
-    u8_t                 chunkIndex            = 0u;
+    u16_t                dataChunks            = 0u;
+    u16_t                chunkIndex            = 0u;
     u16_t                tempSize              = 0u;
 
     /*
@@ -467,6 +473,18 @@ GOS_STATIC GOS_INLINE gos_result_t gos_gcpReceiveMessageInternal (
         if (channelFunctions[channel].gcpReceiveFunction((u8_t*)&requestHeaderFrame, (u16_t)sizeof(requestHeaderFrame)) == GOS_SUCCESS &&
             gos_gcpValidateHeader(&requestHeaderFrame, &headerAck) == GOS_SUCCESS)
         {
+            if (requestHeaderFrame.dataSize > targetSize)
+            {
+                responseHeaderFrame.ackType   = GCP_ACK_SIZE_ERROR;
+                responseHeaderFrame.headerCrc = gos_crcDriverGetCrc(
+                        (u8_t*)&responseHeaderFrame,
+                        (u16_t)(sizeof(responseHeaderFrame) - sizeof(responseHeaderFrame.headerCrc)));
+                (void_t)channelFunctions[channel].gcpTransmitFunction(
+                        (u8_t*)&responseHeaderFrame,
+                        (u16_t)sizeof(responseHeaderFrame));
+                return GOS_ERROR;
+            }
+
             if (requestHeaderFrame.dataSize == 0)
             {
                 // OK.

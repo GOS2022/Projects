@@ -137,7 +137,7 @@
 #define SVL_SYSMON_WIRED_DAEMON_PRIO         ( 191u )
 
 //! TODO
-#define SVL_SYSMON_WIRED_DAEMON_STACK        ( 0x800 )
+#define SVL_SYSMON_WIRED_DAEMON_STACK        ( 0x1000 )
 
 //! TODO
 #define SVL_SYSMON_WIRELESS_DAEMON_PRIO      ( 190u )

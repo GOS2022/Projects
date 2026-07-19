@@ -198,8 +198,7 @@ gos_result_t gos_queueCreate (gos_queueDescriptor_t* pQueueDescriptor)
                 queues[queueIndex].queueId = (GOS_DEFAULT_QUEUE_ID + queueIndex);
                 pQueueDescriptor->queueId = queues[queueIndex].queueId;
 #if CFG_QUEUE_USE_NAME == 1
-                if (pQueueDescriptor->queueName != NULL &&
-                    strlen(pQueueDescriptor->queueName) <= CFG_QUEUE_MAX_NAME_LENGTH)
+                if (strlen(pQueueDescriptor->queueName) <= CFG_QUEUE_MAX_NAME_LENGTH)
                 {
                     (void_t) strcpy(queues[queueIndex].queueName, pQueueDescriptor->queueName);
                 }

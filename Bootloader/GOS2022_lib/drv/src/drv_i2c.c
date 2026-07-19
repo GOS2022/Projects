@@ -285,40 +285,45 @@ gos_result_t drv_i2cGetDiagData (
  * Function: drv_i2cMemWrite
  */
 GOS_INLINE gos_result_t drv_i2cMemWrite (
-        drv_i2cPeriphInstance_t instance, u16_t address, u16_t memAddress, u16_t memAddressSize,
-        u8_t*                   data,     u16_t size,    u32_t mutexTmo,   u32_t triggerTmo
+        drv_i2cPeriphInstance_t instance, u16_t address, u16_t memAddress,
+        u16_t memAddressSize, u8_t* data, u16_t size, u32_t mutexTmo, u32_t triggerTmo
         )
 {
-    /*
-     * Local variables.
-     */
     gos_result_t i2cMemWriteResult = GOS_ERROR;
+    bool_t       lockTaken         = GOS_FALSE;
 
-    /*
-     * Function code.
-     */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
-        if (HAL_I2C_Mem_Write_IT(&hi2cs[instance], address, memAddress, memAddressSize, data, size) == HAL_OK      &&
-            gos_triggerWait     (&i2cTxMemReadyTriggers[instance], 1, triggerTmo)                   == GOS_SUCCESS &&
-            gos_triggerReset    (&i2cTxMemReadyTriggers[instance])                                  == GOS_SUCCESS)
+        lockTaken = GOS_TRUE;
+        (void_t)gos_triggerReset(&i2cTxMemReadyTriggers[instance]);
+
+        if ((HAL_I2C_Mem_Write_IT(
+                &hi2cs[instance], address, memAddress, memAddressSize, data, size) == HAL_OK) &&
+            (gos_triggerWait(
+                &i2cTxMemReadyTriggers[instance], 1u, triggerTmo) == GOS_SUCCESS))
         {
+            (void_t)gos_triggerReset(&i2cTxMemReadyTriggers[instance]);
             i2cMemWriteResult = GOS_SUCCESS;
         }
         else
         {
-            // Transmit or trigger error.
-            HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
-            DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_MEM_WRITE_TRIG_HAL);
+            (void_t)HAL_I2C_Master_Abort_IT(&hi2cs[instance], address);
+            DRV_ERROR_SET(
+                    i2cDiag.instanceErrorFlags[instance],
+                    DRV_ERROR_I2C_MEM_WRITE_TRIG_HAL);
         }
     }
     else
     {
-        // Mutex error.
-    	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_MEM_WRITE_MUTEX);
+        DRV_ERROR_SET(
+                i2cDiag.instanceErrorFlags[instance],
+                DRV_ERROR_I2C_MEM_WRITE_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    if (lockTaken == GOS_TRUE)
+    {
+        (void_t)gos_mutexUnlock(&i2cMutexes[instance]);
+    }
 
     return i2cMemWriteResult;
 }
@@ -335,16 +340,20 @@ GOS_INLINE gos_result_t drv_i2cMemRead (
      * Local variables.
      */
     gos_result_t i2cMemReadResult = GOS_ERROR;
+    bool_t       lockTaken         = GOS_FALSE;
 
     /*
      * Function code.
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
-        if (HAL_I2C_Mem_Read_IT(&hi2cs[instance], address, memAddress, memAddressSize, data, size) == HAL_OK      &&
-            gos_triggerWait    (&i2cRxMemReadyTriggers[instance], 1, triggerTmo)                   == GOS_SUCCESS &&
-            gos_triggerReset   (&i2cRxMemReadyTriggers[instance])                                  == GOS_SUCCESS)
+        lockTaken = GOS_TRUE;
+        (void_t)gos_triggerReset(&i2cRxMemReadyTriggers[instance]);
+
+        if ((HAL_I2C_Mem_Read_IT(&hi2cs[instance], address, memAddress, memAddressSize, data, size) == HAL_OK) &&
+            (gos_triggerWait    (&i2cRxMemReadyTriggers[instance], 1, triggerTmo)                   == GOS_SUCCESS))
         {
+            (void_t)gos_triggerReset(&i2cRxMemReadyTriggers[instance]);
             i2cMemReadResult = GOS_SUCCESS;
         }
         else
@@ -360,7 +369,10 @@ GOS_INLINE gos_result_t drv_i2cMemRead (
     	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_MEM_READ_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    if (lockTaken == GOS_TRUE)
+    {
+        (void_t)gos_mutexUnlock(&i2cMutexes[instance]);
+    }
 
     return i2cMemReadResult;
 }
@@ -377,12 +389,15 @@ GOS_INLINE gos_result_t drv_i2cTransmitBlocking (
      * Local variables.
      */
     gos_result_t i2cDriverTransmitResult = GOS_ERROR;
+    bool_t       lockTaken              = GOS_FALSE;
 
     /*
      * Function code.
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+        lockTaken = GOS_TRUE;
+
         if (HAL_I2C_Master_Transmit(&hi2cs[instance], address, pData, size, transmitTmo) == HAL_OK)
         {
             i2cDriverTransmitResult = GOS_SUCCESS;
@@ -399,7 +414,10 @@ GOS_INLINE gos_result_t drv_i2cTransmitBlocking (
     	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_BLOCKING_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    if (lockTaken == GOS_TRUE)
+    {
+        (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    }
 
     return i2cDriverTransmitResult;
 }
@@ -416,12 +434,15 @@ GOS_INLINE gos_result_t drv_i2cReceiveBlocking (
      * Local variables.
      */
     gos_result_t i2cDriverReceiveResult = GOS_ERROR;
+    bool_t       lockTaken              = GOS_FALSE;
 
     /*
      * Function code.
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+        lockTaken = GOS_TRUE;
+
         if (HAL_I2C_Master_Receive(&hi2cs[instance], address, pBuffer, size, receiveTmo) == HAL_OK)
         {
             i2cDriverReceiveResult = GOS_SUCCESS;
@@ -438,7 +459,10 @@ GOS_INLINE gos_result_t drv_i2cReceiveBlocking (
     	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_BLOCKING_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    if (lockTaken == GOS_TRUE)
+    {
+        (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    }
 
     return i2cDriverReceiveResult;
 }
@@ -455,12 +479,16 @@ GOS_INLINE gos_result_t drv_i2cTransmitIT (
      * Local variables.
      */
     gos_result_t i2cDriverTransmitResult = GOS_ERROR;
+    bool_t       lockTaken              = GOS_FALSE;
 
     /*
      * Function code.
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+        lockTaken = GOS_TRUE;
+        (void_t)gos_triggerReset(&i2cTxReadyTriggers[instance]);
+
         if (HAL_I2C_Master_Transmit_IT(&hi2cs[instance], address, pData, size) == HAL_OK)
         {
             if (triggerTmo > 0u)
@@ -494,7 +522,10 @@ GOS_INLINE gos_result_t drv_i2cTransmitIT (
     	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_IT_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    if (lockTaken == GOS_TRUE)
+    {
+        (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    }
 
     return i2cDriverTransmitResult;
 }
@@ -511,12 +542,16 @@ GOS_INLINE gos_result_t drv_i2cReceiveIT (
      * Local variables.
      */
     gos_result_t i2cDriverReceiveResult = GOS_ERROR;
+    bool_t       lockTaken              = GOS_FALSE;
 
     /*
      * Function code.
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+        lockTaken = GOS_TRUE;
+        (void_t)gos_triggerReset(&i2cRxReadyTriggers[instance]);
+
         if (HAL_I2C_Master_Receive_IT(&hi2cs[instance], address, pBuffer, size) == HAL_OK)
         {
             if (triggerTmo > 0u)
@@ -550,7 +585,10 @@ GOS_INLINE gos_result_t drv_i2cReceiveIT (
     	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_IT_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    if (lockTaken == GOS_TRUE)
+    {
+        (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    }
 
     return i2cDriverReceiveResult;
 }
@@ -567,12 +605,16 @@ GOS_INLINE gos_result_t drv_i2cTransmitDMA (
      * Local variables.
      */
     gos_result_t i2cDriverTransmitResult = GOS_ERROR;
+    bool_t       lockTaken              = GOS_FALSE;
 
     /*
      * Function code.
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+        lockTaken = GOS_TRUE;
+        (void_t)gos_triggerReset(&i2cTxReadyTriggers[instance]);
+
         if (HAL_I2C_Master_Transmit_DMA(&hi2cs[instance], address, pData, size) == HAL_OK)
         {
             if (triggerTmo > 0u)
@@ -606,7 +648,10 @@ GOS_INLINE gos_result_t drv_i2cTransmitDMA (
     	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_TX_DMA_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    if (lockTaken == GOS_TRUE)
+    {
+        (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    }
 
     return i2cDriverTransmitResult;
 }
@@ -623,12 +668,16 @@ GOS_INLINE gos_result_t drv_i2cReceiveDMA (
      * Local variables.
      */
     gos_result_t i2cDriverReceiveResult = GOS_ERROR;
+    bool_t       lockTaken              = GOS_FALSE;
 
     /*
      * Function code.
      */
     if (gos_mutexLock(&i2cMutexes[instance], mutexTmo) == GOS_SUCCESS)
     {
+        lockTaken = GOS_TRUE;
+        (void_t)gos_triggerReset(&i2cRxReadyTriggers[instance]);
+
         if (HAL_I2C_Master_Receive_DMA(&hi2cs[instance], address, pBuffer, size) == HAL_OK)
         {
             if (triggerTmo > 0u)
@@ -662,7 +711,10 @@ GOS_INLINE gos_result_t drv_i2cReceiveDMA (
     	DRV_ERROR_SET(i2cDiag.instanceErrorFlags[instance], DRV_ERROR_I2C_RX_DMA_MUTEX);
     }
 
-    (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    if (lockTaken == GOS_TRUE)
+    {
+        (void_t) gos_mutexUnlock(&i2cMutexes[instance]);
+    }
 
     return i2cDriverReceiveResult;
 }

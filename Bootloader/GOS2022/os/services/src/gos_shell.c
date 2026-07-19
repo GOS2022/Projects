@@ -413,7 +413,8 @@ gos_result_t gos_shellRegisterCommand (gos_shellCommand_t* command)
                 shellCommands[index].commandHandler           = command->commandHandler;
                 shellCommands[index].commandHandlerPrivileges = command->commandHandlerPrivileges;
                 shellCommands[index].commandPrivilege         = command->commandPrivilege;
-                (void_t) strcpy(shellCommands[index].command, command->command);
+                (void_t) strncpy(shellCommands[index].command, command->command, sizeof(shellCommands[index].command) - 1u);
+                shellCommands[index].command[sizeof(shellCommands[index].command) - 1u] = '\0';
                 shellRegisterCommandResult = GOS_SUCCESS;
                 break;
             }
@@ -446,7 +447,9 @@ gos_result_t gos_shellRegisterUser (GOS_CONST char_t* username, GOS_CONST char_t
     else
     {
         (void_t) strncpy(registeredUsers[registeredUsersCount].username, username, GOS_SHELL_USERNAME_MAX_LEN - 1u);
+        registeredUsers[registeredUsersCount].username[GOS_SHELL_USERNAME_MAX_LEN - 1u] = '\0';
         (void_t) strncpy(registeredUsers[registeredUsersCount].password, password, GOS_SHELL_PASSWORD_MAX_LEN - 1u);
+        registeredUsers[registeredUsersCount].password[GOS_SHELL_PASSWORD_MAX_LEN - 1u] = '\0';
 
         registeredUsers[registeredUsersCount].privilege = privilege;
         registeredUsers[registeredUsersCount].isEnabled = GOS_TRUE;
@@ -533,7 +536,7 @@ gos_result_t gos_shellEchoOff (void_t)
 /*
  * Function: gos_shellForcePrintPrompt
  */
-gos_result_t gos_shellForcePrintPromt (void_t)
+gos_result_t gos_shellForcePrintPrompt (void_t)
 {
     /*
      * Function code.

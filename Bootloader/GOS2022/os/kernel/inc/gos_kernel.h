@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_kernel.h
 //! @author     Ahmed Gazar
-//! @date       2025-07-04
-//! @version    1.23
+//! @date       2026-07-19
+//! @version    1.24
 //!
 //! @brief      GOS kernel header.
 //! @details    The GOS kernel is the core of the GOS system. It contains the basic type
@@ -87,6 +87,13 @@
 //                                          +    gos_kernelRegisterPreResetHook() added
 // 1.23       2025-07-04    Ahmed Gazar     +    GOS_UNUSED_PAR() added
 //                                          +    GOS_CONVERT_RESULT() added
+// 1.24       2026-07-19    Ahmed Gazar     +    Fault diagnostics support added:
+//                                               gos_faultSource_t,
+//                                               gos_faultSnapshot_t,
+//                                               gos_kernelIsFaultSnapshotValid(),
+//                                               gos_kernelGetLastFaultSnapshot()
+//                                          +    EXC_RETURN and stack diagnostic macros
+//                                               added for Cortex-M fault handling
 //*************************************************************************************************
 //
 // Copyright (c) 2022 Ahmed Gazar
@@ -126,103 +133,151 @@
 /**
  * NULL pointer.
  */
-#define NULL                           ( (void *) 0 )
+#define NULL                              ( (void *) 0 )
 #endif
 
 /**
  * RAM start address.
  */
-#define RAM_START                      ( 0x20000000u )
+#define RAM_START                         ( 0x20000000u )
 
 /**
  * RAM size (128kB).
  */
-#define RAM_SIZE                       ( 128 * 1024 )
+#define RAM_SIZE                          ( 128 * 1024 )
 
 /**
  * Main stack.
  */
-#define MAIN_STACK                     ( RAM_START + RAM_SIZE )
+#define MAIN_STACK                        ( RAM_START + RAM_SIZE )
 
 /**
  * Global stack.
  */
-#define GLOBAL_STACK                   ( 0x1200 )
+#define GLOBAL_STACK                      ( 0x1200 )
 
 /**
  * Default task ID.
  */
-#define GOS_DEFAULT_TASK_ID            ( (gos_tid_t)0x8000 )
+#define GOS_DEFAULT_TASK_ID               ( (gos_tid_t)0x8000 )
 
 /**
  * Invalid task ID.
  */
-#define GOS_INVALID_TASK_ID            ( (gos_tid_t)0x0100 )
+#define GOS_INVALID_TASK_ID               ( (gos_tid_t)0x0100 )
 
 /**
  * Maximum task priority levels.
  */
-#define GOS_TASK_MAX_PRIO_LEVELS       ( UINT8_MAX )
+#define GOS_TASK_MAX_PRIO_LEVELS          ( UINT8_MAX )
 
 /**
  * Idle task priority.
  */
-#define GOS_TASK_IDLE_PRIO             ( GOS_TASK_MAX_PRIO_LEVELS )
+#define GOS_TASK_IDLE_PRIO                ( GOS_TASK_MAX_PRIO_LEVELS )
 
 /**
  * Task maximum block time.
  */
-#define GOS_TASK_MAX_BLOCK_TIME_MS     ( 0xFFFFFFFFu )
+#define GOS_TASK_MAX_BLOCK_TIME_MS        ( 0xFFFFFFFFu )
 
 /**
  * Static macro.
  */
-#define GOS_STATIC                     static
+#define GOS_STATIC                        static
 
 /**
  * Constant macro.
  */
-#define GOS_CONST                      const
+#define GOS_CONST                         const
 
 /**
  * Inline macro.
  */
-#define GOS_INLINE                     inline __attribute__((always_inline))
+#define GOS_INLINE                        inline __attribute__((always_inline))
 
 /**
  * Static in-line macro.
  */
-#define GOS_STATIC_INLINE              GOS_STATIC GOS_INLINE
+#define GOS_STATIC_INLINE                 GOS_STATIC GOS_INLINE
 
 /**
  * Extern macro.
  */
-#define GOS_EXTERN                     extern
+#define GOS_EXTERN                        extern
 
 /**
  * Naked.
  */
-#define GOS_NAKED                      __attribute__ ((naked))
+#define GOS_NAKED                         __attribute__ ((naked))
 
 /**
  * Unused.
  */
-#define GOS_UNUSED                     __attribute__ ((unused))
+#define GOS_UNUSED                        __attribute__ ((unused))
 
 /**
  * NOP.
  */
-#define GOS_NOP                        __asm volatile ("NOP")
+#define GOS_NOP                           __asm volatile ("NOP")
 
 /**
  * ASM.
  */
-#define GOS_ASM                        __asm volatile
+#define GOS_ASM                           __asm volatile
 
 /**
  * Unused.
  */
-#define GOS_UNUSED_PAR(x)             (void_t) x
+#define GOS_UNUSED_PAR(x)                 (void_t)(x)
+
+/**
+ * EXC_RETURN value: return to Thread mode using PSP (basic stack frame).
+ */
+#define GOS_EXC_RETURN_THREAD_PSP         ( 0xFFFFFFFDu )
+
+/**
+ * EXC_RETURN value: return to Thread mode using PSP (extended FP stack frame).
+ */
+#define GOS_EXC_RETURN_THREAD_PSP_FP      ( 0xFFFFFFEDu )
+
+/**
+ * xPSR Thumb-state bit.
+ */
+#define GOS_XPSR_T_BIT                    ( 1u << 24 )
+
+/**
+ * Maximum valid code address region end for Cortex-M fetch checks.
+ * (0x00000000..0x3FFFFFFF includes code/SRAM executable regions, excludes peripherals/system space)
+ */
+#define GOS_CODE_ADDRESS_MAX              ( 0x3FFFFFFFu )
+
+/**
+ * Stack debug fill pattern and guard region.
+ */
+#define GOS_STACK_FILL_PATTERN            ( 0xA5A5A5A5u )
+
+/**
+ * Number of 32-bit guard words reserved at the stack boundary for overflow diagnostics.
+ */
+#define GOS_STACK_GUARD_WORDS             ( 8u )
+
+/**
+ * Extra headroom under task stack bottom accepted for saved context probing.
+ */
+#define GOS_STACK_CONTEXT_HEADROOM_BYTES  ( 256u )
+
+/**
+ * Stack diagnostics master switch:
+ * 0 = disabled (recommended for normal runtime/UART timing),
+ * 1 = enabled (debug/diagnostics).
+ */
+#define GOS_STACK_DIAG_ENABLE             ( 0u )
+
+/**
+ * Stack overflow threshold number of bytes.
+ */
+#define GOS_STACK_OVERFLOW_THRESHOLD      ( 128u )
 
 /**
  * @}
@@ -235,72 +290,79 @@
 /**
  * Disable scheduling.
  */
-#define GOS_DISABLE_SCHED              {                                            \
-                                           GOS_EXTERN u8_t schedDisableCntr;        \
-                                           schedDisableCntr++;                      \
-                                       }
+#define GOS_DISABLE_SCHED                 {                                            \
+                                              GOS_EXTERN u8_t schedDisableCntr;        \
+                                              schedDisableCntr++;                      \
+                                          }
 /**
  * Enable scheduling.
  */
-#define GOS_ENABLE_SCHED               {                                            \
-                                           GOS_EXTERN u8_t schedDisableCntr;        \
-                                           if (schedDisableCntr > 0)                \
-                                           { schedDisableCntr--; }                  \
-                                       }
+#define GOS_ENABLE_SCHED                  {                                            \
+                                              GOS_EXTERN u8_t schedDisableCntr;        \
+                                              if (schedDisableCntr > 0)                \
+                                              { schedDisableCntr--; }                  \
+                                          }
 
 /**
  * Interrupt Service Routine enter.
  */
-#define GOS_ISR_ENTER                  {                                            \
-                                           GOS_EXTERN u8_t inIsr;                   \
-                                           if (inIsr == 0) { GOS_DISABLE_SCHED }    \
-                                           inIsr++;                                 \
-                                       }
+#define GOS_ISR_ENTER                     {                                            \
+                                              GOS_EXTERN u8_t inIsr;                   \
+                                              if (inIsr == 0) { GOS_DISABLE_SCHED }    \
+                                              inIsr++;                                 \
+                                          }
 /**
  * Interrupt service routine exit.
  */
-#define GOS_ISR_EXIT                   {                                            \
-                                           GOS_EXTERN u8_t inIsr;                   \
-                                           if (inIsr > 0) { inIsr--; }              \
-                                           if (inIsr == 0) { GOS_ENABLE_SCHED }     \
-                                       }
+#define GOS_ISR_EXIT                      {                                            \
+                                              GOS_EXTERN u8_t inIsr;                   \
+                                              if (inIsr > 0) { inIsr--; }              \
+                                              if (inIsr == 0) { GOS_ENABLE_SCHED }     \
+                                          }
 
 /**
  * Atomic operation enter - disable interrupts and kernel rescheduling.
  */
-#define GOS_ATOMIC_ENTER               {                                                                 \
-                                           GOS_EXTERN u8_t atomicCntr;                                   \
-                                           GOS_EXTERN u32_t primask;                                     \
-                                           if (atomicCntr == 0)                                          \
-                                           {                                                             \
-                                               GOS_ASM( " cpsid i " ::: "memory" );                      \
-                                               GOS_ASM( "MRS %0, primask" : "=r" (primask) :: "memory"); \
-                                               GOS_ASM( "dsb" ::: "memory" );                            \
-                                               GOS_ASM( "isb" );                                         \
-                                           }                                                             \
-                                           atomicCntr++;                                                 \
-                                           GOS_DISABLE_SCHED                                             \
-                                       }
+#define GOS_ATOMIC_ENTER                  {                                                                 \
+                                              GOS_EXTERN u8_t atomicCntr;                                   \
+                                              GOS_EXTERN u32_t primask;                                     \
+                                              if (atomicCntr == 0u)                                         \
+                                              {                                                             \
+                                                  GOS_ASM("MRS %0, primask" : "=r" (primask) :: "memory"); \
+                                                  GOS_ASM("cpsid i" ::: "memory");                          \
+                                                  GOS_ASM("dsb" ::: "memory");                              \
+                                                  GOS_ASM("isb");                                           \
+                                              }                                                             \
+                                              atomicCntr++;                                                 \
+                                              GOS_DISABLE_SCHED                                             \
+                                          }
 
 /**
  * Atomic operation exit - enable interrupts kernel rescheduling.
  */
-#define GOS_ATOMIC_EXIT                {                                                                  \
-                                           GOS_EXTERN u8_t atomicCntr;                                    \
-                                           GOS_EXTERN u32_t primask;                                      \
-                                           if (atomicCntr > 0)                                            \
-                                           {                                                              \
-                                               atomicCntr--;                                              \
-                                           }                                                              \
-                                           if (atomicCntr == 0)                                           \
-                                           {                                                              \
-                                               GOS_ASM ( "MSR primask, %0" : : "r" (primask) : "memory"); \
-                                               GOS_ASM( " cpsie i " ::: "memory" );                       \
-                                               GOS_ASM( "dsb" ::: "memory" );                             \
-                                               GOS_ASM( "isb" );                                          \
-                                           }                                                              \
-                                           GOS_ENABLE_SCHED                                               \
-                                       }
+#define GOS_ATOMIC_EXIT                   {                                                                  \
+                                              GOS_EXTERN u8_t atomicCntr;                                    \
+                                              GOS_EXTERN u32_t primask;                                      \
+                                              if (atomicCntr > 0u)                                           \
+                                              {                                                              \
+                                                  atomicCntr--;                                              \
+                                              }                                                              \
+                                              else                                                           \
+                                              {                                                              \
+                                                  /* Nothing to do. */                                       \
+                                              }                                                              \
+                                              GOS_ENABLE_SCHED                                               \
+                                              if (atomicCntr == 0u)                                          \
+                                              {                                                              \
+                                                  GOS_ASM("MSR primask, %0" : : "r" (primask) : "memory");  \
+                                                  GOS_ASM("dsb" ::: "memory");                               \
+                                                  GOS_ASM("isb");                                            \
+                                              }                                                              \
+                                              else                                                           \
+                                              {                                                              \
+                                                  /* Nothing to do. */                                       \
+                                              }                                                              \
+                                          }
 /**
  * @}
  */
@@ -312,37 +374,37 @@
 /**
  * Task manipulation privilege flag.
  */
-#define GOS_PRIV_TASK_MANIPULATE       ( 1 << 15 )
+#define GOS_PRIV_TASK_MANIPULATE          ( 1 << 15 )
 
 /**
  * Task priority change privilege flag.
  */
-#define GOS_PRIV_TASK_PRIO_CHANGE      ( 1 << 14 )
+#define GOS_PRIV_TASK_PRIO_CHANGE         ( 1 << 14 )
 
 /**
  * Tracing privilege flag.
  */
-#define GOS_PRIV_TRACE                 ( 1 << 13 )
+#define GOS_PRIV_TRACE                    ( 1 << 13 )
 
 /**
  * Task signal invoking privilege flag.
  */
-#define GOS_PRIV_SIGNALING             ( 1 << 11 )
+#define GOS_PRIV_SIGNALING                ( 1 << 11 )
 
 /**
  * Kernel reserved.
  */
-#define GOS_PRIV_RESERVED_3            ( 1 << 10 )
+#define GOS_PRIV_RESERVED_3               ( 1 << 10 )
 
 /**
  * Kernel reserved.
  */
-#define GOS_PRIV_RESERVED_4            ( 1 << 9 )
+#define GOS_PRIV_RESERVED_4               ( 1 << 9 )
 
 /**
  * Kernel reserved.
  */
-#define GOS_PRIV_RESERVED_5            ( 1 << 8 )
+#define GOS_PRIV_RESERVED_5               ( 1 << 8 )
 /**
  * @}
  */
@@ -498,9 +560,22 @@ typedef enum
  */
 typedef enum
 {
-    GOS_PRIVILEGED      = 0b10110,   //!< GOS_PRIVILEDGED
-    GOS_UNPRIVILEGED    = 0b01001    //!< GOS_UNPRIVILEDGED
+    GOS_PRIVILEGED      = 0b10110,   //!< Privileged.
+    GOS_UNPRIVILEGED    = 0b01001    //!< Unprivileged.
 }gos_kernel_privilege_t;
+
+/**
+ * Fault source identifier captured by the fault handlers.
+ */
+typedef enum
+{
+    GOS_FAULT_SOURCE_UNKNOWN    = 0u, //!< Fault source is unknown or not yet classified.
+    GOS_FAULT_SOURCE_NMI        = 1u, //!< Fault was captured from the NMI handler.
+    GOS_FAULT_SOURCE_HARDFAULT  = 2u, //!< Fault was captured from the HardFault handler.
+    GOS_FAULT_SOURCE_MEMMANAGE  = 3u, //!< Fault was captured from the MemManage handler.
+    GOS_FAULT_SOURCE_BUSFAULT   = 4u, //!< Fault was captured from the BusFault handler.
+    GOS_FAULT_SOURCE_USAGEFAULT = 5u  //!< Fault was captured from the UsageFault handler.
+}gos_faultSource_t;
 
 /**
  * @defgroup TimeDef Time-related definitions
@@ -561,6 +636,56 @@ typedef struct __attribute__((packed))
     u16_t                    taskCpuMonitoringUsage;     //!< Task CPU usage monitoring value in [% x 100].
     u32_t                    taskStackOverflowThreshold; //!< Task stack overflow threshold address.
 }gos_taskDescriptor_t;
+
+/**
+ * Fault snapshot storage type.
+ *
+ * Captures CPU registers, fault status registers, task context, and stack-related
+ * diagnostics at the time of an exception for post-mortem analysis.
+ */
+typedef struct
+{
+    u32_t             excReturn;             //!< EXC_RETURN value (LR on exception entry).
+    u32_t             stackedR0;             //!< Stacked R0.
+    u32_t             stackedR1;             //!< Stacked R1.
+    u32_t             stackedR2;             //!< Stacked R2.
+    u32_t             stackedR3;             //!< Stacked R3.
+    u32_t             stackedR12;            //!< Stacked R12.
+    u32_t             stackedLr;             //!< Stacked LR.
+    u32_t             stackedPc;             //!< Stacked PC.
+    u32_t             stackedXpsr;           //!< Stacked xPSR.
+    u32_t             msp;                   //!< MSP at fault.
+    u32_t             psp;                   //!< PSP at fault.
+    u32_t             control;               //!< CONTROL register.
+    u32_t             primask;               //!< PRIMASK register.
+    u32_t             basepri;               //!< BASEPRI register.
+    u32_t             faultmask;             //!< FAULTMASK register.
+    u32_t             cfsr;                  //!< Configurable Fault Status Register.
+    u32_t             hfsr;                  //!< HardFault Status Register.
+    u32_t             mmfar;                 //!< MemManage Fault Address Register.
+    u32_t             bfar;                  //!< BusFault Address Register.
+    u32_t             afsr;                  //!< Auxiliary Fault Status Register.
+    u32_t             shcsr;                 //!< System Handler Control and State Register.
+    u32_t             icsr;                  //!< Interrupt Control and State Register.
+    gos_faultSource_t faultSource;           //!< Fault source (which handler captured).
+    u32_t             faultTaskIndex;        //!< Current task index at fault.
+    gos_tid_t         faultTaskId;           //!< Current task ID at fault.
+    gos_taskState_t   faultTaskState;        //!< Current task state at fault.
+    u32_t             faultTaskPsp;          //!< Saved task PSP at fault.
+    u8_t              faultInIsr;            //!< ISR nesting counter.
+    u8_t              faultAtomicCntr;       //!< Atomic section nesting counter.
+    u8_t              faultSchedDisableCntr; //!< Scheduler disable counter.
+    gos_taskName_t    faultTaskName;         //!< Current task name at fault.
+    u32_t             savedContextValid;     //!< 0: invalid/unavailable, 1: valid.
+    u32_t             savedContextSw[10];    //!< Saved software frame at taskPsp: R4..R11, LR, pad.
+    u32_t             savedContextHw[8];     //!< Saved hardware frame: R0,R1,R2,R3,R12,LR,PC,xPSR.
+    u32_t             savedContextPadWord;   //!< Saved software frame padding word (index 9).
+    u32_t             faultTaskStackBottom;  //!< Calculated task stack bottom address.
+    u32_t             faultTaskStackTop;     //!< Calculated task stack top address.
+    u32_t             faultTaskStackUsed;    //!< Approx. used bytes at fault (stackTop - PSP).
+    u32_t             faultStackFrame;       //!< Hardware exception-frame address selected on fault entry.
+    u32_t             faultStackFrameValid;  //!< 1 if the complete basic frame is inside the fault task stack.
+}gos_faultSnapshot_t;
 
 /*
  * Function prototypes
@@ -1277,6 +1402,31 @@ gos_result_t gos_taskGetNumber (
  * @retval  #GOS_SUCCESS Yield successful.
  */
 gos_result_t gos_taskYield (
+        void_t
+        );
+
+/**
+ * @brief   Returns whether a fault snapshot is available.
+ * @details Checks the internal validity flag of the stored fault snapshot and
+ *          indicates whether the captured data can be used.
+ *
+ * @return  Snapshot validity state.
+ *
+ * @retval  #GOS_TRUE  Snapshot is valid.
+ * @retval  #GOS_FALSE Snapshot is invalid.
+ */
+bool_t gos_kernelIsFaultSnapshotValid (
+        void_t
+        );
+
+/**
+ * @brief   Returns pointer to the last stored fault snapshot.
+ * @details Returns a read-only pointer to the internal snapshot object that stores
+ *          the most recently captured fault context.
+ *
+ * @return  Pointer to internal fault snapshot storage.
+ */
+GOS_CONST volatile gos_faultSnapshot_t* gos_kernelGetLastFaultSnapshot (
         void_t
         );
 /**

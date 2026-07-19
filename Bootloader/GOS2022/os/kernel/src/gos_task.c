@@ -14,8 +14,8 @@
 //*************************************************************************************************
 //! @file       gos_task.c
 //! @author     Ahmed Gazar
-//! @date       2025-06-18
-//! @version    1.4
+//! @date       2026-07-19
+//! @version    1.5
 //!
 //! @brief      GOS task source.
 //! @details    For a more detailed description of this module, please refer to @ref gos_kernel.h
@@ -30,6 +30,17 @@
 // 1.3        2025-04-06    Ahmed Gazar     *    gos_taskCheckDescriptor check logic inverted
 // 1.4        2025-06-18    Ahmed Gazar     *    gos_taskGetDataByIndex and gos_taskGetData invalid
 //                                               task ID check added
+// 1.5        2026-07-19    Ahmed Gazar     *    Task registration stack-frame initialization
+//                                               updated (EXC_RETURN/PC/LR handling, alignment
+//                                               padding, and task-exit error return path)
+//                                          +    Stack diagnostics preparation and RAM bound
+//                                               checks added during task registration
+//                                          *    Task sleep behavior refined for non-running or
+//                                               scheduler-disabled states (chunked delay)
+//                                          *    Privilege error handling in task control APIs
+//                                               reworked to avoid atomic-section exit hazards
+//                                          *    Descriptor/name/data handling hardened
+//                                               (NULL checks, bounded copy, safer snapshot copy)
 //*************************************************************************************************
 //
 // Copyright (c) 2023 Ahmed Gazar
@@ -59,6 +70,10 @@
 #include <string.h>
 
 /*
+ *
+ */
+
+/*
  * Global variables
  */
 /**
@@ -72,7 +87,7 @@ gos_signalId_t                kernelTaskDeleteSignal;
 /**
  * Kernel idle hook function.
  */
-GOS_STATIC gos_taskIdleHook_t kernelIdleHookFunction       = NULL;
+GOS_STATIC gos_taskIdleHook_t kernelIdleHookFunction = NULL;
 
 /*
  * External variables
@@ -91,6 +106,7 @@ GOS_STATIC gos_result_t  gos_taskCheckDescriptor    (gos_taskDescriptor_t* taskD
  * Global function prototypes
  */
 void_t                   gos_idleTask               (void_t);
+GOS_EXTERN void_t        gos_kernelTaskExitError    (void_t);
 
 /**
  * Internal task array.
@@ -170,6 +186,11 @@ gos_result_t gos_taskRegister (gos_taskDescriptor_t* taskDescriptor, gos_tid_t* 
     u16_t        taskIndex          = 0u;
     u32_t        taskStackOffset    = GLOBAL_STACK;
     u32_t*       psp                = NULL;
+#if (GOS_STACK_DIAG_ENABLE == 1u)
+    u32_t*       pStackBottom       = NULL;
+    u32_t*       pStackTop          = NULL;
+    u32_t*       pFill              = NULL;
+#endif
 
     /*
      * Function code.
@@ -197,8 +218,13 @@ gos_result_t gos_taskRegister (gos_taskDescriptor_t* taskDescriptor, gos_tid_t* 
             }
             taskStackOffset += taskDescriptors[taskIndex].taskStackSize;
         }
+
         // Check if empty slot was found.
         if (taskIndex >= CFG_TASK_MAX_NUMBER)
+        {
+            taskRegisterResult = GOS_ERROR;
+        }
+        else if ((taskStackOffset + taskDescriptor->taskStackSize) > RAM_SIZE)
         {
             taskRegisterResult = GOS_ERROR;
         }
@@ -207,15 +233,27 @@ gos_result_t gos_taskRegister (gos_taskDescriptor_t* taskDescriptor, gos_tid_t* 
             // Calculate new PSP.
             psp = (u32_t*)(MAIN_STACK - taskStackOffset);
 
+#if (GOS_STACK_DIAG_ENABLE == 1u)
+            // Fill full stack region with known pattern for overflow diagnostics.
+            pStackTop    = (u32_t*)(MAIN_STACK - taskStackOffset);
+            pStackBottom = (u32_t*)((u32_t)pStackTop - taskDescriptor->taskStackSize);
+            for (pFill = pStackBottom; pFill < pStackTop; pFill++)
+            {
+                *pFill = GOS_STACK_FILL_PATTERN;
+            }
+#endif
+
             // Fill dummy stack frame.
-            *(--psp) = 0x01000000u; // Dummy xPSR, just enable Thumb State bit;
-            *(--psp) = (u32_t)taskDescriptor->taskFunction; // PC
-            *(--psp) = 0xFFFFFFFDu; // LR with EXC_RETURN to return to Thread using PSP
+            *(--psp) = GOS_XPSR_T_BIT; // Dummy xPSR, Thumb state.
+            *(--psp) = ((u32_t)taskDescriptor->taskFunction | 1u); // PC
+            *(--psp) = ((u32_t)gos_kernelTaskExitError | 1u); // LR in thread mode
             *(--psp) = 0x12121212u; // Dummy R12
             *(--psp) = 0x03030303u; // Dummy R3
             *(--psp) = 0x02020202u; // Dummy R2
             *(--psp) = 0x01010101u; // Dummy R1
             *(--psp) = 0x00000000u; // Dummy R0
+            *(--psp) = 0x00000000u; // Alignment padding word
+            *(--psp) = GOS_EXC_RETURN_THREAD_PSP; // Initial basic exception frame.
             *(--psp) = 0x11111111u; // Dummy R11
             *(--psp) = 0x10101010u; // Dummy R10
             *(--psp) = 0x09090909u; // Dummy R9
@@ -226,7 +264,7 @@ gos_result_t gos_taskRegister (gos_taskDescriptor_t* taskDescriptor, gos_tid_t* 
             *(--psp) = 0x04040404u; // Dummy R4
 
             // Save PSP.
-            taskDescriptors[taskIndex].taskPsp      = (u32_t)psp;
+            taskDescriptors[taskIndex].taskPsp              = (u32_t)psp;
 
             // Initial state.
             taskDescriptors[taskIndex].taskState            = GOS_TASK_READY;
@@ -251,13 +289,14 @@ gos_result_t gos_taskRegister (gos_taskDescriptor_t* taskDescriptor, gos_tid_t* 
             }
 
             // Copy task name.
-            if (strlen(taskDescriptor->taskName) <= CFG_TASK_MAX_NAME_LENGTH)
+            if (strlen(taskDescriptor->taskName) < CFG_TASK_MAX_NAME_LENGTH)
             {
-                (void_t) strcpy(taskDescriptors[taskIndex].taskName, taskDescriptor->taskName);
+                (void_t) strncpy(taskDescriptors[taskIndex].taskName, taskDescriptor->taskName, CFG_TASK_MAX_NAME_LENGTH - 1u);
+                taskDescriptors[taskIndex].taskName[CFG_TASK_MAX_NAME_LENGTH - 1u] = '\0';
             }
             else
             {
-                // Task name is not requried.
+                // Task name is not required.
             }
 
             // Set task ID.
@@ -271,9 +310,9 @@ gos_result_t gos_taskRegister (gos_taskDescriptor_t* taskDescriptor, gos_tid_t* 
                 // External task ID not required.
             }
 
-            // Calculate stack overflow threshold value (64 byte reserved for protection).
+            // Calculate stack overflow threshold value (GOS_STACK_OVERFLOW_THRESHOLD byte reserved for protection).
             taskDescriptors[taskIndex].taskStackOverflowThreshold =
-                    taskDescriptors[taskIndex].taskPsp - taskDescriptors[taskIndex].taskStackSize + 64;
+                    taskDescriptors[taskIndex].taskPsp - taskDescriptors[taskIndex].taskStackSize + GOS_STACK_OVERFLOW_THRESHOLD;
         }
     }
 
@@ -288,14 +327,33 @@ GOS_INLINE gos_result_t gos_taskSleep (gos_taskSleepTick_t sleepTicks)
     /*
      * Local variables.
      */
-    gos_result_t taskSleepResult = GOS_ERROR;
+    gos_result_t        taskSleepResult = GOS_ERROR;
+    gos_taskSleepTick_t remainingTicks  = 0u;
+    u16_t               chunkTicks      = 0u;
 
     /*
      * Function code.
      */
     if ((isKernelRunning == GOS_FALSE) || (schedDisableCntr > 0))
     {
-        gos_kernelDelayMs(sleepTicks);
+        remainingTicks = sleepTicks;
+
+        while (remainingTicks > 0u)
+        {
+            if (remainingTicks > 0xFFFFu)
+            {
+                chunkTicks = 0xFFFFu;
+            }
+            else
+            {
+                chunkTicks = (u16_t)remainingTicks;
+            }
+
+            gos_kernelDelayMs(chunkTicks);
+            remainingTicks -= chunkTicks;
+        }
+
+        taskSleepResult = GOS_SUCCESS;
     }
     else
     {
@@ -346,6 +404,7 @@ GOS_INLINE gos_result_t gos_taskWakeup (gos_tid_t taskId)
      */
     gos_result_t taskWakeupResult = GOS_ERROR;
     u32_t        taskIndex        = 0u;
+    bool_t       privilegeError   = GOS_FALSE;
 
     /*
      * Function code.
@@ -355,9 +414,7 @@ GOS_INLINE gos_result_t gos_taskWakeup (gos_tid_t taskId)
     {
         taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
 
-        // Check task manipulation privilege.
-        if ((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_MANIPULATE) == GOS_PRIV_TASK_MANIPULATE ||
-            inIsr > 0)
+        if (((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_MANIPULATE) == GOS_PRIV_TASK_MANIPULATE) || (inIsr > 0u))
         {
             if (taskDescriptors[taskIndex].taskState == GOS_TASK_SLEEPING)
             {
@@ -371,18 +428,20 @@ GOS_INLINE gos_result_t gos_taskWakeup (gos_tid_t taskId)
         }
         else
         {
-            GOS_ATOMIC_EXIT
-            gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to wake up <%s>!",
-                taskDescriptors[currentTaskIndex].taskName,
-                taskDescriptors[taskIndex].taskName
-            );
+            privilegeError = GOS_TRUE;
         }
+    }
+    GOS_ATOMIC_EXIT
+
+    if (privilegeError == GOS_TRUE)
+    {
+        gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to wake up <%s>!",
+            taskDescriptors[currentTaskIndex].taskName, taskDescriptors[taskIndex].taskName);
     }
     else
     {
-        // Task ID error.
+        // Nothing to do.
     }
-    GOS_ATOMIC_EXIT
 
     return taskWakeupResult;
 }
@@ -397,6 +456,8 @@ GOS_INLINE gos_result_t gos_taskSuspend (gos_tid_t taskId)
      */
     gos_result_t taskSuspendResult = GOS_ERROR;
     u32_t        taskIndex         = 0u;
+    bool_t       privilegeError    = GOS_FALSE;
+    bool_t       needReschedule    = GOS_FALSE;
 
     /*
      * Function code.
@@ -406,29 +467,17 @@ GOS_INLINE gos_result_t gos_taskSuspend (gos_tid_t taskId)
     {
         taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
 
-        // Check task manipulation privilege.
-        if ((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_MANIPULATE) == GOS_PRIV_TASK_MANIPULATE ||
-            currentTaskIndex == taskIndex || inIsr > 0)
+        if (((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_MANIPULATE) == GOS_PRIV_TASK_MANIPULATE) ||
+            (currentTaskIndex == taskIndex) || (inIsr > 0u))
         {
-            if (taskDescriptors[taskIndex].taskState == GOS_TASK_READY ||
-                taskDescriptors[taskIndex].taskState == GOS_TASK_SLEEPING ||
-                taskDescriptors[taskIndex].taskState == GOS_TASK_BLOCKED)
+            if ((taskDescriptors[taskIndex].taskState == GOS_TASK_READY) ||
+                (taskDescriptors[taskIndex].taskState == GOS_TASK_SLEEPING) ||
+                (taskDescriptors[taskIndex].taskState == GOS_TASK_BLOCKED))
             {
                 taskDescriptors[taskIndex].taskPreviousState = taskDescriptors[taskIndex].taskState;
                 taskDescriptors[taskIndex].taskState = GOS_TASK_SUSPENDED;
                 taskSuspendResult = GOS_SUCCESS;
-
-                GOS_ATOMIC_EXIT
-
-                if (currentTaskIndex == taskIndex)
-                {
-                    // Unprivileged.
-                    gos_kernelReschedule(GOS_UNPRIVILEGED);
-                }
-                else
-                {
-                    // Nothing to do.
-                }
+                needReschedule = (currentTaskIndex == taskIndex) ? GOS_TRUE : GOS_FALSE;
             }
             else
             {
@@ -437,21 +486,28 @@ GOS_INLINE gos_result_t gos_taskSuspend (gos_tid_t taskId)
         }
         else
         {
-            GOS_ATOMIC_EXIT
-            gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to suspend <%s>!",
-                taskDescriptors[currentTaskIndex].taskName,
-                taskDescriptors[taskIndex].taskName
-            );
+            privilegeError = GOS_TRUE;
         }
     }
     else
     {
         // Task ID error.
     }
+    GOS_ATOMIC_EXIT
 
-    if (taskSuspendResult != GOS_SUCCESS)
+    if (privilegeError == GOS_TRUE)
     {
-        GOS_ATOMIC_EXIT
+        gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to suspend <%s>!",
+            taskDescriptors[currentTaskIndex].taskName, taskDescriptors[taskIndex].taskName);
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    if (needReschedule == GOS_TRUE)
+    {
+        gos_kernelReschedule(GOS_UNPRIVILEGED);
     }
     else
     {
@@ -471,6 +527,7 @@ GOS_INLINE gos_result_t gos_taskResume (gos_tid_t taskId)
      */
     gos_result_t taskResumeResult = GOS_ERROR;
     u32_t        taskIndex        = 0u;
+    bool_t       privilegeError   = GOS_FALSE;
 
     /*
      * Function code.
@@ -480,7 +537,6 @@ GOS_INLINE gos_result_t gos_taskResume (gos_tid_t taskId)
     {
         taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
 
-        // Check task manipulation privilege.
         if ((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_MANIPULATE) == GOS_PRIV_TASK_MANIPULATE ||
             inIsr > 0)
         {
@@ -496,18 +552,24 @@ GOS_INLINE gos_result_t gos_taskResume (gos_tid_t taskId)
         }
         else
         {
-            gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to resume <%s>!",
-                taskDescriptors[currentTaskIndex].taskName,
-                taskDescriptors[taskIndex].taskName
-            );
+            privilegeError = GOS_TRUE;
         }
     }
     else
     {
         // Task ID error.
     }
-
     GOS_ATOMIC_EXIT
+
+    if (privilegeError == GOS_TRUE)
+    {
+        gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to resume <%s>!",
+            taskDescriptors[currentTaskIndex].taskName, taskDescriptors[taskIndex].taskName);
+    }
+    else
+    {
+        // Nothing to do.
+    }
 
     return taskResumeResult;
 }
@@ -522,6 +584,8 @@ GOS_INLINE gos_result_t gos_taskBlock (gos_tid_t taskId, gos_blockMaxTick_t bloc
      */
     gos_result_t taskBlockResult = GOS_ERROR;
     u32_t        taskIndex       = 0u;
+    bool_t       privilegeError  = GOS_FALSE;
+    bool_t       needReschedule  = GOS_FALSE;
 
     /*
      * Function code.
@@ -532,8 +596,8 @@ GOS_INLINE gos_result_t gos_taskBlock (gos_tid_t taskId, gos_blockMaxTick_t bloc
     {
         taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
 
-        if ((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_MANIPULATE) == GOS_PRIV_TASK_MANIPULATE ||
-            currentTaskIndex == taskIndex || inIsr > 0)
+        if (((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_MANIPULATE) == GOS_PRIV_TASK_MANIPULATE) ||
+            (currentTaskIndex == taskIndex) || (inIsr > 0))
         {
             if (taskDescriptors[taskIndex].taskState == GOS_TASK_READY)
             {
@@ -542,18 +606,7 @@ GOS_INLINE gos_result_t gos_taskBlock (gos_tid_t taskId, gos_blockMaxTick_t bloc
                 taskDescriptors[taskIndex].taskBlockTickCounter = 0u;
 
                 taskBlockResult = GOS_SUCCESS;
-
-                GOS_ATOMIC_EXIT
-
-                if (currentTaskIndex == taskIndex)
-                {
-                    // Unprivileged.
-                    gos_kernelReschedule(GOS_UNPRIVILEGED);
-                }
-                else
-                {
-                    // Nothing to do.
-                }
+                needReschedule = (currentTaskIndex == taskIndex) ? GOS_TRUE : GOS_FALSE;
             }
             else
             {
@@ -562,22 +615,23 @@ GOS_INLINE gos_result_t gos_taskBlock (gos_tid_t taskId, gos_blockMaxTick_t bloc
         }
         else
         {
-            GOS_ATOMIC_EXIT
-
-            gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to block <%s>!",
-                taskDescriptors[currentTaskIndex].taskName,
-                taskDescriptors[taskIndex].taskName
-            );
+            privilegeError = GOS_TRUE;
         }
     }
     else
     {
-        // Task ID error.
+        // Nothing to do.
     }
+    GOS_ATOMIC_EXIT
 
-    if (taskBlockResult != GOS_SUCCESS)
+    if (privilegeError == GOS_TRUE)
     {
-        GOS_ATOMIC_EXIT
+        gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to block <%s>!",
+            taskDescriptors[currentTaskIndex].taskName, taskDescriptors[taskIndex].taskName);
+    }
+    else if (needReschedule == GOS_TRUE)
+    {
+        gos_kernelReschedule(GOS_UNPRIVILEGED);
     }
     else
     {
@@ -597,6 +651,7 @@ GOS_INLINE gos_result_t gos_taskUnblock (gos_tid_t taskId)
      */
     gos_result_t taskUnblockResult = GOS_ERROR;
     u32_t        taskIndex         = 0u;
+    bool_t       privilegeError    = GOS_FALSE;
 
     /*
      * Function code.
@@ -615,7 +670,7 @@ GOS_INLINE gos_result_t gos_taskUnblock (gos_tid_t taskId)
                 taskUnblockResult = GOS_SUCCESS;
             }
             else if (taskDescriptors[taskIndex].taskState == GOS_TASK_SUSPENDED &&
-                    taskDescriptors[taskIndex].taskPreviousState == GOS_TASK_BLOCKED)
+                     taskDescriptors[taskIndex].taskPreviousState == GOS_TASK_BLOCKED)
             {
                 taskDescriptors[taskIndex].taskPreviousState = GOS_TASK_READY;
                 taskUnblockResult = GOS_SUCCESS;
@@ -627,12 +682,7 @@ GOS_INLINE gos_result_t gos_taskUnblock (gos_tid_t taskId)
         }
         else
         {
-            GOS_ATOMIC_EXIT
-
-            gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to unblock <%s>!",
-                taskDescriptors[currentTaskIndex].taskName,
-                taskDescriptors[taskIndex].taskName
-            );
+            privilegeError = GOS_TRUE;
         }
     }
     else
@@ -640,6 +690,16 @@ GOS_INLINE gos_result_t gos_taskUnblock (gos_tid_t taskId)
         // Task ID error.
     }
     GOS_ATOMIC_EXIT
+
+    if (privilegeError == GOS_TRUE)
+    {
+        gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to unblock <%s>!",
+            taskDescriptors[currentTaskIndex].taskName, taskDescriptors[taskIndex].taskName);
+    }
+    else
+    {
+        // Nothing to do.
+    }
 
     return taskUnblockResult;
 }
@@ -653,7 +713,9 @@ GOS_INLINE gos_result_t gos_taskDelete (gos_tid_t taskId)
      * Local variables.
      */
     gos_result_t taskDeleteResult = GOS_ERROR;
-    u32_t        taskIndex         = 0u;
+    u32_t        taskIndex        = 0u;
+    bool_t       privilegeError   = GOS_FALSE;
+    bool_t       needReschedule   = GOS_FALSE;
 
     /*
      * Function code.
@@ -671,8 +733,8 @@ GOS_INLINE gos_result_t gos_taskDelete (gos_tid_t taskId)
             {
                 taskDescriptors[taskIndex].taskState = GOS_TASK_ZOMBIE;
                 taskDeleteResult = GOS_SUCCESS;
+                needReschedule = (currentTaskIndex == taskIndex) ? GOS_TRUE : GOS_FALSE;
 
-                // Invoke signal.
                 if ((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_SIGNALING) != GOS_PRIV_SIGNALING)
                 {
                     taskDescriptors[currentTaskIndex].taskPrivilegeLevel |= GOS_PRIV_SIGNALING;
@@ -691,12 +753,7 @@ GOS_INLINE gos_result_t gos_taskDelete (gos_tid_t taskId)
         }
         else
         {
-            GOS_ATOMIC_EXIT
-
-            gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to delete <%s>!",
-                taskDescriptors[currentTaskIndex].taskName,
-                taskDescriptors[taskIndex].taskName
-            );
+            privilegeError = GOS_TRUE;
         }
     }
     else
@@ -705,16 +762,19 @@ GOS_INLINE gos_result_t gos_taskDelete (gos_tid_t taskId)
     }
     GOS_ATOMIC_EXIT
 
-    if (taskDeleteResult == GOS_SUCCESS)
+    if (privilegeError == GOS_TRUE)
     {
-        if (currentTaskIndex == taskIndex)
-        {
-            gos_kernelReschedule(GOS_UNPRIVILEGED);
-        }
-        else
-        {
-            // Nothing to do.
-        }
+        gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to delete <%s>!",
+            taskDescriptors[currentTaskIndex].taskName, taskDescriptors[taskIndex].taskName);
+    }
+    else
+    {
+        // Nothing to do.
+    }
+
+    if (needReschedule == GOS_TRUE)
+    {
+        gos_kernelReschedule(GOS_UNPRIVILEGED);
     }
     else
     {
@@ -734,6 +794,7 @@ GOS_INLINE gos_result_t gos_taskSetPriority (gos_tid_t taskId, gos_taskPrio_t ta
      */
     gos_result_t taskSetPriorityResult = GOS_ERROR;
     u32_t        taskIndex             = 0u;
+    bool_t       privilegeError        = GOS_FALSE;
 
     /*
      * Function code.
@@ -744,7 +805,6 @@ GOS_INLINE gos_result_t gos_taskSetPriority (gos_tid_t taskId, gos_taskPrio_t ta
     {
         taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
 
-        // Check privilege level.
         if ((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_PRIO_CHANGE) == GOS_PRIV_TASK_PRIO_CHANGE ||
             inIsr > 0)
         {
@@ -753,12 +813,7 @@ GOS_INLINE gos_result_t gos_taskSetPriority (gos_tid_t taskId, gos_taskPrio_t ta
         }
         else
         {
-            GOS_ATOMIC_EXIT
-
-            gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to set the priority of <%s>!",
-                taskDescriptors[currentTaskIndex].taskName,
-                taskDescriptors[taskIndex].taskName
-            );
+            privilegeError = GOS_TRUE;
         }
     }
     else
@@ -766,6 +821,16 @@ GOS_INLINE gos_result_t gos_taskSetPriority (gos_tid_t taskId, gos_taskPrio_t ta
         // Task ID or task priority error.
     }
     GOS_ATOMIC_EXIT
+
+    if (privilegeError == GOS_TRUE)
+    {
+        gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to set the priority of <%s>!",
+            taskDescriptors[currentTaskIndex].taskName, taskDescriptors[taskIndex].taskName);
+    }
+    else
+    {
+        // Nothing to do.
+    }
 
     return taskSetPriorityResult;
 }
@@ -780,6 +845,7 @@ GOS_INLINE gos_result_t gos_taskSetOriginalPriority (gos_tid_t taskId, gos_taskP
      */
     gos_result_t taskSetPriorityResult = GOS_ERROR;
     u32_t        taskIndex             = 0u;
+    bool_t       privilegeError        = GOS_FALSE;
 
     /*
      * Function code.
@@ -790,7 +856,6 @@ GOS_INLINE gos_result_t gos_taskSetOriginalPriority (gos_tid_t taskId, gos_taskP
     {
         taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
 
-        // Check privilege level.
         if ((taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_PRIV_TASK_PRIO_CHANGE) == GOS_PRIV_TASK_PRIO_CHANGE ||
             inIsr > 0)
         {
@@ -799,12 +864,7 @@ GOS_INLINE gos_result_t gos_taskSetOriginalPriority (gos_tid_t taskId, gos_taskP
         }
         else
         {
-            GOS_ATOMIC_EXIT
-
-            gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to set the priority of <%s>!",
-                taskDescriptors[currentTaskIndex].taskName,
-                taskDescriptors[taskIndex].taskName
-            );
+            privilegeError = GOS_TRUE;
         }
     }
     else
@@ -812,6 +872,16 @@ GOS_INLINE gos_result_t gos_taskSetOriginalPriority (gos_tid_t taskId, gos_taskP
         // Task ID or task priority error.
     }
     GOS_ATOMIC_EXIT
+
+    if (privilegeError == GOS_TRUE)
+    {
+        gos_errorHandler(GOS_ERROR_LEVEL_OS_FATAL, __func__, __LINE__, "<%s> has no privilege to set the priority of <%s>!",
+            taskDescriptors[currentTaskIndex].taskName, taskDescriptors[taskIndex].taskName);
+    }
+    else
+    {
+        // Nothing to do.
+    }
 
     return taskSetPriorityResult;
 }
@@ -984,7 +1054,7 @@ GOS_INLINE gos_result_t gos_taskGetPrivileges (gos_tid_t taskId, gos_taskPrivile
      */
     GOS_ATOMIC_ENTER
     if (taskId > GOS_DEFAULT_TASK_ID && (taskId - GOS_DEFAULT_TASK_ID) < CFG_TASK_MAX_NUMBER &&
-            pPrivileges != NULL)
+        pPrivileges != NULL)
     {
         taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
 
@@ -1062,18 +1132,25 @@ gos_result_t gos_taskGetId (gos_taskName_t taskName, gos_tid_t* pTaskId)
     /*
      * Function code.
      */
-    for (taskIndex = 0u; taskIndex < CFG_TASK_MAX_NUMBER && pTaskId != NULL; taskIndex++)
+    if ((taskName != NULL) && (pTaskId != NULL))
     {
-        if (strcmp(taskName, taskDescriptors[taskIndex].taskName) == 0u)
+        for (taskIndex = 0u; taskIndex < CFG_TASK_MAX_NUMBER; taskIndex++)
         {
-            *pTaskId = taskDescriptors[taskIndex].taskId;
-            taskGetIdResult = GOS_SUCCESS;
-            break;
+            if (strcmp(taskName, taskDescriptors[taskIndex].taskName) == 0u)
+            {
+                *pTaskId = taskDescriptors[taskIndex].taskId;
+                taskGetIdResult = GOS_SUCCESS;
+                break;
+            }
+            else
+            {
+                // Continue.
+            }
         }
-        else
-        {
-            // Continue.
-        }
+    }
+    else
+    {
+        // Task name or task ID pointer is NULL.
     }
 
     return taskGetIdResult;
@@ -1115,34 +1192,45 @@ gos_result_t gos_taskGetData (gos_tid_t taskId, gos_taskDescriptor_t* pTaskData)
     /*
      * Local variables.
      */
-    gos_result_t taskGetDataResult = GOS_ERROR;
-    u32_t        taskIndex         = 0u;
+    gos_result_t          taskGetDataResult = GOS_ERROR;
+    u32_t                 taskIndex         = 0u;
+    gos_taskDescriptor_t* pSource           = NULL;
 
     /*
      * Function code.
      */
+    /*
+     * Validate while atomic, but do not keep interrupts disabled for the
+     * complete descriptor copy. Task descriptors are never deallocated;
+     * monitoring data may be a transient snapshot.
+     */
     GOS_ATOMIC_ENTER
-    if (taskId >= GOS_DEFAULT_TASK_ID && (taskId - GOS_DEFAULT_TASK_ID) < CFG_TASK_MAX_NUMBER &&
-        pTaskData != NULL)
+    if ((taskId >= GOS_DEFAULT_TASK_ID) &&
+        ((taskId - GOS_DEFAULT_TASK_ID) < CFG_TASK_MAX_NUMBER) &&
+        (pTaskData != NULL))
     {
         taskIndex = (u32_t)(taskId - GOS_DEFAULT_TASK_ID);
 
         if (taskDescriptors[taskIndex].taskId != GOS_INVALID_TASK_ID)
         {
-            (void_t) memcpy((void*)pTaskData, (void*)&taskDescriptors[taskIndex], sizeof(*pTaskData));
-
-            taskGetDataResult = GOS_SUCCESS;
+            pSource = &taskDescriptors[taskIndex];
         }
         else
         {
-            // Task is not used.
+            // Nothing to do.
         }
+    }
+    GOS_ATOMIC_EXIT
+
+    if (pSource != NULL)
+    {
+        (void_t)memcpy(pTaskData, pSource, sizeof(*pTaskData));
+        taskGetDataResult = GOS_SUCCESS;
     }
     else
     {
-        // Task data does not exist.
+        // Nothing to do.
     }
-    GOS_ATOMIC_EXIT
 
     return taskGetDataResult;
 }
@@ -1155,26 +1243,36 @@ gos_result_t gos_taskGetDataByIndex (u16_t taskIndex, gos_taskDescriptor_t* pTas
     /*
      * Local variables.
      */
-    gos_result_t taskGetDataResult = GOS_ERROR;
+    gos_result_t          taskGetDataResult = GOS_ERROR;
+    gos_taskDescriptor_t* pSource           = NULL;
 
     /*
      * Function code.
      */
     GOS_ATOMIC_ENTER
-    if (taskIndex < CFG_TASK_MAX_NUMBER &&
-        taskDescriptors[taskIndex].taskId != GOS_INVALID_TASK_ID &&
-        pTaskData != NULL &&
-        (taskDescriptors[currentTaskIndex].taskPrivilegeLevel & GOS_TASK_PRIVILEGE_KERNEL) == GOS_TASK_PRIVILEGE_KERNEL)
+    if ((taskIndex < CFG_TASK_MAX_NUMBER) &&
+        (pTaskData != NULL) &&
+        (taskDescriptors[taskIndex].taskId != GOS_INVALID_TASK_ID) &&
+        ((taskDescriptors[currentTaskIndex].taskPrivilegeLevel &
+          GOS_TASK_PRIVILEGE_KERNEL) == GOS_TASK_PRIVILEGE_KERNEL))
     {
-        (void_t) memcpy((void*)pTaskData, (void*)&taskDescriptors[taskIndex], sizeof(*pTaskData));
+        pSource = &taskDescriptors[taskIndex];
+    }
+    else
+    {
+        // Nothing to do.
+    }
+    GOS_ATOMIC_EXIT
 
+    if (pSource != NULL)
+    {
+        (void_t)memcpy(pTaskData, pSource, sizeof(*pTaskData));
         taskGetDataResult = GOS_SUCCESS;
     }
     else
     {
-        // Task data does not exist.
+        // Nothing to do.
     }
-    GOS_ATOMIC_EXIT
 
     return taskGetDataResult;
 }
@@ -1305,13 +1403,14 @@ GOS_STATIC gos_result_t gos_taskCheckDescriptor (gos_taskDescriptor_t* taskDescr
     /*
      * Function code.
      */
-    if (taskDescriptor->taskFunction != NULL                     &&
+    if (taskDescriptor != NULL                                   &&
+        taskDescriptor->taskFunction != NULL                     &&
         taskDescriptor->taskPrivilegeLevel != 0                  &&
         taskDescriptor->taskPriority <= GOS_TASK_MAX_PRIO_LEVELS &&
         taskDescriptor->taskFunction != gos_idleTask             &&
         taskDescriptor->taskStackSize <= CFG_TASK_MAX_STACK_SIZE &&
-        taskDescriptor->taskStackSize >= CFG_TASK_MIN_STACK_SIZE  &&
-        taskDescriptor->taskStackSize % 4 == 0u)
+        taskDescriptor->taskStackSize >= CFG_TASK_MIN_STACK_SIZE &&
+        (taskDescriptor->taskStackSize % 8u) == 0u)
     {
         taskDescCheckResult = GOS_SUCCESS;
     }

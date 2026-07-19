@@ -578,7 +578,10 @@ gos_result_t svl_sysmonRegisterUserMessage (svl_sysmonUserMessageDescriptor_t* p
     /*
      * Function code.
      */
-    if ((pDesc != NULL) && (pDesc->callback != NULL))
+    if ((pDesc != NULL) &&
+        (pDesc->callback != NULL) &&
+        (pDesc->payloadSize <= SVL_SYSMON_WIRED_RX_BUFF_SIZE) &&
+        (pDesc->payloadSize <= SVL_SYSMON_WIRELESS_RX_BUFF_SIZE))
     {
         for (userMessageIndex = 0u; userMessageIndex < SVL_SYSMON_MAX_USER_MESSAGES; userMessageIndex++)
         {
@@ -1243,19 +1246,11 @@ GOS_STATIC void_t svl_sysmonWiredDaemonTask (void_t)
                     {
                     	if (gos_mutexLock(&sysmonMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
                     	{
-                            // If payload is not NULL, copy it.
-                            if (userMessages[userMessageIndex].payload != NULL)
+                            if ((userMessages[userMessageIndex].payload != NULL) &&
+                                (userMessages[userMessageIndex].payloadSize <= SVL_SYSMON_WIRED_RX_BUFF_SIZE))
                             {
-/*                            	if (userMessages[userMessageIndex].payloadSize > SVL_SYSMON_WIRED_RX_BUFF_SIZE)
-                            	{
-#if SVL_SYSMON_TRACE_LEVEL > 0
-                                (void_t) gos_traceTraceFormatted(GOS_TRUE, "[Wired] Payload overflow.\r\n", messageId);
-#endif
-                            	}
-                            	else*/
-                            	{
-                                    (void_t) memcpy(userMessages[userMessageIndex].payload, (void_t*)wiredRxBuffer, userMessages[userMessageIndex].payloadSize);
-                            	}
+                                (void_t)memcpy(userMessages[userMessageIndex].payload,
+                                               (void_t*)wiredRxBuffer, userMessages[userMessageIndex].payloadSize);
                             }
                             else
                             {
@@ -1374,9 +1369,11 @@ GOS_STATIC void_t svl_sysmonWirelessDaemonTask (void_t)
                     	if (gos_mutexLock(&sysmonMutex, GOS_MUTEX_ENDLESS_TMO) == GOS_SUCCESS)
                     	{
                             // If payload is not NULL, copy it.
-                            if (userMessages[userMessageIndex].payload != NULL)
+                            if ((userMessages[userMessageIndex].payload != NULL) &&
+                                (userMessages[userMessageIndex].payloadSize <= SVL_SYSMON_WIRELESS_RX_BUFF_SIZE))
                             {
-                                (void_t) memcpy(userMessages[userMessageIndex].payload, (void_t*)wirelessRxBuffer, userMessages[userMessageIndex].payloadSize);
+                                (void_t)memcpy(userMessages[userMessageIndex].payload,
+                                               (void_t*)wirelessRxBuffer, userMessages[userMessageIndex].payloadSize);
                             }
                             else
                             {

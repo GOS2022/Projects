@@ -207,7 +207,7 @@ GOS_STATIC gos_taskDescriptor_t tftTaskDesc =
 {
 	.taskFunction	    = APP_TFT_Task,
 	.taskName		    = "app_tft_task",
-	.taskStackSize 	    = 0x800,
+	.taskStackSize 	    = 0x1000,
 	.taskPriority 	    = 80,
 	.taskPrivilegeLevel	= GOS_TASK_PRIVILEGE_USER
 };
